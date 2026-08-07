@@ -1,0 +1,17 @@
+platform: clash
+
+features:
+  tun: true
+  fake_ip: true
+  redir_host: true
+  dns_rules: true
+  script: false
+  rewrite: false
+  rule_provider: true
+  proxy_provider: true
+  process: false
+  sniffer: false
+
+limitations:
+  advanced_sniffer: false
+  script: false
