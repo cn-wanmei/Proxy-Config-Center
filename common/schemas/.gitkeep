@@ -1,0 +1,7 @@
+# JSON Schemas for strict validation of Core data
+# 用于严格验证 Core 数据的 JSON Schema
+# Planned files:
+# - core.schema.json
+# - proxy-group.schema.json
+# - rule.schema.json
+# - platform.schema.json
