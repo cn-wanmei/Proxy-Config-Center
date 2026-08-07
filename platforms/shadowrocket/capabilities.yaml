@@ -1,0 +1,17 @@
+platform: shadowrocket
+
+features:
+  tun: true
+  fake_ip: false
+  dns_rules: true
+  script: true
+  rewrite: true
+  rule_provider: false
+  proxy_provider: false
+  process: false
+  mitm: true
+
+limitations:
+  rule_provider: false
+  proxy_provider: false
+  advanced_dns: limited
