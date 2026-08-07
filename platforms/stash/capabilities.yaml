@@ -1,0 +1,14 @@
+platform: stash
+
+features:
+  tun: true
+  fake_ip: true
+  dns_rules: true
+  script: true
+  rewrite: true
+  rule_provider: true
+  proxy_provider: true
+  process: true
+  mitm: true
+
+limitations: {}
