@@ -1,0 +1,15 @@
+platform: clash-meta
+
+features:
+  tun: true
+  fake_ip: true
+  redir_host: true
+  dns_rules: true
+  script: true
+  rewrite: false
+  rule_provider: true
+  proxy_provider: true
+  process: true
+  sniffer: true
+
+limitations: {}
