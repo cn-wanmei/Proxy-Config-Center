@@ -85,11 +85,17 @@ def test_client_group_icon_capabilities():
     assert supports("loon", "icons") is True
     assert supports("shadowrocket", "icons") is True
     assert supports("clash", "icons") is False
-    for platform in ("egern", "loon", "shadowrocket"):
-        cfg = _render(platform)
-        text = str(cfg)
-        assert "proxy-mode" not in text or True
-    print("✅ client icon capability declarations OK")
+
+    egern = _render("egern")
+    egern_groups = egern.get("policy_groups") or []
+    assert any("icon" in group.get("select", {}) for group in egern_groups)
+
+    loon = _render("loon")
+    assert "img-url =" in loon
+
+    shadowrocket = _render("shadowrocket")
+    assert "icon-url=" in shadowrocket
+    print("✅ client policy-group icon emission OK")
 
 
 def test_external_resource_interval():
