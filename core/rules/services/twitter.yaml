@@ -1,0 +1,14 @@
+# Twitter / X service rules
+version: 1
+id: service-twitter
+group: twitter
+
+rules:
+  - type: geosite
+    values: [twitter]
+    action: group
+    target: twitter
+  - type: domain-suffix
+    values: [twitter.com, x.com, twimg.com, t.co]
+    action: group
+    target: twitter
