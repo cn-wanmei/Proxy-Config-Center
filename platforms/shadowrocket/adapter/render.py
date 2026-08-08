@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shadowrocket Renderer — IR.rule_sources."""
+"""Shadowrocket — domain_suffix only (no GEOIP/GEOSITE)."""
 from typing import Any, Dict, List
 
 def _resolve(opt: str, m: Dict[str, str]) -> str:
@@ -9,7 +9,7 @@ def _resolve(opt: str, m: Dict[str, str]) -> str:
 
 def render(ir: Any) -> str:
     m = dict(getattr(ir, "id_to_display", {}) or {})
-    lines = ["# AUTO-GENERATED", "[General]", "ipv6 = true", "", "[Proxy Group]"]
+    lines = ["# AUTO-GENERATED | blackmatrix7 via Core", "[General]", "ipv6 = true", "", "[Proxy Group]"]
     for g in getattr(ir, "base_groups", []) or []:
         name = g.get("name", {})
         d = name.get("zh") if isinstance(name, dict) else str(name)
@@ -32,8 +32,7 @@ def render(ir: Any) -> str:
     for rs in getattr(ir, "rule_sources", []) or []:
         if rs.is_match: continue
         t = m.get(rs.target_service, rs.target_service)
-        for gi in rs.geoip: lines.append(f"GEOIP,{gi},{t}")
-        for gs in rs.geosite: lines.append(f"DOMAIN-SUFFIX,{gs},{t}")
-        for d in rs.domain_suffix: lines.append(f"DOMAIN-SUFFIX,{d},{t}")
+        for d in rs.domain_suffix:
+            lines.append(f"DOMAIN-SUFFIX,{d},{t}")
     lines.append(f"FINAL,{m.get('final','其它连接')}")
     return "\n".join(lines)+"\n"
