@@ -1,5 +1,4 @@
-# AUTO-GENERATED from Core — DO NOT EDIT MANUALLY
-# Source: core/ | Build: scripts/build.py
+# AUTO-GENERATED from Core | IR rule_sources
 # 订阅: core/proxies/providers.yaml 填真实 URL 后 rebuild
 
 mixed-port: 7890
@@ -53,8 +52,10 @@ rule-providers:
   ad-block: { type: http, behavior: classical, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AdvertisingLite/AdvertisingLite.yaml, path: ./ruleset/ad-block.yaml, interval: 86400 }
   china: { type: http, behavior: classical, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/China/China.yaml, path: ./ruleset/china.yaml, interval: 86400 }
   apple: { type: http, behavior: classical, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple.yaml, path: ./ruleset/apple.yaml, interval: 86400 }
-  github: { type: http, behavior: classical, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GitHub/GitHub.yaml, path: ./ruleset/github.yaml, interval: 86400 }
+  code-repo: { type: http, behavior: classical, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GitHub/GitHub.yaml, path: ./ruleset/code-repo.yaml, interval: 86400 }
   microsoft: { type: http, behavior: classical, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Microsoft/Microsoft.yaml, path: ./ruleset/microsoft.yaml, interval: 86400 }
+  game: { type: http, behavior: classical, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Steam/Steam.yaml, path: ./ruleset/game.yaml, interval: 86400 }
+  ai: { type: http, behavior: classical, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.yaml, path: ./ruleset/ai.yaml, interval: 86400 }
   google: { type: http, behavior: classical, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Google/Google.yaml, path: ./ruleset/google.yaml, interval: 86400 }
   youtube: { type: http, behavior: classical, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTube/YouTube.yaml, path: ./ruleset/youtube.yaml, interval: 86400 }
   spotify: { type: http, behavior: classical, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Spotify/Spotify.yaml, path: ./ruleset/spotify.yaml, interval: 86400 }
@@ -62,8 +63,6 @@ rule-providers:
   twitter: { type: http, behavior: classical, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Twitter/Twitter.yaml, path: ./ruleset/twitter.yaml, interval: 86400 }
   netflix: { type: http, behavior: classical, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Netflix/Netflix.yaml, path: ./ruleset/netflix.yaml, interval: 86400 }
   tiktok: { type: http, behavior: classical, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/TikTok/TikTok.yaml, path: ./ruleset/tiktok.yaml, interval: 86400 }
-  game: { type: http, behavior: classical, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Steam/Steam.yaml, path: ./ruleset/game.yaml, interval: 86400 }
-  ai: { type: http, behavior: classical, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.yaml, path: ./ruleset/ai.yaml, interval: 86400 }
 
 rules:
   - GEOSITE,category-ads-all,广告拦截
@@ -74,7 +73,7 @@ rules:
   - GEOSITE,apple,苹果服务
   - RULE-SET,apple,苹果服务
   - GEOSITE,github,代码仓库
-  - RULE-SET,github,代码仓库
+  - RULE-SET,code-repo,代码仓库
   - GEOSITE,microsoft,微软服务
   - RULE-SET,microsoft,微软服务
   - GEOSITE,steam,游戏平台
@@ -97,4 +96,6 @@ rules:
   - RULE-SET,tiktok,抖音国际
   - DOMAIN-SUFFIX,e-hentai.org,绅士漫画
   - DOMAIN-SUFFIX,exhentai.org,绅士漫画
+  - DOMAIN-SUFFIX,ehgt.org,绅士漫画
+  - DOMAIN-SUFFIX,hath.network,绅士漫画
   - MATCH,其它连接

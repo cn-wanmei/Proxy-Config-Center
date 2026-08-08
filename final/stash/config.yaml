@@ -1,5 +1,4 @@
-# AUTO-GENERATED from Core — DO NOT EDIT MANUALLY
-# Stash / Clash 兼容；订阅见 core/proxies/providers.yaml
+# AUTO-GENERATED from Core | Stash (Clash-compatible)
 
 mixed-port: 7890
 allow-lan: true
