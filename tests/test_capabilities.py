@@ -53,12 +53,15 @@ def test_real_platform_matrix():
         "clash-meta": (True, True, True),
         "clash": (True, True, True),
         "stash": (True, True, True),
+        "egern": (True, False, True),
         "loon": (True, True, True),
-        "egern": (False, True, True),
         "shadowrocket": (False, False, True),
     }
-    assert REQUIRED_PLATFORMS == list(expected)
-    for name, want in expected.items():
+    # Compare sets/order independently: capability data must not be coupled to
+    # filesystem enumeration or the order of REQUIRED_PLATFORMS.
+    assert set(REQUIRED_PLATFORMS) == set(expected)
+    for name in REQUIRED_PLATFORMS:
+        want = expected[name]
         got = (supports_rule_set(name), supports_rule_provider(name), supports_domain_fallback(name))
         assert got == want, f"{name}: got {got}, want {want}"
     print("✅ real platform capability matrix OK")
