@@ -1,4 +1,4 @@
-# Core Rule Source — 仅 blackmatrix7（无 GEOSITE / GEOIP）
+# 分流源：blackmatrix7 为主；domain_suffix 供不支持 rule-set 的平台 fallback
 version: 2
 engine: blackmatrix7
 
@@ -9,6 +9,7 @@ sources:
     blackmatrix7:
       path: AdvertisingLite/AdvertisingLite.yaml
       behavior: classical
+    domain_suffix: [doubleclick.net, googlesyndication.com, googletagmanager.com]
 
   china:
     blackmatrix7:
@@ -17,66 +18,79 @@ sources:
     blackmatrix7_extra:
       - path: ChinaIPs/ChinaIPs.yaml
         behavior: classical
+    domain_suffix: [cn, baidu.com, qq.com, aliyun.com, taobao.com, bilibili.com]
 
   apple:
     blackmatrix7:
       path: Apple/Apple.yaml
       behavior: classical
+    domain_suffix: [apple.com, icloud.com, icloud-content.com, mzstatic.com, cdn-apple.com]
 
   code-repo:
     blackmatrix7:
       path: GitHub/GitHub.yaml
       behavior: classical
+    domain_suffix: [github.com, githubusercontent.com, githubassets.com, gitlab.com]
 
   microsoft:
     blackmatrix7:
       path: Microsoft/Microsoft.yaml
       behavior: classical
+    domain_suffix: [microsoft.com, live.com, office.com, office365.com, onedrive.com]
 
   google:
     blackmatrix7:
       path: Google/Google.yaml
       behavior: classical
+    domain_suffix: [google.com, googleapis.com, gstatic.com, googleusercontent.com]
 
   youtube:
     blackmatrix7:
       path: YouTube/YouTube.yaml
       behavior: classical
+    domain_suffix: [youtube.com, youtu.be, googlevideo.com, ytimg.com]
 
   spotify:
     blackmatrix7:
       path: Spotify/Spotify.yaml
       behavior: classical
+    domain_suffix: [spotify.com, scdn.co, spotifycdn.com]
 
   telegram:
     blackmatrix7:
       path: Telegram/Telegram.yaml
       behavior: classical
+    domain_suffix: [telegram.org, t.me, tdesktop.com, telegra.ph]
 
   twitter:
     blackmatrix7:
       path: Twitter/Twitter.yaml
       behavior: classical
+    domain_suffix: [twitter.com, x.com, twimg.com, t.co]
 
   netflix:
     blackmatrix7:
       path: Netflix/Netflix.yaml
       behavior: classical
+    domain_suffix: [netflix.com, nflxvideo.net, nflxso.net, nflximg.net]
 
   tiktok:
     blackmatrix7:
       path: TikTok/TikTok.yaml
       behavior: classical
+    domain_suffix: [tiktok.com, tiktokv.com, musical.ly, byteoversea.com]
 
   game:
     blackmatrix7:
       path: Steam/Steam.yaml
       behavior: classical
+    domain_suffix: [steampowered.com, steamcommunity.com, steamgames.com]
 
   ai:
     blackmatrix7:
       path: OpenAI/OpenAI.yaml
       behavior: classical
+    domain_suffix: [openai.com, chatgpt.com, anthropic.com, claude.ai]
 
   ehentai:
     domain_suffix:
