@@ -1,4 +1,4 @@
-# AUTO-GENERATED | no GEOSITE/GEOIP; BM 规则在 Clash 系 RULE-SET
+# AUTO-GENERATED | capabilities: rule_set=false → domain_suffix
 
 ipv6: true
 dns:
@@ -38,8 +38,27 @@ policy_groups:
   - select: { name: 苹果服务, policies: [DIRECT, 代理模式, 手动选择, 自动选择, REJECT], flatten: true }
   - select: { name: 其它连接, policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT], flatten: true }
 rules:
+  - domain_suffix: { match: doubleclick.net, policy: 广告拦截 }
+  - domain_suffix: { match: googlesyndication.com, policy: 广告拦截 }
+  - domain_suffix: { match: cn, policy: 中国连接 }
+  - domain_suffix: { match: baidu.com, policy: 中国连接 }
+  - domain_suffix: { match: qq.com, policy: 中国连接 }
+  - domain_suffix: { match: apple.com, policy: 苹果服务 }
+  - domain_suffix: { match: icloud.com, policy: 苹果服务 }
+  - domain_suffix: { match: github.com, policy: 代码仓库 }
+  - domain_suffix: { match: microsoft.com, policy: 微软服务 }
+  - domain_suffix: { match: steampowered.com, policy: 游戏平台 }
+  - domain_suffix: { match: openai.com, policy: 人工智能 }
+  - domain_suffix: { match: chatgpt.com, policy: 人工智能 }
+  - domain_suffix: { match: google.com, policy: 谷歌服务 }
+  - domain_suffix: { match: youtube.com, policy: 油管视频 }
+  - domain_suffix: { match: googlevideo.com, policy: 油管视频 }
+  - domain_suffix: { match: spotify.com, policy: 声破天乐 }
+  - domain_suffix: { match: telegram.org, policy: 电报通讯 }
+  - domain_suffix: { match: twitter.com, policy: 推特社交 }
+  - domain_suffix: { match: x.com, policy: 推特社交 }
+  - domain_suffix: { match: netflix.com, policy: 奈飞影视 }
+  - domain_suffix: { match: tiktok.com, policy: 抖音国际 }
   - domain_suffix: { match: e-hentai.org, policy: 绅士漫画 }
   - domain_suffix: { match: exhentai.org, policy: 绅士漫画 }
-  - domain_suffix: { match: ehgt.org, policy: 绅士漫画 }
-  - domain_suffix: { match: hath.network, policy: 绅士漫画 }
   - default: { policy: 其它连接 }
