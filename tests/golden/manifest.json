@@ -3,11 +3,11 @@
   "files": {
     ".gitkeep": "5af6b6c75164f3faa97343960c5bb9ca5452246e",
     "README.md": "94f7cae0f5077df8021714e4ec161a75c1868ddb",
-    "clash/config.yaml": "d8138925d84a952cab4853455848864c37aa45f2",
-    "clash-meta/config.yaml": "9a2d6d1fe627d2dd2091f49309922fd33e5d69f9",
+    "clash/config.yaml": "5431ec07a5f04a02e5384bba096c0e67e2161016",
+    "clash-meta/config.yaml": "29fe36f0e889bc5dafe1507b68c282f94e42058c",
     "egern/config.yaml": "f8061a76718047703f2c488a12a87e6afd229981",
     "loon/config.conf": "1e67c00a78b0748dc404e69b4f9bcaf8455492d1",
-    "shadowrocket/config.conf": "a2e06aa9b7414cd6e169068c1435ce04d6b7471f",
-    "stash/config.yaml": "0b76908f9a137ff5bf54c9de8a87469d1c48b1c0"
+    "shadowrocket/config.conf": "474ba8ad0198a2a1a16984cf57654b5c08aaf5fe",
+    "stash/config.yaml": "fa30337a6fc221be07d54267f70f787e3b9e39dc"
   }
 }

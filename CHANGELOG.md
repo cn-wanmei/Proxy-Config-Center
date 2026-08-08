@@ -11,12 +11,14 @@
 - 六端 Capability Matrix 增加客户端图标能力覆盖测试。
 - 外部规则资源统一采用 7 天（604800 秒）刷新周期。
 - Clash/Stash 等支持远程代理集的客户端，其外部节点订阅统一采用 7 天刷新周期。
+- 修复 Blackmatrix7 ChinaIPs 已移除的 Clash YAML 源，并映射到当前 IP-CIDR 列表格式。
 
 ### Fixed
 - 正式 Release workflow 不再响应 `release/v*` 分支或 Pull Request。
 - PR / release 分支不会再进入正式 Release Job，也不会创建或修改 GitHub Release。
 - 正式 Release 只能由 `v*` Git tag 触发，并始终从 tag 对应 commit checkout。
 - Release 的 `target_commitish` 改为当前 tag commit，消除旧版本代码与新版本 tag 错配风险。
+- 非 Clash 客户端的规则集转换不再保留失效的 `/rule/Clash/` 路径。
 
 ### Validation
 - Capability、Semantic、Golden、Build、Structural、Rule Source Health 均继续作为正式 Release 的强制门禁。
@@ -78,8 +80,3 @@
 - Egern
 - Loon
 - Shadowrocket
-
-### Notes
-- 节点由 Sub-Store 独立管理
-- 规则与策略由 Core 统一维护
-- Release Artifact 是正式六端配置的交付来源
