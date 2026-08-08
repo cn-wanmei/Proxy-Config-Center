@@ -1,89 +1,110 @@
 #!/usr/bin/env python3
 """
-Clash Meta Renderer
-Translates IR into Clash Meta (mihomo) YAML config.
+Clash Meta Renderer (P1-8/9/10/11)
+Resolved IR → Clash Meta YAML including DNS nameserver-policy
 """
 
-from typing import Any
+from typing import Any, Dict, List
 
-def _name(g: dict) -> str:
-    name = g.get("name", {})
-    if isinstance(name, dict):
-        return name.get("zh") or name.get("en") or g.get("id", "unknown")
-    return str(name)
 
-def _resolve_option(opt: str, id_to_name: dict) -> str:
-    if opt in ("direct",):
+def _resolve_proxy_ref(opt: str, id_to_display: Dict[str, str]) -> str:
+    if opt in ("direct", "DIRECT"):
         return "DIRECT"
-    if opt in ("reject",):
+    if opt in ("reject", "REJECT"):
         return "REJECT"
-    return id_to_name.get(opt, opt)
+    return id_to_display.get(opt, opt)
+
+
+def _resolver_to_clash(resolver_id: str, resolvers: dict) -> List[str]:
+    """Convert a resolver id to Clash DNS server list."""
+    r = resolvers.get(resolver_id) or {}
+    rtype = r.get("type", "system")
+    if rtype == "system":
+        return ["system"]
+    servers = r.get("servers") or []
+    return list(servers) if servers else ["system"]
+
 
 def render(ir: Any) -> dict:
-    """Return a dict ready to be dumped as Clash Meta YAML."""
-    id_to_name = {}
+    id_to_display = dict(getattr(ir, "id_to_display", {}) or {})
 
-    # Collect all group display names
-    for g in ir.proxy_base + ir.proxy_service:
-        id_to_name[g["id"]] = _name(g)
+    # Ensure base group names
+    for g in getattr(ir, "base_groups", []) or []:
+        name = g.get("name", {})
+        display = name.get("zh") if isinstance(name, dict) else str(name)
+        id_to_display[g["id"]] = display or g["id"]
 
-    proxy_groups = []
+    proxy_groups: List[dict] = []
 
-    # Base groups
-    for g in ir.proxy_base:
-        gid = g["id"]
+    # ---- Base groups ----
+    for g in getattr(ir, "base_groups", []) or []:
         entry = {
-            "name": _name(g),
+            "name": id_to_display.get(g["id"], g["id"]),
             "type": g.get("type", "select"),
         }
         if g.get("include-all-nodes"):
             entry["include-all-providers"] = True
         if g.get("filter"):
             entry["filter"] = g["filter"]
-        if "options" in g:
-            entry["proxies"] = [_resolve_option(o if isinstance(o, str) else o.get("ref") or o.get("action"), id_to_name) for o in g["options"]]
-        # Handle nested options from semantic form
-        opts = g.get("options", [])
+
         proxies = []
-        for o in opts:
+        for o in g.get("options") or []:
             if isinstance(o, dict):
                 if "ref" in o:
-                    proxies.append(id_to_name.get(o["ref"], o["ref"]))
+                    proxies.append(id_to_display.get(o["ref"], o["ref"]))
                 elif "action" in o:
                     act = o["action"]
                     proxies.append("DIRECT" if act == "direct" else "REJECT" if act == "reject" else act)
             else:
-                proxies.append(_resolve_option(str(o), id_to_name))
+                proxies.append(_resolve_proxy_ref(str(o), id_to_display))
         if proxies:
             entry["proxies"] = proxies
         if g.get("icon"):
             entry["icon"] = g["icon"]
         proxy_groups.append(entry)
 
-    # Service groups
-    for g in ir.proxy_service:
-        proxy_cfg = g.get("proxy", {})
-        options = proxy_cfg.get("options", [])
-        default = proxy_cfg.get("default")
-        proxies = []
-        for o in options:
-            proxies.append(_resolve_option(str(o), id_to_name))
+    # ---- Service groups (use ResolvedService) ----
+    for s in getattr(ir, "services", []) or []:
+        # Support both ResolvedService dataclass and plain dict
+        if hasattr(s, "id"):
+            sid, name_zh = s.id, s.name_zh
+            options, default = s.proxy_options, s.proxy_default
+            icon = s.icon
+            gtype = s.type
+        else:
+            sid = s["id"]
+            name = s.get("name", {})
+            name_zh = name.get("zh", sid) if isinstance(name, dict) else str(name)
+            proxy_cfg = s.get("proxy") or {}
+            options = proxy_cfg.get("options") or []
+            default = proxy_cfg.get("default") or (options[0] if options else "proxy-mode")
+            icon = s.get("icon", "")
+            gtype = s.get("type", "select")
+
+        id_to_display[sid] = name_zh
+        proxies = [_resolve_proxy_ref(o, id_to_display) for o in options]
+
+        # Put default first for better UX
+        if default:
+            dname = _resolve_proxy_ref(default, id_to_display)
+            if dname in proxies:
+                proxies = [dname] + [p for p in proxies if p != dname]
+
         entry = {
-            "name": _name(g),
-            "type": g.get("type", "select"),
+            "name": name_zh,
+            "type": gtype,
             "proxies": proxies or ["DIRECT"],
         }
-        if g.get("icon"):
-            entry["icon"] = g["icon"]
+        if icon:
+            entry["icon"] = icon
         proxy_groups.append(entry)
-        id_to_name[g["id"]] = _name(g)
 
-    # Rules
-    rules = []
-    for r in ir.rules:
-        target = id_to_name.get(r.get("_group"), r.get("_group", "FINAL"))
+    # ---- Rules ----
+    rules: List[str] = []
+    for r in getattr(ir, "rules", []) or []:
+        target = id_to_display.get(r.get("_group"), r.get("_group", "其它连接"))
         rtype = r.get("type", "")
-        values = r.get("values", [])
+        values = r.get("values") or []
         if rtype == "domain-suffix":
             for v in values:
                 rules.append(f"DOMAIN-SUFFIX,{v},{target}")
@@ -100,10 +121,54 @@ def render(ir: Any) -> dict:
         elif rtype == "match":
             rules.append(f"MATCH,{target}")
 
-    # Ensure MATCH at end
     if not any(x.startswith("MATCH,") for x in rules):
-        final_name = id_to_name.get("final", "其它连接")
-        rules.append(f"MATCH,{final_name}")
+        rules.append(f"MATCH,{id_to_display.get('final', '其它连接')}")
+
+    # ---- DNS (from Resolved IR) ----
+    resolvers = getattr(ir, "resolvers", {}) or {}
+    dns_policies = getattr(ir, "dns_policies", {}) or {}
+
+    # nameserver: use foreign/cloudflare default
+    default_servers = _resolver_to_clash("cloudflare", resolvers)
+    if default_servers == ["system"]:
+        default_servers = ["https://cloudflare-dns.com/dns-query"]
+
+    nameserver_policy = {}
+    # Map domains from service rules that have domain-suffix to their DNS policy default resolver
+    for s in getattr(ir, "services", []) or []:
+        if not hasattr(s, "dns_policy_id"):
+            continue
+        policy = dns_policies.get(s.dns_policy_id) or {}
+        resolver_id = policy.get("default") or s.dns_default_resolver
+        servers = _resolver_to_clash(resolver_id, resolvers)
+        # We attach policy via domain keys in a simplified way:
+        # Full domain mapping comes from rules; here we set common known sets
+        pass
+
+    # Build nameserver-policy from a static mapping aligned with core/dns design
+    # (Apple → system, China → alidns, Google → google, etc.)
+    policy_domain_map = {
+        "dns-system": ["+.apple.com", "+.icloud.com", "+.push.apple.com", "+.mzstatic.com", "+.itunes.apple.com"],
+        "dns-china": ["+.cn", "+.baidu.com", "+.qq.com", "+.tencent.com", "+.alipay.com"],
+        "dns-google": ["+.google.com", "+.googleapis.com", "+.gstatic.com", "+.youtube.com"],
+        "dns-foreign": ["+.openai.com", "+.anthropic.com", "+.x.ai", "+.telegram.org", "+.twitter.com", "+.x.com"],
+        "dns-cloudflare": ["+.netflix.com", "+.spotify.com", "+.github.com"],
+    }
+    for policy_id, domains in policy_domain_map.items():
+        policy = dns_policies.get(policy_id) or {}
+        resolver_id = policy.get("default", "cloudflare")
+        servers = _resolver_to_clash(resolver_id, resolvers)
+        for d in domains:
+            nameserver_policy[d] = servers if len(servers) > 1 else (servers[0] if servers else "system")
+
+    dns_block = {
+        "enable": True,
+        "ipv6": True,
+        "enhanced-mode": "fake-ip",
+        "fake-ip-range": "198.18.0.1/16",
+        "nameserver": default_servers,
+        "nameserver-policy": nameserver_policy,
+    }
 
     config = {
         "mixed-port": 7890,
@@ -111,6 +176,7 @@ def render(ir: Any) -> dict:
         "mode": "rule",
         "log-level": "info",
         "ipv6": True,
+        "dns": dns_block,
         "proxy-groups": proxy_groups,
         "rules": rules,
     }
