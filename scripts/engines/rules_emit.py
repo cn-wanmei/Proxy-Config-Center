@@ -3,8 +3,6 @@
 
 from typing import Any, Dict, List, Tuple
 
-# External rule resources are intentionally refreshed weekly. This keeps release
-# output deterministic while avoiding daily upstream churn.
 EXTERNAL_RESOURCE_INTERVAL = 7 * 24 * 60 * 60
 
 
@@ -17,27 +15,24 @@ def _has_bm(rs) -> bool:
 
 
 def _clash_yaml_to_list(url: str, flavor: str) -> str:
-    """Map blackmatrix7 Clash classical .yaml → client .list URL.
-
-    flavor: 'Surge' | 'Loon' | 'QuantumultX'
-    blackmatrix7 has no dedicated Egern tree; Surge .list is widely accepted.
-    """
+    """Map blackmatrix7 Clash rule resources to a client-native list URL."""
     if not url:
         return url
-    if "/rule/Clash/" in url and url.endswith(".yaml"):
-        return url.replace("/rule/Clash/", f"/rule/{flavor}/").replace(".yaml", ".list")
+    if "/rule/Clash/" in url:
+        if url.endswith(".yaml"):
+            return url.replace("/rule/Clash/", f"/rule/{flavor}/").replace(".yaml", ".list")
+        if url.endswith(".list"):
+            return url.replace("/rule/Clash/", f"/rule/{flavor}/")
     return url
 
 
 def emit_clash_style(ir: Any, id_to_display: Dict[str, str], use_rule_set: bool) -> Tuple[dict, List[str]]:
     rule_providers: dict = {}
     rules: List[str] = []
-
     for rs in getattr(ir, "rule_sources", []) or []:
         if rs.is_match:
             continue
         target = _target(rs, id_to_display)
-
         if use_rule_set and _has_bm(rs):
             for bm in rs.bm_sets:
                 rule_providers[bm.key] = {
@@ -49,12 +44,10 @@ def emit_clash_style(ir: Any, id_to_display: Dict[str, str], use_rule_set: bool)
                 }
                 rules.append(f"RULE-SET,{bm.key},{target}")
             continue
-
         for d in rs.domain_suffix:
             rules.append(f"DOMAIN-SUFFIX,{d},{target}")
         for d in rs.domain_keyword:
             rules.append(f"DOMAIN-KEYWORD,{d},{target}")
-
     rules.append(f"MATCH,{id_to_display.get('final', '其它连接')}")
     return rule_providers, rules
 
@@ -67,8 +60,7 @@ def emit_loon_style(ir: Any, id_to_display: Dict[str, str], use_rule_set: bool) 
         target = _target(rs, id_to_display)
         if use_rule_set and _has_bm(rs):
             for bm in rs.bm_sets:
-                url = _clash_yaml_to_list(bm.url, "Loon")
-                lines.append(f"DOMAIN-SET,{url},{target}")
+                lines.append(f"DOMAIN-SET,{_clash_yaml_to_list(bm.url, 'Loon')},{target}")
             continue
         for d in rs.domain_suffix:
             lines.append(f"DOMAIN-SUFFIX,{d},{target}")
@@ -79,7 +71,6 @@ def emit_loon_style(ir: Any, id_to_display: Dict[str, str], use_rule_set: bool) 
 
 
 def emit_egern_style(ir: Any, id_to_display: Dict[str, str], use_rule_set: bool) -> List[dict]:
-    """Egern native rule_set uses remote .list (Surge path from blackmatrix7)."""
     rules: List[dict] = []
     for rs in getattr(ir, "rule_sources", []) or []:
         if rs.is_match:
@@ -87,8 +78,7 @@ def emit_egern_style(ir: Any, id_to_display: Dict[str, str], use_rule_set: bool)
         target = _target(rs, id_to_display)
         if use_rule_set and _has_bm(rs):
             for bm in rs.bm_sets:
-                url = _clash_yaml_to_list(bm.url, "Surge")
-                rules.append({"rule_set": {"url": url, "policy": target}})
+                rules.append({"rule_set": {"url": _clash_yaml_to_list(bm.url, "Surge"), "policy": target}})
             continue
         for d in rs.domain_suffix:
             rules.append({"domain_suffix": {"match": d, "policy": target}})
