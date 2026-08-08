@@ -1,0 +1,14 @@
+# Microsoft service rules
+version: 1
+id: service-microsoft
+group: microsoft
+
+rules:
+  - type: geosite
+    values: [microsoft, onedrive]
+    action: group
+    target: microsoft
+  - type: domain-suffix
+    values: [microsoft.com, microsoftonline.com, live.com, office.com, office365.com, onedrive.com, 1drv.com, windowsupdate.com]
+    action: group
+    target: microsoft
