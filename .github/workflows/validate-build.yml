@@ -37,6 +37,8 @@ jobs:
         run: pip install pyyaml
       - name: Build all platforms
         run: python scripts/build.py
+      - name: Structural check
+        run: python scripts/check_config.py
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
