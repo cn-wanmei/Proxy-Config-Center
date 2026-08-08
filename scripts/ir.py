@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """
-Core → IR loader
-Loads all Core YAML and builds Intermediate Representation.
+Core → IR → Resolved IR (P1-6/7)
 """
 
 from pathlib import Path
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 try:
     import yaml
@@ -23,63 +22,129 @@ def load_yaml(path: Path) -> Any:
         return yaml.safe_load(f)
 
 @dataclass
-class IR:
+class ResolvedService:
+    id: str
+    name_zh: str
+    name_en: str
+    type: str
+    proxy_options: List[str]
+    proxy_default: str
+    dns_policy_id: str
+    dns_default_resolver: str
+    dns_options: List[str]
+    icon: str
+
+@dataclass
+class ResolvedIR:
+    """Fully resolved intermediate representation for renderers."""
     config_base: dict = field(default_factory=dict)
     config_runtime: dict = field(default_factory=dict)
-    dns_resolvers: dict = field(default_factory=dict)
-    dns_groups: list = field(default_factory=list)
-    dns_policies: list = field(default_factory=list)
-    proxy_base: list = field(default_factory=list)
-    proxy_service: list = field(default_factory=list)
-    priority: list = field(default_factory=list)
-    rules: list = field(default_factory=list)  # sorted by priority
+    # DNS resolved
+    resolvers: Dict[str, dict] = field(default_factory=dict)
+    dns_groups: Dict[str, dict] = field(default_factory=dict)
+    dns_policies: Dict[str, dict] = field(default_factory=dict)
+    # Proxy
+    base_groups: List[dict] = field(default_factory=list)
+    services: List[ResolvedService] = field(default_factory=list)
+    # Rules sorted by priority
+    rules: List[dict] = field(default_factory=list)
+    priority: List[dict] = field(default_factory=list)
+    # Lookup maps
+    id_to_display: Dict[str, str] = field(default_factory=dict)
 
-def build_ir() -> IR:
-    ir = IR()
+def _display_name(g: dict) -> str:
+    name = g.get("name", {})
+    if isinstance(name, dict):
+        return name.get("zh") or name.get("en") or g.get("id", "unknown")
+    return str(name)
 
-    # Config
+def build_ir() -> ResolvedIR:
+    ir = ResolvedIR()
+
     ir.config_base = load_yaml(CORE / "config" / "base.yaml") or {}
     ir.config_runtime = load_yaml(CORE / "config" / "runtime.yaml") or {}
 
-    # DNS
-    resolvers = load_yaml(CORE / "dns" / "resolvers.yaml") or {}
-    ir.dns_resolvers = resolvers.get("resolvers", {})
-    groups = load_yaml(CORE / "dns" / "groups.yaml") or {}
-    ir.dns_groups = groups.get("groups", [])
-    policies = load_yaml(CORE / "dns" / "policies.yaml") or {}
-    ir.dns_policies = policies.get("policies", [])
+    # DNS layers
+    resolvers_data = load_yaml(CORE / "dns" / "resolvers.yaml") or {}
+    ir.resolvers = resolvers_data.get("resolvers") or {}
 
-    # Proxy groups
+    groups_data = load_yaml(CORE / "dns" / "groups.yaml") or {}
+    for g in groups_data.get("groups") or []:
+        ir.dns_groups[g["id"]] = g
+
+    policies_data = load_yaml(CORE / "dns" / "policies.yaml") or {}
+    for p in policies_data.get("policies") or []:
+        ir.dns_policies[p["id"]] = p
+
+    # Base proxy groups
     base = load_yaml(CORE / "proxy-groups" / "base.yaml") or {}
-    ir.proxy_base = base.get("groups", [])
-    service = load_yaml(CORE / "proxy-groups" / "service.yaml") or {}
-    ir.proxy_service = service.get("groups", [])
+    ir.base_groups = base.get("groups") or []
+    for g in ir.base_groups:
+        ir.id_to_display[g["id"]] = _display_name(g)
+
+    # Special actions
+    ir.id_to_display["direct"] = "DIRECT"
+    ir.id_to_display["reject"] = "REJECT"
 
     # Priority
     prio = load_yaml(CORE / "rules" / "priority.yaml") or {}
-    ir.priority = sorted(prio.get("priority", []), key=lambda x: x.get("value", 999))
-
-    # Rules - load all service rule files and sort by priority map
+    ir.priority = sorted(prio.get("priority") or [], key=lambda x: x.get("value", 999))
     priority_map = {p["id"]: p.get("value", 999) for p in ir.priority}
-    group_map = {p["id"]: p.get("group", p["id"]) for p in ir.priority}
 
+    # Services resolved
+    service_data = load_yaml(CORE / "proxy-groups" / "service.yaml") or {}
+    for g in service_data.get("groups") or []:
+        sid = g["id"]
+        name = g.get("name") or {}
+        proxy_cfg = g.get("proxy") or {}
+        options = list(proxy_cfg.get("options") or [])
+        default = proxy_cfg.get("default") or (options[0] if options else "proxy-mode")
+        if default not in options and options:
+            default = options[0]
+
+        dns_policy_id = g.get("dns") or "dns-foreign"
+        policy = ir.dns_policies.get(dns_policy_id) or {}
+        dns_options = list(policy.get("options") or ["cloudflare"])
+        dns_default = policy.get("default") or (dns_options[0] if dns_options else "cloudflare")
+
+        rs = ResolvedService(
+            id=sid,
+            name_zh=name.get("zh", sid) if isinstance(name, dict) else str(name),
+            name_en=name.get("en", sid) if isinstance(name, dict) else str(name),
+            type=g.get("type", "select"),
+            proxy_options=options,
+            proxy_default=default,
+            dns_policy_id=dns_policy_id,
+            dns_default_resolver=dns_default,
+            dns_options=dns_options,
+            icon=g.get("icon", ""),
+        )
+        ir.services.append(rs)
+        ir.id_to_display[sid] = rs.name_zh
+
+    # Rules
     rules_dir = CORE / "rules" / "services"
     all_rules = []
     if rules_dir.exists():
         for f in rules_dir.glob("*.yaml"):
-            data = load_yaml(f)
-            if not data:
-                continue
+            data = load_yaml(f) or {}
             gid = data.get("group") or data.get("id", "").replace("service-", "")
             order = priority_map.get(gid, 500)
-            for r in data.get("rules", []):
+            for r in data.get("rules") or []:
+                r = dict(r)
                 r["_group"] = data.get("group", gid)
                 r["_priority"] = order
                 all_rules.append(r)
-
     ir.rules = sorted(all_rules, key=lambda x: x.get("_priority", 999))
     return ir
 
+# Backward compatible alias
+def build_raw_ir():
+    return build_ir()
+
 if __name__ == "__main__":
     ir = build_ir()
-    print(f"Loaded IR: {len(ir.proxy_base)} base groups, {len(ir.proxy_service)} service groups, {len(ir.rules)} rules")
+    print(f"Resolved IR: {len(ir.base_groups)} base, {len(ir.services)} services, {len(ir.rules)} rules")
+    print(f"DNS: {len(ir.resolvers)} resolvers, {len(ir.dns_policies)} policies")
+    for s in ir.services[:3]:
+        print(f"  {s.id}: proxy_default={s.proxy_default}, dns={s.dns_policy_id} -> {s.dns_default_resolver}")
