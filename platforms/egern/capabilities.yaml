@@ -7,7 +7,7 @@ features:
   script: true
   rewrite: true
   rule_provider: false
-  rule_set: false
+  rule_set: true
   proxy_provider: true
   process: true
   mitm: true
