@@ -1,52 +1,37 @@
-# DNS Groups / DNS 组
-# Reusable DNS groups composed from resolvers
-# 由 resolvers 组成的可复用 DNS 组
+# ============================================================
+# DNS Layer 2: Groups (composed from resolvers)
+# ============================================================
+# A group is an ordered list of resolver ids + optional default.
+# Policies reference groups; options in policies must be resolver ids.
 
 version: 1
 
 groups:
-  # Force system DNS (Apple push, local, etc.)
   - id: system
     name: { zh: 系统组, en: System Group }
     resolvers: [system]
-    description:
-      zh: 强制使用系统 DNS
-      en: Force system DNS
+    default: system
 
-  # China optimized
   - id: china
     name: { zh: 中国组, en: China Group }
     resolvers: [alidns, tencent, system]
     default: alidns
-    description:
-      zh: 国内域名优化，优先阿里/腾讯
-      en: Optimized for China domains
 
-  # Foreign / general
   - id: foreign
     name: { zh: 国外组, en: Foreign Group }
     resolvers: [cloudflare, google, alidns]
     default: cloudflare
-    description:
-      zh: 国外服务默认组
-      en: Default for foreign services
 
-  # Secure / privacy focused
   - id: secure
     name: { zh: 安全组, en: Secure Group }
     resolvers: [cloudflare, google]
     default: cloudflare
-    description:
-      zh: 偏重隐私与安全性的 DNS
-      en: Privacy & security focused
 
-  # Google preferred
   - id: google
     name: { zh: 谷歌组, en: Google Group }
     resolvers: [google, cloudflare]
     default: google
 
-  # Cloudflare preferred
   - id: cloudflare
     name: { zh: CF组, en: Cloudflare Group }
     resolvers: [cloudflare, google]
