@@ -72,7 +72,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.2
-          target_commitish: v1.0.2
+          target_commitish: ${{ github.sha }}
           files: dist/*
           generate_release_notes: true
           make_latest: true
