@@ -4,15 +4,6 @@ on:
   push:
     tags:
       - 'v*'
-    branches:
-      - 'release/v*'
-  pull_request:
-    types: [opened, synchronize]
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Release tag (e.g. v1.0.1)'
-        required: false
 
 permissions:
   contents: write
@@ -21,10 +12,15 @@ permissions:
 
 jobs:
   release:
-    if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref_name, 'release/v') || startsWith(github.head_ref, 'release/v')
+    # Formal release is tag-only. PRs/release branches must use the normal CI
+    # validation workflow and can never create or mutate a GitHub Release.
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -32,13 +28,7 @@ jobs:
         id: release_meta
         shell: bash
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            TAG="$GITHUB_REF_NAME"
-          elif [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then
-            TAG="${GITHUB_HEAD_REF#release/}"
-          else
-            TAG="${GITHUB_REF_NAME#release/}"
-          fi
+          TAG="$GITHUB_REF_NAME"
           if [[ "$TAG" != v* ]]; then
             echo "Invalid release tag: $TAG"
             exit 1
@@ -68,6 +58,8 @@ jobs:
         run: python scripts/build.py
       - name: Structural check
         run: python scripts/check_config.py
+      - name: Rule source health
+        run: python scripts/check_rule_sources.py
       - name: Pack configs
         env:
           RELEASE_TAG: ${{ steps.release_meta.outputs.tag }}
@@ -96,7 +88,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.release_meta.outputs.tag }}
-          target_commitish: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          target_commitish: ${{ github.sha }}
           files: dist/*
           generate_release_notes: true
           make_latest: true

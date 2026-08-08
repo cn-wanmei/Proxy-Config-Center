@@ -1,4 +1,4 @@
-# Release v1.0.1 / 发布规范
+# Release v1.0.2 / 发布规范
 
 ## 正式发布模型
 
@@ -6,10 +6,31 @@
 
 ```text
 Core → Validate → Reference → Capability → Golden
-     → Renderer → Build → Structural Check
+     → Renderer → Build → Structural Check → Rule Source Health
      → Six independent assets + ZIP archive
      → GitHub Release + Attestation
 ```
+
+## 正式 Release 触发边界
+
+正式 Release Workflow **只接受 `v*` Git tag push**：
+
+```text
+Pull Request       → 普通 CI 验证，不创建 Release
+release/* branch   → 普通 CI 验证，不创建 Release
+main push          → 普通 CI 验证，不创建 Release
+v1.0.2 tag         → Release Workflow → Build → Release
+```
+
+Release Job 会从触发它的 tag commit checkout，并首先验证：
+
+```text
+Tag vX.Y.Z
+    ==
+VERSION X.Y.Z
+```
+
+版本不一致时立即 Fail-fast，后续 Build / Pack / Release 全部停止。
 
 ## Release 产物
 
@@ -59,21 +80,23 @@ https://github.com/cn-wanmei/Proxy-Config-Center/releases/latest/download/loon.c
 https://github.com/cn-wanmei/Proxy-Config-Center/releases/latest/download/shadowrocket.conf
 ```
 
-## 正常发布
+## 外部资源更新周期
 
-具备 Git Tag 写权限时：
+规则源和远程节点订阅默认统一采用 **7 天（604800 秒）**刷新周期。
 
-```bash
-bash scripts/release.sh X.Y.Z
-```
+- Rule Set / Rule Provider：7 天
+- Clash / Stash 等远程 Proxy Provider：7 天
+- Egern policy group 外部订阅：7 天
+- 客户端自身的节点测速/健康检查仍由客户端能力模型独立控制，不与资源下载周期混用
 
-脚本会完成校验、构建、提交 `VERSION` 并推送 `vX.Y.Z`；Release workflow 随 tag 自动运行。
+## 客户端规则能力
 
-## 无 Tag 写权限时
-
-仓库提供受控的 `release/vX.Y.Z` 发布分支作为 bootstrap 入口。该分支由维护者/自动化创建，Release workflow 从发布分支构建并创建对应 `vX.Y.Z` Release，Release tag 指向发布分支实际提交；发布完成后再将发布分支合并回 `main`。
-
-该机制只用于解决 GitHub App 无法创建 Tag 的权限限制，不改变正常的 Tag 发布模型。
+- Core 统一生成节点组与策略组语义。
+- Clash Meta / Stash 使用原生 `icon` 字段。
+- Egern 使用 policy group 原生 `icon`。
+- Loon 使用 Proxy Group 原生 `img-url`。
+- Shadowrocket 使用 Proxy Group 原生 `icon-url`。
+- 不支持某能力的平台由 Capability 显式关闭，禁止静默输出无效字段。
 
 ## 版本规则
 
@@ -82,4 +105,4 @@ bash scripts/release.sh X.Y.Z
 - Tag 版本必须与 `VERSION` 一致
 - Release 不直接接受手工修改的生成配置
 - 独立文件与 ZIP 必须来自同一次 CI Build
-- Release Artifact 必须经过结构检查与 Attestation
+- Release Artifact 必须经过结构检查、Rule Source Health 与 Attestation

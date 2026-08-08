@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capability regression — complete rule capability matrix + renderer emission."""
+"""Capability regression — complete rule matrix + client group/icon emission."""
 
 import importlib.util
 import itertools
@@ -12,11 +12,13 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from engines.capability import (
     REQUIRED_PLATFORMS,
     feature_supported,
+    supports,
     supports_domain_fallback,
     supports_rule_provider,
     supports_rule_set,
     validate_capabilities,
 )
+from engines.rules_emit import EXTERNAL_RESOURCE_INTERVAL
 from ir import build_ir
 
 
@@ -57,8 +59,6 @@ def test_real_platform_matrix():
         "loon": (True, True, True),
         "shadowrocket": (False, False, True),
     }
-    # Compare sets/order independently: capability data must not be coupled to
-    # filesystem enumeration or the order of REQUIRED_PLATFORMS.
     assert set(REQUIRED_PLATFORMS) == set(expected)
     for name in REQUIRED_PLATFORMS:
         want = expected[name]
@@ -78,11 +78,37 @@ def test_ir_platform_flags():
     print("✅ IR capability flags OK")
 
 
+def test_client_group_icon_capabilities():
+    assert supports("clash-meta", "icons") is True
+    assert supports("stash", "icons") is True
+    assert supports("egern", "icons") is True
+    assert supports("loon", "icons") is True
+    assert supports("shadowrocket", "icons") is True
+    assert supports("clash", "icons") is False
+
+    egern = _render("egern")
+    egern_groups = egern.get("policy_groups") or []
+    assert any("icon" in group.get("select", {}) for group in egern_groups)
+
+    loon = _render("loon")
+    assert "img-url =" in loon
+
+    shadowrocket = _render("shadowrocket")
+    assert "icon-url=" in shadowrocket
+    print("✅ client policy-group icon emission OK")
+
+
+def test_external_resource_interval():
+    assert EXTERNAL_RESOURCE_INTERVAL == 604800
+    print("✅ external resource refresh interval = 7 days")
+
+
 def test_clash_meta_rule_set():
     cfg = _render("clash-meta")
     rules = [str(r) for r in cfg.get("rules") or []]
     assert any(r.startswith("RULE-SET,") for r in rules)
     assert cfg.get("rule-providers")
+    assert all(p.get("interval") == EXTERNAL_RESOURCE_INTERVAL for p in cfg["rule-providers"].values())
     assert not any(r.startswith("GEOSITE,") for r in rules)
     print("✅ clash-meta remote rule emission OK")
 
@@ -91,7 +117,10 @@ def test_egern_native_rule_set():
     cfg = _render("egern")
     rules = cfg.get("rules") or []
     assert len([r for r in rules if "rule_set" in r]) >= 10
-    print("✅ egern native rule_set emission OK")
+    groups = cfg.get("policy_groups") or []
+    assert groups
+    assert all("select" in g for g in groups)
+    print("✅ egern native rule_set + policy group emission OK")
 
 
 def test_shadowrocket_domain_fallback():
@@ -106,6 +135,8 @@ if __name__ == "__main__":
     test_capability_truth_table()
     test_real_platform_matrix()
     test_ir_platform_flags()
+    test_client_group_icon_capabilities()
+    test_external_resource_interval()
     test_clash_meta_rule_set()
     test_egern_native_rule_set()
     test_shadowrocket_domain_fallback()

@@ -13,6 +13,7 @@ features:
   process: true
   mitm: true
   module: true
+  icons: true
 
 limitations:
   rule_provider: false

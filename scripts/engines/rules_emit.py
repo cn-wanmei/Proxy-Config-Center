@@ -3,6 +3,10 @@
 
 from typing import Any, Dict, List, Tuple
 
+# External rule resources are intentionally refreshed weekly. This keeps release
+# output deterministic while avoiding daily upstream churn.
+EXTERNAL_RESOURCE_INTERVAL = 7 * 24 * 60 * 60
+
 
 def _target(rs, id_to_display: Dict[str, str]) -> str:
     return id_to_display.get(rs.target_service, rs.target_service)
@@ -41,7 +45,7 @@ def emit_clash_style(ir: Any, id_to_display: Dict[str, str], use_rule_set: bool)
                     "behavior": bm.behavior or "classical",
                     "url": bm.url,
                     "path": f"./ruleset/{bm.key}.yaml",
-                    "interval": 86400,
+                    "interval": EXTERNAL_RESOURCE_INTERVAL,
                 }
                 rules.append(f"RULE-SET,{bm.key},{target}")
             continue
