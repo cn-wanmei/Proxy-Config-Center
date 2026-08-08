@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Egern Renderer — no empty proxy_providers."""
+"""Egern Renderer — IR.rule_sources only."""
 
 import sys
 from pathlib import Path
@@ -9,13 +9,11 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 try:
-    from engines.proxies import load_providers, enabled_subscriptions, enabled_nodes
+    from engines.proxies import load_providers, enabled_subscriptions
 except Exception:
     def load_providers():
         return {}
     def enabled_subscriptions(data=None):
-        return []
-    def enabled_nodes(data=None):
         return []
 
 
@@ -60,60 +58,35 @@ def render(ir: Any) -> dict:
         })
 
     for s in getattr(ir, "services", []) or []:
-        if hasattr(s, "id"):
-            sid, name_zh = s.id, s.name_zh
-            options, default = s.proxy_options, s.proxy_default
-        else:
-            sid = s["id"]
-            name = s.get("name", {})
-            name_zh = name.get("zh", sid) if isinstance(name, dict) else str(name)
-            proxy_cfg = s.get("proxy") or {}
-            options = proxy_cfg.get("options") or []
-            default = proxy_cfg.get("default")
-
-        id_to_display[sid] = name_zh
-        policies = [_resolve(str(o), id_to_display) for o in options]
-        if default:
-            dname = _resolve(default, id_to_display)
-            if dname in policies:
-                policies = [dname] + [p for p in policies if p != dname]
-
+        id_to_display[s.id] = s.name_zh
+        policies = [_resolve(str(o), id_to_display) for o in s.proxy_options]
+        dname = _resolve(s.proxy_default, id_to_display)
+        if dname in policies:
+            policies = [dname] + [p for p in policies if p != dname]
         policy_groups.append({
             "select": {
-                "name": name_zh,
+                "name": s.name_zh,
                 "policies": policies or ["DIRECT"],
                 "flatten": True,
             }
         })
 
+    # Rules from IR.rule_sources: geosite→domain_suffix, geoip, domain, default
     rules: List[dict] = []
-    for r in getattr(ir, "rules", []) or []:
-        target = id_to_display.get(r.get("_group"), r.get("_group", "其它连接"))
-        rtype = r.get("type", "")
-        values = r.get("values") or []
-        if rtype == "domain-suffix":
-            for v in values:
-                rules.append({"domain_suffix": {"match": v, "policy": target}})
-        elif rtype == "domain-keyword":
-            for v in values:
-                rules.append({"domain_keyword": {"match": v, "policy": target}})
-        elif rtype == "geosite":
-            for v in values:
-                rules.append({"domain_suffix": {"match": v, "policy": target}})
-        elif rtype == "geoip":
-            for v in values:
-                rules.append({
-                    "geoip": {
-                        "match": v,
-                        "policy": target,
-                        "no_resolve": bool(r.get("no_resolve", False)),
-                    }
-                })
-        elif rtype == "match":
-            rules.append({"default": {"policy": target}})
+    for rs in getattr(ir, "rule_sources", []) or []:
+        if rs.is_match:
+            continue
+        target = id_to_display.get(rs.target_service, rs.target_service)
+        for gs in rs.geosite:
+            rules.append({"domain_suffix": {"match": gs, "policy": target}})
+        for gi in rs.geoip:
+            rules.append({"geoip": {"match": gi, "policy": target, "no_resolve": True}})
+        for d in rs.domain_suffix:
+            rules.append({"domain_suffix": {"match": d, "policy": target}})
+        for d in rs.domain_keyword:
+            rules.append({"domain_keyword": {"match": d, "policy": target}})
 
-    if not any("default" in x for x in rules):
-        rules.append({"default": {"policy": id_to_display.get("final", "其它连接")}})
+    rules.append({"default": {"policy": id_to_display.get("final", "其它连接")}})
 
     resolvers = getattr(ir, "resolvers", {}) or {}
     dns_upstreams = {}
@@ -131,16 +104,11 @@ def render(ir: Any) -> dict:
         "rules": rules,
     }
 
-    # 仅真实订阅才写入
     subs = []
     for s in enabled_subscriptions(pdata):
         name = s.get("name", {})
         n = name.get("zh") if isinstance(name, dict) else str(name)
-        subs.append({
-            "name": n or s.get("id"),
-            "url": s.get("url"),
-            "udp_relay": True,
-        })
+        subs.append({"name": n or s.get("id"), "url": s.get("url"), "udp_relay": True})
     if subs:
         config["proxy_providers"] = subs
 
