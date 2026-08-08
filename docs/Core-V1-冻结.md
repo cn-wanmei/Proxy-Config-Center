@@ -2,46 +2,48 @@
 
 ## 中文
 
-**冻结日期：** 2026-08-08
+**冻结日期：** 2026-08-08  
+**正式版本：** v1.0.0
 
-### 已冻结内容（不得随意破坏兼容性）
+Core V1 是稳定版本的语义契约。允许向后兼容的增量扩展；破坏性变更必须进入 Core V2。
+
+### 已冻结内容
 
 1. **DNS 三层模型**
-   - `core/dns/resolvers.yaml` — Layer 1
-   - `core/dns/groups.yaml` — Layer 2
-   - `core/dns/policies.yaml` — Layer 3
-
+   - `core/dns/resolvers.yaml`
+   - `core/dns/groups.yaml`
+   - `core/dns/policies.yaml`
 2. **策略组语义**
    - `core/proxy-groups/base.yaml`
-   - `core/proxy-groups/service.yaml`（`proxy` + `dns` 双绑定）
-
+   - `core/proxy-groups/service.yaml`
 3. **规则优先级**
-   - `core/rules/priority.yaml` 为唯一优先级来源
-
-4. **ID 规范**
+   - `core/rules/priority.yaml` 是唯一优先级来源
+4. **ID / Reference 契约**
    - kebab-case
-   - DNS policy 必须以 `dns-` 开头
-   - `ref` / `action` 引用方式
-
+   - DNS policy 使用 `dns-` 前缀
+   - `ref` / `action` 引用
 5. **IR 契约**
-   - `scripts/ir.py` 产出的 `ResolvedIR` / `ResolvedService` 字段
+   - `ResolvedIR` / `ResolvedService` 的稳定字段语义
+6. **平台解耦**
+   - Core 不写平台名称分支
+   - 平台差异通过 capability + adapter 表达
 
 ### 允许变更
-- 新增 service / rule / resolver（向后兼容）
-- 完善 Renderer 细节
-- 增加平台适配
 
-### 禁止变更（需升 V2）
-- 删除或重命名已有 service id / dns policy id
-- 改变 priority 数字含义
-- 破坏 ResolvedService 字段结构
+- 新增 service / rule / resolver
+- 完善 Renderer
+- 增加新的 adapter + capability
+- 增加验证、测试和发布能力
+
+### 必须升 V2 的变更
+
+- 删除或重命名已有核心 ID
+- 改变已有 priority 的业务含义
+- 破坏 Resolved IR 稳定字段
+- 让 Core 重新依赖具体平台语法
 
 ---
 
 ## English
 
-**Freeze date:** 2026-08-08
-
-Core V1 locks the DNS three-layer model, strategy group semantics, priority as single source of truth, ID conventions, and Resolved IR contract.
-
-Additive changes are allowed. Breaking changes require Core V2.
+Core V1 is the stable semantic contract shipped as v1.0.0. Backward-compatible additions are allowed; breaking semantic or IR changes require Core V2.

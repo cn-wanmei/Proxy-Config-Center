@@ -1,26 +1,40 @@
 # v1.0.0 Release Status
 
-**Code & configs: READY**  
-**Git tag `v1.0.0`: NOT YET PUSHED** (GitHub App has no create-tag permission)
+**目标：首个正式稳定版本 / First Stable Release**
 
-## Daddy, run this once:
+## 发布链
 
-```bash
-cd Proxy-Config-Center
-git pull origin main
-bash scripts/release.sh 1.0.0
+```text
+release/v1.0.0
+    ↓
+GitHub Actions
+    ↓
+Validate → Tests → Build → Structural Check
+    ↓
+Six-platform ZIP Artifact
+    ↓
+GitHub Release v1.0.0
 ```
 
-Or only the tag:
+正式 Release 包含：
 
-```bash
-git pull origin main
-git tag v1.0.0
-git push origin v1.0.0
-```
+- Clash Meta
+- Clash
+- Stash
+- Egern
+- Loon
+- Shadowrocket
 
-After the tag is pushed, Actions will publish the GitHub Release automatically.
+## 发布原则
 
-## Verified locally
-- validate / semantic / golden / build / check_config — all passed
-- 6 platform outputs generated
+- `main` 不长期保存生成配置
+- Release Artifact 是六端正式配置的交付来源
+- Release 必须由同一套 CI 构建链生成
+- 版本号以根目录 `VERSION` 为唯一来源
+- 发布产物生成后通过 Artifact Attestation 保护来源与完整性
+
+## v1.0.0
+
+代码基线：Core V1 + P0–P3 工程化升级。
+
+六端构建、Golden Snapshot、Capability、Reference、Semantic、Structural Check 已通过。

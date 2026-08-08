@@ -2,32 +2,40 @@
 
 ## 中文
 
-- 补全规则：游戏平台、抖音国际、绅士漫画等
-- 图标：接入 ClashTools 高清图标 CDN（22 个策略组图标）
-- 全平台配置已生成：Clash Meta / Clash / Stash / Egern / Loon / Shadowrocket
-- DNS nameserver-policy：苹果→系统、中国→阿里、谷歌→Google DNS 等
-- 节点仍由 Sub-Store 管理
+首个正式稳定版本。
+
+- 六平台最终配置：Clash Meta / Clash / Stash / Egern / Loon / Shadowrocket
+- Core V1 DNS 三层模型与统一策略组
+- 完整分流规则：广告、中国、Apple、AI、Google、YouTube、Spotify、Telegram、Twitter、Netflix、TikTok、游戏、E-Hentai 等
+- 六端 Golden Snapshot、Capability Matrix、Reference Validator
+- Rule-source 健康检查、缓存与可选 SHA-256 完整性校验
+- CI 从 Core 构建并发布六端 Artifact / Release
+- 节点仍由 Sub-Store 独立管理
 
 ## English
 
-- Complete rules for game / tiktok / ehentai and more
-- Icons from ClashTools CDN
-- All 6 platform configs generated
-- DNS policy mapping included
-- Nodes via Sub-Store only
+First stable release.
 
-## Download
+- Final configurations for Clash Meta / Clash / Stash / Egern / Loon / Shadowrocket
+- Core V1 DNS model and unified strategy groups
+- Complete routing rules for ads, China, Apple, AI, Google, YouTube, Spotify, Telegram, Twitter, Netflix, TikTok, games, E-Hentai and more
+- Full six-platform Golden Snapshot, capability matrix and reference validation
+- Rule-source health checks, cache and optional SHA-256 integrity pins
+- CI builds and distributes six-platform artifacts/releases from Core
+- Nodes remain managed independently by Sub-Store
 
-Run CI or:
-```bash
-python scripts/build.py
+## Release Artifact
+
+The official release archive contains:
+
+```text
+configs/
+├── clash-meta/config.yaml
+├── clash/config.yaml
+├── stash/config.yaml
+├── egern/config.yaml
+├── loon/config.conf
+└── shadowrocket/config.conf
 ```
 
-Configs under `build/`.
-
-## Tag
-
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
+Generated configs are not maintained as source files on `main`.

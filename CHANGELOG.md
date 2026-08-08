@@ -1,32 +1,35 @@
 # Changelog
 
-## [Unreleased]
+## [1.0.0] - 2026-08-09
+
+首个正式稳定版本 / First Stable Release。
 
 ### Added
-- Strict capability schema and complete rule capability matrix
-- Cross-file reference graph validation and rule priority constraints
-- Full generated-config golden snapshot fingerprints
-- Cached rule-source health checks with optional SHA-256 integrity pins
-- Large Core/platform diff safety gate
-- Version validation and release artifact attestation
+- Core V1：DNS 三层模型、统一策略组、规则优先级
+- Strict capability schema 与完整 capability matrix
+- Cross-file reference graph validation
+- `rule_set` / `rule_provider` / `domain_fallback` 独立能力模型
+- 六平台完整 Golden Snapshot
+- Rule-source health check、缓存与可选 SHA-256 integrity pin
+- Rule priority constraints 与 CI large-diff safety gate
+- 六端构建 Artifact、版本校验与 Release Artifact Attestation
+- GitHub Release 自动生成六端配置压缩包
 
 ### Changed
-- Capability resolution is fail-fast; missing profiles and dependency failures no longer silently degrade builds
-- `rule_set`, `rule_provider`, and `domain_fallback` are modeled independently
-- Generated `build/` and `final/` configuration files are no longer auto-committed by CI
-- Releases build fresh artifacts from source and generate GitHub release notes automatically
+- capability engine 改为 fail-fast，不再静默降级
+- Core → IR → Adapter 架构保持平台无关
+- 生成的 `build/` / `final/` 不再由 CI 自动提交到 `main`
+- 发布产物统一由 CI 从源码重新构建
 
-## [1.0.0] - 2026-08-08
-
-### Added
-- Core V1: DNS three-layer model, unified strategy groups, rule priority
-- Rule Engine / DNS Engine / Proxy Policy V1
-- Full rules: ads, China, Apple, AI, Google, YouTube, Spotify, Telegram, Twitter, Netflix, TikTok, Game, E-Hentai
-- Icons via ClashTools CDN
-- Renderers: Clash Meta, Clash, Stash, Egern, Loon, Shadowrocket
-- CI: validate, semantic/golden tests, build, artifact
-- Release workflow on tag `v*`
+### Platforms
+- Clash Meta
+- Clash
+- Stash
+- Egern
+- Loon
+- Shadowrocket
 
 ### Notes
-- Nodes managed by Sub-Store only
-- Configs are generated from Core; CI artifacts and releases are the distribution mechanism
+- 节点由 Sub-Store 独立管理
+- 规则与策略由 Core 统一维护
+- Release Artifact 是正式六端配置的交付来源
