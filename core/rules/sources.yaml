@@ -1,240 +1,52 @@
-# 分流源：blackmatrix7 为主；domain_suffix 供不支持 rule-set 的平台 fallback
-# Shadowrocket 及其他不支持 rule-set 的平台仅依赖 domain_suffix
-# 更新说明：补全各服务关键 domain_suffix，提升非 Clash 平台分流覆盖率
 version: 2
 engine: blackmatrix7
-
 blackmatrix7_base: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash"
-
 sources:
   ad-block:
-    blackmatrix7:
-      path: AdvertisingLite/AdvertisingLite.yaml
-      behavior: classical
-    domain_suffix:
-      - doubleclick.net
-      - googlesyndication.com
-      - googletagmanager.com
-      - googleadservices.com
-      - adservice.google.com
-      - pagead.googlesyndication.com
-
+    blackmatrix7: {path: AdvertisingLite/AdvertisingLite.yaml, behavior: classical}
+    domain_suffix: [doubleclick.net, googlesyndication.com, googletagmanager.com, googleadservices.com, adservice.google.com, pagead.googlesyndication.com]
   china:
-    blackmatrix7:
-      path: China/China.yaml
-      behavior: classical
+    blackmatrix7: {path: China/China.yaml, behavior: classical}
     blackmatrix7_extra:
-      - path: ChinaIPs/ChinaIPs.list
-        behavior: ipcidr
-    domain_suffix:
-      - cn
-      - baidu.com
-      - qq.com
-      - aliyun.com
-      - taobao.com
-      - bilibili.com
-      - weixin.qq.com
-      - wechat.com
-      - jd.com
-      - 163.com
-      - 126.com
-      - weibo.com
-      - zhihu.com
-      - douyin.com
-      - iqiyi.com
-      - youku.com
-      - meituan.com
-      - dianping.com
-      - ctrip.com
-      - pinduoduo.com
-
+      - {path: ChinaIPs/ChinaIPs.list, behavior: ipcidr}
+    domain_suffix: [cn, baidu.com, qq.com, aliyun.com, taobao.com, bilibili.com, weixin.qq.com, wechat.com, jd.com, 163.com, 126.com, weibo.com, zhihu.com, douyin.com, iqiyi.com, youku.com, meituan.com, dianping.com, ctrip.com, pinduoduo.com]
   apple:
-    blackmatrix7:
-      path: Apple/Apple.yaml
-      behavior: classical
-    domain_suffix:
-      - apple.com
-      - icloud.com
-      - icloud-content.com
-      - mzstatic.com
-      - cdn-apple.com
-      - aaplimg.com
-      - apple-dns.net
-      - apple.news
-      - apple.co
-
+    blackmatrix7: {path: Apple/Apple.yaml, behavior: classical}
+    domain_suffix: [apple.com, icloud.com, icloud-content.com, mzstatic.com, cdn-apple.com, aaplimg.com, apple-dns.net, apple.news, apple.co]
   code-repo:
-    blackmatrix7:
-      path: GitHub/GitHub.yaml
-      behavior: classical
-    domain_suffix:
-      - github.com
-      - githubusercontent.com
-      - githubassets.com
-      - gitlab.com
-      - github.io
-      - github.dev
-      - githubcopilot.com
-      - githubapp.com
-      - githubstatus.com
-      - ghcr.io
-      - git.io
-      - npmjs.com
-      - npmjs.org
-      - nuget.org
-      - atom.io
-
+    blackmatrix7: {path: GitHub/GitHub.yaml, behavior: classical}
+    domain_suffix: [github.com, githubusercontent.com, githubassets.com, gitlab.com, github.io, github.dev, githubcopilot.com, githubapp.com, githubstatus.com, ghcr.io, git.io, npmjs.com, npmjs.org, nuget.org, atom.io]
   microsoft:
-    blackmatrix7:
-      path: Microsoft/Microsoft.yaml
-      behavior: classical
-    domain_suffix:
-      - microsoft.com
-      - live.com
-      - office.com
-      - office365.com
-      - onedrive.com
-      - outlook.com
-      - hotmail.com
-      - bing.com
-      - azure.com
-      - azure.net
-      - azurewebsites.net
-      - skype.com
-      - skypeassets.com
-      - xbox.com
-      - xboxlive.com
-      - aka.ms
-      - msedge.net
-      - msecnd.net
-      - sharepoint.com
-      - visualstudio.com
-      - vscode.dev
-      - minecraft.net
-      - mojang.com
-      - microsoftonline.com
-      - windows.net
-      - windowsupdate.com
-      - msftauth.net
-      - msauth.net
-      - msn.com
-
+    blackmatrix7: {path: Microsoft/Microsoft.yaml, behavior: classical}
+    domain_suffix: [microsoft.com, live.com, office.com, office365.com, onedrive.com, outlook.com, hotmail.com, bing.com, azure.com, azure.net, azurewebsites.net, skype.com, skypeassets.com, xbox.com, xboxlive.com, aka.ms, msedge.net, msecnd.net, sharepoint.com, visualstudio.com, vscode.dev, minecraft.net, mojang.com, microsoftonline.com, windows.net, windowsupdate.com, msftauth.net, msauth.net, msn.com]
   google:
-    blackmatrix7:
-      path: Google/Google.yaml
-      behavior: classical
-    domain_suffix:
-      - google.com
-      - googleapis.com
-      - gstatic.com
-      - googleusercontent.com
-      - gmail.com
-      - googlevideo.com
-      - ggpht.com
-      - gvt1.com
-      - gvt2.com
-      - recaptcha.net
-      - g.co
-      - appspot.com
-      - firebaseio.com
-      - firebaseapp.com
-      - withgoogle.com
-      - googledrive.com
-      - googlemail.com
-
+    blackmatrix7: {path: Google/Google.yaml, behavior: classical}
+    domain_suffix: [google.com, googleapis.com, gstatic.com, googleusercontent.com, gmail.com, googlevideo.com, ggpht.com, gvt1.com, gvt2.com, recaptcha.net, g.co, appspot.com, firebaseio.com, firebaseapp.com, withgoogle.com, googledrive.com, googlemail.com]
   youtube:
-    blackmatrix7:
-      path: YouTube/YouTube.yaml
-      behavior: classical
-    domain_suffix:
-      - youtube.com
-      - youtu.be
-      - googlevideo.com
-      - ytimg.com
-      - youtube-nocookie.com
-      - yt.be
-      - youtubekids.com
-      - youtubegaming.com
-      - ggpht.com
-
+    blackmatrix7: {path: YouTube/YouTube.yaml, behavior: classical}
+    domain_suffix: [youtube.com, youtu.be, googlevideo.com, ytimg.com, youtube-nocookie.com, yt.be, youtubekids.com, youtubegaming.com, ggpht.com]
   spotify:
-    blackmatrix7:
-      path: Spotify/Spotify.yaml
-      behavior: classical
-    domain_suffix:
-      - spotify.com
-      - scdn.co
-      - spotifycdn.com
-      - spoti.fi
-      - spotifycdn.net
-      - byspotify.com
-      - pscdn.co
-      - spotifycharts.com
-      - spotifyjobs.com
-
+    blackmatrix7: {path: Spotify/Spotify.yaml, behavior: classical}
+    domain_suffix: [spotify.com, scdn.co, spotifycdn.com, spoti.fi, spotifycdn.net, byspotify.com, pscdn.co, spotifycharts.com, spotifyjobs.com]
   telegram:
-    blackmatrix7:
-      path: Telegram/Telegram.yaml
-      behavior: classical
-    domain_suffix:
-      - telegram.org
-      - t.me
-      - tdesktop.com
-      - telegra.ph
-      - telegram.me
-      - cdn-telegram.org
-      - graph.org
-      - tg.dev
-      - tx.me
-      - telesco.pe
-      - telegram.space
-      - telegram-cdn.org
-
+    blackmatrix7: {path: Telegram/Telegram.yaml, behavior: classical}
+    domain_suffix: [telegram.org, t.me, tdesktop.com, telegra.ph, telegram.me, cdn-telegram.org, graph.org, tg.dev, tx.me, telesco.pe, telegram.space, telegram-cdn.org]
   twitter:
-    blackmatrix7:
-      path: Twitter/Twitter.yaml
-      behavior: classical
-    domain_suffix:
-      - twitter.com
-      - x.com
-      - twimg.com
-      - t.co
-      - twimg.co
-      - tweetdeck.com
-      - grok.com
-      - vine.co
-      - periscope.tv
-      - pscp.tv
-
+    blackmatrix7: {path: Twitter/Twitter.yaml, behavior: classical}
+    domain_suffix: [twitter.com, x.com, twimg.com, t.co, twimg.co, tweetdeck.com, grok.com, vine.co, periscope.tv, pscp.tv]
   netflix:
-    blackmatrix7:
-      path: Netflix/Netflix.yaml
-      behavior: classical
-    domain_suffix:
-      - netflix.com
-      - nflxvideo.net
-      - nflxso.net
-      - nflximg.net
-      - fast.com
-      - nflxext.com
-      - nflximg.com
-      - netflix.net
-      - netflixtechblog.com
-
+    blackmatrix7: {path: Netflix/Netflix.yaml, behavior: classical}
+    domain_suffix: [netflix.com, nflxvideo.net, nflxso.net, nflximg.net, fast.com, nflxext.com, nflximg.com, netflix.net, netflixtechblog.com]
   tiktok:
-    blackmatrix7:
-      path: TikTok/TikTok.yaml
-      behavior: classical
-    domain_suffix:
-      - tiktok.com
-      - tiktokv.com
-      - musical.ly
-      - byteoversea.com
-      - tiktokcdn.com
-      - muscdn.com
-      - capcut.com
-      - snssdk.com
-      - tiktokmusic.app
-      - trae.ai
-      - marscode.com
-      - byteintlapi.com
+    blackmatrix7: {path: TikTok/TikTok.yaml, behavior: classical}
+    domain_suffix: [tiktok.com, tiktokv.com, musical.ly, byteoversea.com, tiktokcdn.com, muscdn.com, capcut.com, snssdk.com, tiktokmusic.app, trae.ai, marscode.com, byteintlapi.com]
+  game:
+    blackmatrix7: {path: Steam/Steam.yaml, behavior: classical}
+    domain_suffix: [steampowered.com, steamcommunity.com, steamgames.com, steamstatic.com, steam.tv, steamdeck.com, valvesoftware.com, s.team, steamstat.us, humblebundle.com, fanatical.com]
+  ai:
+    blackmatrix7: {path: OpenAI/OpenAI.yaml, behavior: classical}
+    domain_suffix: [openai.com, chatgpt.com, anthropic.com, claude.ai, oaistatic.com, oaiusercontent.com, ai.com, sentry.io, auth0.com, intercom.io, intercomcdn.com, stripe.com, launchdarkly.com]
+  ehentai:
+    domain_suffix: [e-hentai.org, exhentai.org, ehgt.org, hath.network]
+  final:
+    match: true
