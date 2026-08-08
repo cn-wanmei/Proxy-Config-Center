@@ -1,0 +1,10 @@
+# Base configuration / 基础配置
+# Platform-agnostic base settings (IPv6, TUN, logging, ports, etc.)
+# 平台无关的基础设置（IPv6、TUN、日志、端口等）
+
+version: 1
+
+settings:
+  ipv6: true
+  log_level: info
+  # More base settings will be filled later
