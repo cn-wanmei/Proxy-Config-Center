@@ -1,0 +1,249 @@
+# Service strategy groups / 分流策略组
+# Platform-agnostic semantic definition
+# 平台无关语义定义
+#
+# Rules:
+# - 中国连接 & 苹果服务: direct first
+# - Other groups: proxy-mode → manual-select → auto-select → direct → reject
+
+version: 1
+
+groups:
+  - id: ad-block
+    name:
+      zh: 广告拦截
+      en: Ad Block
+    type: select
+    options:
+      - action: reject
+      - ref: proxy-mode
+      - ref: manual-select
+      - action: direct
+    icon: ad-block
+    default: reject
+    priority: 1
+
+  - id: china
+    name:
+      zh: 中国连接
+      en: China
+    type: select
+    options:
+      - action: direct
+      - ref: proxy-mode
+      - ref: manual-select
+      - ref: auto-select
+      - action: reject
+    icon: china
+    default: direct
+    priority: 10
+
+  - id: code-repo
+    name:
+      zh: 代码仓库
+      en: Code Repository
+    type: select
+    options:
+      - ref: proxy-mode
+      - ref: manual-select
+      - ref: auto-select
+      - action: direct
+      - action: reject
+    icon: github
+    default: proxy-mode
+    priority: 20
+
+  - id: microsoft
+    name:
+      zh: 微软服务
+      en: Microsoft
+    type: select
+    options:
+      - ref: proxy-mode
+      - ref: manual-select
+      - ref: auto-select
+      - action: direct
+      - action: reject
+    icon: microsoft
+    default: proxy-mode
+    priority: 30
+
+  - id: game
+    name:
+      zh: 游戏平台
+      en: Gaming
+    type: select
+    options:
+      - ref: proxy-mode
+      - ref: manual-select
+      - ref: auto-select
+      - action: direct
+      - action: reject
+    icon: game
+    default: proxy-mode
+    priority: 40
+
+  - id: ai
+    name:
+      zh: 人工智能
+      en: Artificial Intelligence
+    type: select
+    options:
+      - ref: proxy-mode
+      - ref: manual-select
+      - ref: auto-select
+      - action: direct
+      - action: reject
+    icon: ai
+    default: proxy-mode
+    priority: 50
+
+  - id: google
+    name:
+      zh: 谷歌服务
+      en: Google
+    type: select
+    options:
+      - ref: proxy-mode
+      - ref: manual-select
+      - ref: auto-select
+      - action: direct
+      - action: reject
+    icon: google
+    default: proxy-mode
+    priority: 60
+
+  - id: youtube
+    name:
+      zh: 油管视频
+      en: YouTube
+    type: select
+    options:
+      - ref: proxy-mode
+      - ref: manual-select
+      - ref: auto-select
+      - action: direct
+      - action: reject
+    icon: youtube
+    default: proxy-mode
+    priority: 70
+
+  - id: spotify
+    name:
+      zh: 声破天乐
+      en: Spotify
+    type: select
+    options:
+      - ref: proxy-mode
+      - ref: manual-select
+      - ref: auto-select
+      - action: direct
+      - action: reject
+    icon: spotify
+    default: proxy-mode
+    priority: 80
+
+  - id: telegram
+    name:
+      zh: 电报通讯
+      en: Telegram
+    type: select
+    options:
+      - ref: proxy-mode
+      - ref: manual-select
+      - ref: auto-select
+      - action: direct
+      - action: reject
+    icon: telegram
+    default: proxy-mode
+    priority: 90
+
+  - id: twitter
+    name:
+      zh: 推特社交
+      en: Twitter / X
+    type: select
+    options:
+      - ref: proxy-mode
+      - ref: manual-select
+      - ref: auto-select
+      - action: direct
+      - action: reject
+    icon: twitter
+    default: proxy-mode
+    priority: 100
+
+  - id: netflix
+    name:
+      zh: 奈飞影视
+      en: Netflix
+    type: select
+    options:
+      - ref: proxy-mode
+      - ref: manual-select
+      - ref: auto-select
+      - action: direct
+      - action: reject
+    icon: netflix
+    default: proxy-mode
+    priority: 110
+
+  - id: tiktok
+    name:
+      zh: 抖音国际
+      en: TikTok
+    type: select
+    options:
+      - ref: proxy-mode
+      - ref: manual-select
+      - ref: auto-select
+      - action: direct
+      - action: reject
+    icon: tiktok
+    default: proxy-mode
+    priority: 120
+
+  - id: ehentai
+    name:
+      zh: 绅士漫画
+      en: E-Hentai
+    type: select
+    options:
+      - ref: proxy-mode
+      - ref: manual-select
+      - ref: auto-select
+      - action: direct
+      - action: reject
+    icon: ehentai
+    default: proxy-mode
+    priority: 130
+
+  - id: apple
+    name:
+      zh: 苹果服务
+      en: Apple
+    type: select
+    options:
+      - action: direct
+      - ref: proxy-mode
+      - ref: manual-select
+      - ref: auto-select
+      - action: reject
+    icon: apple
+    default: direct
+    priority: 140
+
+  - id: final
+    name:
+      zh: 其它连接
+      en: Final
+    type: select
+    options:
+      - ref: proxy-mode
+      - ref: manual-select
+      - ref: auto-select
+      - action: direct
+      - action: reject
+    icon: final
+    default: proxy-mode
+    priority: 999
