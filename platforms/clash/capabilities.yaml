@@ -8,6 +8,7 @@ features:
   script: false
   rewrite: false
   rule_provider: true
+  rule_set: true
   proxy_provider: true
   process: false
   sniffer: false
