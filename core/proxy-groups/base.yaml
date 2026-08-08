@@ -1,0 +1,63 @@
+# Base proxy groups / 基础策略组
+# Platform-agnostic semantic definition
+# 平台无关语义定义
+
+version: 1
+
+groups:
+  - id: proxy-mode
+    name:
+      zh: 代理模式
+      en: Proxy Mode
+    type: select
+    options:
+      - ref: manual-select
+      - ref: free-flow
+      - ref: auto-select
+      - action: direct
+      - action: reject
+    icon: proxy-mode
+    default: manual-select
+
+  - id: manual-select
+    name:
+      zh: 手动选择
+      en: Manual Select
+    type: select
+    include-all-nodes: true
+    icon: manual
+
+  - id: free-flow
+    name:
+      zh: 定向免流
+      en: Free Flow
+    type: select
+    include-all-nodes: true
+    filter: "(?i)免流"
+    icon: free-flow
+
+  - id: auto-select
+    name:
+      zh: 自动选择
+      en: Auto Select
+    type: url-test
+    include-all-nodes: true
+    icon: auto
+
+  - id: direct
+    name:
+      zh: 直连模式
+      en: Direct
+    type: select
+    options:
+      - action: direct
+    icon: direct
+
+  - id: reject
+    name:
+      zh: 阻断连接
+      en: Reject
+    type: select
+    options:
+      - action: reject
+    icon: reject
