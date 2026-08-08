@@ -1,0 +1,15 @@
+# Telegram service rules / 电报通讯规则
+version: 1
+id: service-telegram
+group: telegram
+priority: 90
+
+rules:
+  - type: geosite
+    values: [telegram]
+    action: group
+    target: telegram
+  - type: domain-suffix
+    values: [telegram.org, t.me, tdesktop.com, telegra.ph]
+    action: group
+    target: telegram
