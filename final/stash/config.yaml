@@ -1,0 +1,126 @@
+# AUTO-GENERATED from Core — DO NOT EDIT MANUALLY
+# Source: core/ | Build: scripts/build.py
+# 订阅/节点: 编辑 core/proxies/providers.yaml 后重新 build
+
+mixed-port: 7890
+allow-lan: true
+mode: rule
+log-level: info
+ipv6: true
+dns:
+  enable: true
+  ipv6: true
+  enhanced-mode: fake-ip
+  nameserver:
+  - https://cloudflare-dns.com/dns-query
+  - https://1.1.1.1/dns-query
+  nameserver-policy:
+    +.apple.com: system
+    +.icloud.com: system
+    +.cn:
+    - https://dns.alidns.com/dns-query
+proxy-providers:
+  机场订阅1:
+    type: http
+    url: YOUR_SUBSCRIBE_URL_1
+    interval: 86400
+    path: ./providers/airport-1.yaml
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 300
+proxies: []
+proxy-groups:
+- name: 代理模式
+  type: select
+  proxies: [手动选择, 定向免流, 自动选择, DIRECT, REJECT]
+- name: 手动选择
+  type: select
+  include-all-providers: true
+  use: [机场订阅1]
+- name: 定向免流
+  type: select
+  include-all-providers: true
+  use: [机场订阅1]
+  filter: (?i)免流
+- name: 自动选择
+  type: url-test
+  include-all-providers: true
+  use: [机场订阅1]
+  url: http://www.gstatic.com/generate_204
+  interval: 300
+- name: 直连模式
+  type: select
+  proxies: [DIRECT]
+- name: 阻断连接
+  type: select
+  proxies: [REJECT]
+- name: 广告拦截
+  type: select
+  proxies: [REJECT, 代理模式, 手动选择, DIRECT]
+- name: 中国连接
+  type: select
+  proxies: [DIRECT, 代理模式, 手动选择, 自动选择, REJECT]
+- name: 代码仓库
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+- name: 微软服务
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+- name: 游戏平台
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+- name: 人工智能
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+- name: 谷歌服务
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+- name: 油管视频
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+- name: 声破天乐
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+- name: 电报通讯
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+- name: 推特社交
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+- name: 奈飞影视
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+- name: 抖音国际
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+- name: 绅士漫画
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+- name: 苹果服务
+  type: select
+  proxies: [DIRECT, 代理模式, 手动选择, 自动选择, REJECT]
+- name: 其它连接
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+rules:
+- DOMAIN-SUFFIX,apple.com,苹果服务
+- DOMAIN-SUFFIX,icloud.com,苹果服务
+- DOMAIN-SUFFIX,cn,中国连接
+- GEOIP,CN,中国连接
+- DOMAIN-SUFFIX,openai.com,人工智能
+- DOMAIN-SUFFIX,chatgpt.com,人工智能
+- DOMAIN-SUFFIX,google.com,谷歌服务
+- DOMAIN-SUFFIX,youtube.com,油管视频
+- DOMAIN-SUFFIX,spotify.com,声破天乐
+- DOMAIN-SUFFIX,telegram.org,电报通讯
+- DOMAIN-SUFFIX,twitter.com,推特社交
+- DOMAIN-SUFFIX,x.com,推特社交
+- DOMAIN-SUFFIX,netflix.com,奈飞影视
+- DOMAIN-SUFFIX,tiktok.com,抖音国际
+- DOMAIN-SUFFIX,github.com,代码仓库
+- DOMAIN-SUFFIX,microsoft.com,微软服务
+- DOMAIN-SUFFIX,steampowered.com,游戏平台
+- DOMAIN-SUFFIX,e-hentai.org,绅士漫画
+- DOMAIN-SUFFIX,exhentai.org,绅士漫画
+- MATCH,其它连接

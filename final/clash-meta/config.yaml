@@ -1,0 +1,198 @@
+# AUTO-GENERATED from Core — DO NOT EDIT MANUALLY
+# Source: core/ | Build: scripts/build.py
+# 订阅/节点: 编辑 core/proxies/providers.yaml 后重新 build
+
+mixed-port: 7890
+allow-lan: true
+mode: rule
+log-level: info
+ipv6: true
+dns:
+  enable: true
+  ipv6: true
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  nameserver:
+  - https://cloudflare-dns.com/dns-query
+  - https://1.1.1.1/dns-query
+  nameserver-policy:
+    +.apple.com: system
+    +.icloud.com: system
+    +.push.apple.com: system
+    +.mzstatic.com: system
+    +.cn:
+    - https://dns.alidns.com/dns-query
+    - h3://dns.alidns.com/dns-query
+    +.baidu.com:
+    - https://dns.alidns.com/dns-query
+    - h3://dns.alidns.com/dns-query
+    +.qq.com:
+    - https://dns.alidns.com/dns-query
+    - h3://dns.alidns.com/dns-query
+    +.google.com: https://dns.google/dns-query
+    +.youtube.com: https://dns.google/dns-query
+    +.openai.com:
+    - https://cloudflare-dns.com/dns-query
+    - https://1.1.1.1/dns-query
+    +.telegram.org:
+    - https://cloudflare-dns.com/dns-query
+    - https://1.1.1.1/dns-query
+    +.netflix.com:
+    - https://cloudflare-dns.com/dns-query
+    - https://1.1.1.1/dns-query
+    +.github.com:
+    - https://cloudflare-dns.com/dns-query
+    - https://1.1.1.1/dns-query
+proxy-providers:
+  机场订阅1:
+    type: http
+    url: YOUR_SUBSCRIBE_URL_1
+    interval: 86400
+    path: ./providers/airport-1.yaml
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 300
+proxies: []
+proxy-groups:
+- name: 代理模式
+  type: select
+  proxies: [手动选择, 定向免流, 自动选择, DIRECT, REJECT]
+  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/SS.png
+- name: 手动选择
+  type: select
+  include-all-providers: true
+  use: [机场订阅1]
+  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/El.png
+- name: 定向免流
+  type: select
+  include-all-providers: true
+  use: [机场订阅1]
+  filter: (?i)免流
+  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/free_mianliu.png
+- name: 自动选择
+  type: url-test
+  include-all-providers: true
+  use: [机场订阅1]
+  url: http://www.gstatic.com/generate_204
+  interval: 300
+  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Auto_Speed.png
+- name: 直连模式
+  type: select
+  proxies: [DIRECT]
+  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/China.png
+- name: 阻断连接
+  type: select
+  proxies: [REJECT]
+  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Reject.png
+- name: 广告拦截
+  type: select
+  proxies: [REJECT, 代理模式, 手动选择, DIRECT]
+  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Reject.png
+- name: 中国连接
+  type: select
+  proxies: [DIRECT, 代理模式, 手动选择, 自动选择, REJECT]
+  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/China.png
+- name: 代码仓库
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/github.png
+- name: 微软服务
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Microsoft.png
+- name: 游戏平台
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/ico/steam.ico
+- name: 人工智能
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/OpenAI.png
+- name: 谷歌服务
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/ico/google.ico
+- name: 油管视频
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/YouTube.png
+- name: 声破天乐
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Spotify.png
+- name: 电报通讯
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Telegram.png
+- name: 推特社交
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/x.png
+- name: 奈飞影视
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/netflix.png
+- name: 抖音国际
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/ico/tiktok.ico
+- name: 绅士漫画
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Eh.png
+- name: 苹果服务
+  type: select
+  proxies: [DIRECT, 代理模式, 手动选择, 自动选择, REJECT]
+  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Apple.png
+- name: 其它连接
+  type: select
+  proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Vpn.png
+rules:
+- GEOSITE,category-ads-all,广告拦截
+- GEOIP,CN,中国连接,no-resolve
+- GEOSITE,cn,中国连接
+- DOMAIN-SUFFIX,cn,中国连接
+- DOMAIN-SUFFIX,baidu.com,中国连接
+- DOMAIN-SUFFIX,qq.com,中国连接
+- DOMAIN-SUFFIX,apple.com,苹果服务
+- DOMAIN-SUFFIX,icloud.com,苹果服务
+- DOMAIN-SUFFIX,icloud-content.com,苹果服务
+- DOMAIN-SUFFIX,push.apple.com,苹果服务
+- DOMAIN-SUFFIX,mzstatic.com,苹果服务
+- DOMAIN-SUFFIX,github.com,代码仓库
+- DOMAIN-SUFFIX,githubusercontent.com,代码仓库
+- DOMAIN-SUFFIX,microsoft.com,微软服务
+- DOMAIN-SUFFIX,live.com,微软服务
+- DOMAIN-SUFFIX,office.com,微软服务
+- DOMAIN-SUFFIX,steampowered.com,游戏平台
+- DOMAIN-SUFFIX,steamcommunity.com,游戏平台
+- DOMAIN-SUFFIX,epicgames.com,游戏平台
+- DOMAIN-SUFFIX,openai.com,人工智能
+- DOMAIN-SUFFIX,chatgpt.com,人工智能
+- DOMAIN-SUFFIX,anthropic.com,人工智能
+- DOMAIN-SUFFIX,claude.ai,人工智能
+- DOMAIN-SUFFIX,x.ai,人工智能
+- DOMAIN-SUFFIX,google.com,谷歌服务
+- DOMAIN-SUFFIX,googleapis.com,谷歌服务
+- DOMAIN-SUFFIX,gstatic.com,谷歌服务
+- DOMAIN-SUFFIX,youtube.com,油管视频
+- DOMAIN-SUFFIX,youtu.be,油管视频
+- DOMAIN-SUFFIX,googlevideo.com,油管视频
+- DOMAIN-SUFFIX,ytimg.com,油管视频
+- DOMAIN-SUFFIX,spotify.com,声破天乐
+- DOMAIN-SUFFIX,scdn.co,声破天乐
+- DOMAIN-SUFFIX,telegram.org,电报通讯
+- DOMAIN-SUFFIX,t.me,电报通讯
+- DOMAIN-SUFFIX,twitter.com,推特社交
+- DOMAIN-SUFFIX,x.com,推特社交
+- DOMAIN-SUFFIX,twimg.com,推特社交
+- DOMAIN-SUFFIX,netflix.com,奈飞影视
+- DOMAIN-SUFFIX,nflxvideo.net,奈飞影视
+- DOMAIN-SUFFIX,tiktok.com,抖音国际
+- DOMAIN-SUFFIX,tiktokv.com,抖音国际
+- DOMAIN-SUFFIX,musical.ly,抖音国际
+- DOMAIN-SUFFIX,e-hentai.org,绅士漫画
+- DOMAIN-SUFFIX,exhentai.org,绅士漫画
+- MATCH,其它连接
