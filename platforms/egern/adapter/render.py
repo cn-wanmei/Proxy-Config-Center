@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Egern Renderer — IR.rule_sources only."""
+"""Egern — no GEOSITE/GEOIP; domain_suffix from IR + BM note."""
 
 import sys
 from pathlib import Path
@@ -16,14 +16,12 @@ except Exception:
     def enabled_subscriptions(data=None):
         return []
 
-
 def _resolve(opt: str, id_to_display: Dict[str, str]) -> str:
     if opt in ("direct", "DIRECT"):
         return "DIRECT"
     if opt in ("reject", "REJECT"):
         return "REJECT"
     return id_to_display.get(opt, opt)
-
 
 def render(ir: Any) -> dict:
     id_to_display = dict(getattr(ir, "id_to_display", {}) or {})
@@ -35,7 +33,6 @@ def render(ir: Any) -> dict:
         id_to_display[g["id"]] = display or g["id"]
 
     policy_groups: List[dict] = []
-
     for g in getattr(ir, "base_groups", []) or []:
         policies = []
         for o in g.get("options") or []:
@@ -44,7 +41,7 @@ def render(ir: Any) -> dict:
                     policies.append(id_to_display.get(o["ref"], o["ref"]))
                 elif "action" in o:
                     act = o["action"]
-                    policies.append("DIRECT" if act == "direct" else "REJECT" if act == "reject" else act)
+                    policies.append("DIRECT" if act == "direct" else "REJECT")
             else:
                 policies.append(_resolve(str(o), id_to_display))
         if g.get("include-all-nodes") and not policies:
@@ -64,23 +61,16 @@ def render(ir: Any) -> dict:
         if dname in policies:
             policies = [dname] + [p for p in policies if p != dname]
         policy_groups.append({
-            "select": {
-                "name": s.name_zh,
-                "policies": policies or ["DIRECT"],
-                "flatten": True,
-            }
+            "select": {"name": s.name_zh, "policies": policies or ["DIRECT"], "flatten": True}
         })
 
-    # Rules from IR.rule_sources: geosite→domain_suffix, geoip, domain, default
+    # Egern: domain_suffix patches only (no geoip/geosite)
+    # Full BM lists are for Clash rule-providers; Egern uses domain_suffix from source
     rules: List[dict] = []
     for rs in getattr(ir, "rule_sources", []) or []:
         if rs.is_match:
             continue
         target = id_to_display.get(rs.target_service, rs.target_service)
-        for gs in rs.geosite:
-            rules.append({"domain_suffix": {"match": gs, "policy": target}})
-        for gi in rs.geoip:
-            rules.append({"geoip": {"match": gi, "policy": target, "no_resolve": True}})
         for d in rs.domain_suffix:
             rules.append({"domain_suffix": {"match": d, "policy": target}})
         for d in rs.domain_keyword:
@@ -103,7 +93,7 @@ def render(ir: Any) -> dict:
         "policy_groups": policy_groups,
         "rules": rules,
     }
-
+    # 注释：Clash 系用 blackmatrix7 rule-providers；Egern 以策略组 + 域名补丁为主
     subs = []
     for s in enabled_subscriptions(pdata):
         name = s.get("name", {})
@@ -111,5 +101,4 @@ def render(ir: Any) -> dict:
         subs.append({"name": n or s.get("id"), "url": s.get("url"), "udp_relay": True})
     if subs:
         config["proxy_providers"] = subs
-
     return config
