@@ -1,11 +1,10 @@
-# AUTO-GENERATED | 分流仅 blackmatrix7 RULE-SET（无 GEOSITE/GEOIP）
+# AUTO-GENERATED | capabilities: rule_set=true → blackmatrix7 RULE-SET
 
 mixed-port: 7890
 allow-lan: true
 mode: rule
 log-level: info
 ipv6: true
-
 dns:
   enable: true
   ipv6: true
@@ -13,37 +12,33 @@ dns:
   fake-ip-range: 198.18.0.1/16
   nameserver:
     - https://dns.alidns.com/dns-query
-    - h3://dns.alidns.com/dns-query
     - https://doh.pub/dns-query
     - https://dns.google/dns-query
     - https://cloudflare-dns.com/dns-query
-    - https://1.1.1.1/dns-query
   default-nameserver: [223.5.5.5, 119.29.29.29, 1.1.1.1]
-
 proxy-groups:
-  - { name: 代理模式, type: select, proxies: [手动选择, 定向免流, 自动选择, DIRECT, REJECT], icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/SS.png }
-  - { name: 手动选择, type: select, proxies: [DIRECT], icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/El.png }
-  - { name: 定向免流, type: select, proxies: [DIRECT], filter: "(?i)免流", icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/free_mianliu.png }
-  - { name: 自动选择, type: url-test, proxies: [DIRECT], url: http://www.gstatic.com/generate_204, interval: 300, icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Auto_Speed.png }
-  - { name: 直连模式, type: select, proxies: [DIRECT], icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/China.png }
-  - { name: 阻断连接, type: select, proxies: [REJECT], icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Reject.png }
-  - { name: 广告拦截, type: select, proxies: [REJECT, 代理模式, 手动选择, DIRECT], icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Reject.png }
-  - { name: 中国连接, type: select, proxies: [DIRECT, 代理模式, 手动选择, 自动选择, REJECT], icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/China.png }
-  - { name: 代码仓库, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT], icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/github.png }
-  - { name: 微软服务, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT], icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Microsoft.png }
-  - { name: 游戏平台, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT], icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/ico/steam.ico }
-  - { name: 人工智能, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT], icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/OpenAI.png }
-  - { name: 谷歌服务, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT], icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/ico/google.ico }
-  - { name: 油管视频, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT], icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/YouTube.png }
-  - { name: 声破天乐, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT], icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Spotify.png }
-  - { name: 电报通讯, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT], icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Telegram.png }
-  - { name: 推特社交, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT], icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/x.png }
-  - { name: 奈飞影视, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT], icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/netflix.png }
-  - { name: 抖音国际, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT], icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/ico/tiktok.ico }
-  - { name: 绅士漫画, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT], icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Eh.png }
-  - { name: 苹果服务, type: select, proxies: [DIRECT, 代理模式, 手动选择, 自动选择, REJECT], icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Apple.png }
-  - { name: 其它连接, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT], icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Vpn.png }
-
+  - { name: 代理模式, type: select, proxies: [手动选择, 定向免流, 自动选择, DIRECT, REJECT] }
+  - { name: 手动选择, type: select, proxies: [DIRECT] }
+  - { name: 定向免流, type: select, proxies: [DIRECT], filter: "(?i)免流" }
+  - { name: 自动选择, type: url-test, proxies: [DIRECT], url: http://www.gstatic.com/generate_204, interval: 300 }
+  - { name: 直连模式, type: select, proxies: [DIRECT] }
+  - { name: 阻断连接, type: select, proxies: [REJECT] }
+  - { name: 广告拦截, type: select, proxies: [REJECT, 代理模式, 手动选择, DIRECT] }
+  - { name: 中国连接, type: select, proxies: [DIRECT, 代理模式, 手动选择, 自动选择, REJECT] }
+  - { name: 代码仓库, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT] }
+  - { name: 微软服务, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT] }
+  - { name: 游戏平台, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT] }
+  - { name: 人工智能, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT] }
+  - { name: 谷歌服务, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT] }
+  - { name: 油管视频, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT] }
+  - { name: 声破天乐, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT] }
+  - { name: 电报通讯, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT] }
+  - { name: 推特社交, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT] }
+  - { name: 奈飞影视, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT] }
+  - { name: 抖音国际, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT] }
+  - { name: 绅士漫画, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT] }
+  - { name: 苹果服务, type: select, proxies: [DIRECT, 代理模式, 手动选择, 自动选择, REJECT] }
+  - { name: 其它连接, type: select, proxies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT] }
 rule-providers:
   ad-block: { type: http, behavior: classical, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AdvertisingLite/AdvertisingLite.yaml, path: ./ruleset/ad-block.yaml, interval: 86400 }
   china: { type: http, behavior: classical, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/China/China.yaml, path: ./ruleset/china.yaml, interval: 86400 }
@@ -60,7 +55,6 @@ rule-providers:
   twitter: { type: http, behavior: classical, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Twitter/Twitter.yaml, path: ./ruleset/twitter.yaml, interval: 86400 }
   netflix: { type: http, behavior: classical, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Netflix/Netflix.yaml, path: ./ruleset/netflix.yaml, interval: 86400 }
   tiktok: { type: http, behavior: classical, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/TikTok/TikTok.yaml, path: ./ruleset/tiktok.yaml, interval: 86400 }
-
 rules:
   - RULE-SET,ad-block,广告拦截
   - RULE-SET,china,中国连接

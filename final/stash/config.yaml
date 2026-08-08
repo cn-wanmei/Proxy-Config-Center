@@ -1,4 +1,4 @@
-# AUTO-GENERATED | blackmatrix7 RULE-SET only (no GEOSITE/GEOIP)
+# AUTO-GENERATED | capabilities: rule_set=true
 
 mixed-port: 7890
 allow-lan: true
