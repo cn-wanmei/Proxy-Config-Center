@@ -12,6 +12,7 @@ features:
   proxy_provider: false
   process: false
   mitm: true
+  icons: true
 
 limitations:
   rule_provider: false
