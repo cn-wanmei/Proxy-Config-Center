@@ -44,7 +44,7 @@ def main() -> int:
         from reference_validator import validate as validate_references
         errors.extend(validate_references())
     except Exception as exc:
-        errors.append(f"reference validation failed: {exc}")
+        raise RuntimeError("reference validation failed") from exc
 
     try:
         resolvers = load_yaml(CORE / "dns" / "resolvers.yaml").get("resolvers") or {}
