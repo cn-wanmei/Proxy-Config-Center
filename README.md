@@ -3,48 +3,95 @@
 **通用代理配置中心 / Universal Proxy Configuration Center**  
 **Version: 1.0.0**
 
-支持平台 / Supported Platforms：
-- Clash Meta (mihomo)
-- Clash
-- Loon
-- Egern
-- Stash
-- Shadowrocket
+支持平台：Clash Meta · Clash · Stash · Egern · Loon · Shadowrocket
 
-> **节点由 Sub-Store 独立管理，本仓库不包含任何节点订阅。**  
-> **Nodes are managed independently via Sub-Store.**
+---
 
-## 快速获取配置 / Get configs
+## 三种节点接入方式 / Node sources
+
+| 方式 | 说明 | 配置位置 |
+|------|------|----------|
+| **机场订阅** | 一个或多个订阅链接 | `core/proxies/providers.yaml` → `subscriptions` |
+| **单节点** | 手写一个节点 | `core/proxies/providers.yaml` → `nodes`（`enabled: true`） |
+| **多节点** | 手写多个节点 | 同上，追加多条 |
+| **Sub-Store** | 外部注入（可选） | 客户端 / Sub-Store 自行对接 |
+
+### 填写示例
+
+编辑 `core/proxies/providers.yaml`：
+
+```yaml
+subscriptions:
+  - id: airport-1
+    name: { zh: 机场订阅1, en: Airport Sub 1 }
+    url: "https://example.com/your-subscribe-link"   # ⬅️ 改这里
+    interval: 86400
+    enabled: true
+
+nodes:
+  - name: "我家VPS"
+    type: ss
+    server: "1.2.3.4"
+    port: 443
+    cipher: aes-128-gcm
+    password: "pass"
+    enabled: true   # ⬅️ 打开后进入配置
+```
+
+然后重新构建：
 
 ```bash
-git clone https://github.com/cn-wanmei/Proxy-Config-Center.git
-cd Proxy-Config-Center
 pip install pyyaml
 python scripts/build.py
 ```
 
-生成目录 / Output：
+---
 
-| 平台 | 文件 |
-|------|------|
-| Clash Meta | `build/clash-meta/config.yaml` |
-| Clash | `build/clash/config.yaml` |
-| Stash | `build/stash/config.yaml` |
-| Egern | `build/egern/config.yaml` |
-| Loon | `build/loon/config.conf` |
-| Shadowrocket | `build/shadowrocket/config.conf` |
+## 最终配置目录 / Final configs
 
-也可从 GitHub Actions Artifact 下载（每次 push 自动构建）。
+构建后直接使用：
 
-## 已包含 / Included
+```
+final/
+├── README.md
+├── clash-meta/config.yaml
+├── clash/config.yaml
+├── stash/config.yaml
+├── egern/config.yaml
+├── loon/config.conf
+└── shadowrocket/config.conf
+```
 
-- 16 个分流策略组 + 代理模式（手动/自动/免流/直连/阻断）
-- 完整规则：广告、中国、苹果、AI、谷歌、油管、Spotify、Telegram、Twitter、Netflix、TikTok、游戏、E-Hentai 等
-- 图标：ClashTools 高清 CDN（22 组）
-- DNS 策略：苹果→系统、中国→阿里、谷歌→Google、流媒体→CF 等
-- CI：validate + semantic/golden test + build + release
+（`build/` 为同内容中间产物，`final/` 为交付目录）
 
-## 构建与校验 / Build & Test
+| 客户端 | 路径 |
+|--------|------|
+| Clash Meta | `final/clash-meta/config.yaml` |
+| Clash | `final/clash/config.yaml` |
+| Stash | `final/stash/config.yaml` |
+| Egern | `final/egern/config.yaml` |
+| Loon | `final/loon/config.conf` |
+| Shadowrocket | `final/shadowrocket/config.conf` |
+
+Clash / Meta / Stash 配置内已预留：
+
+- `proxy-providers` ← 订阅链接（`YOUR_SUBSCRIBE_URL_*` 占位）
+- `proxies` ← 单/多节点列表
+- `proxy-groups` 中「手动选择 / 自动选择 / 定向免流」自动引用上述节点与订阅
+
+---
+
+## 策略与规则
+
+- 16 个分流策略组 + 代理模式（手动 / 自动 / 免流 / 直连 / 阻断）
+- 中国连接、苹果服务默认 **直连**；广告默认 **REJECT**
+- 规则覆盖：AI、谷歌、油管、Spotify、Telegram、Twitter、Netflix、TikTok、游戏、E-Hentai 等
+- 图标：ClashTools CDN
+- DNS：苹果→系统、中国→阿里、谷歌→Google、流媒体→CF
+
+---
+
+## 构建与校验
 
 ```bash
 python scripts/validate.py
@@ -54,16 +101,8 @@ python scripts/build.py
 python scripts/check_config.py
 ```
 
-## 发版 / Release
-
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-## 设计原则 / Principles
+## 设计原则
 
 1. Core First — 逻辑只在 `core/`
-2. Platform-agnostic — Core 无平台语法
-3. No Nodes — Sub-Store 管节点
-4. Unified Strategy — 一套策略全平台
+2. 订阅/节点与策略分离 — `core/proxies/providers.yaml`
+3. 改一次 Core，六端一起重建
