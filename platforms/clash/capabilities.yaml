@@ -9,6 +9,7 @@ features:
   rewrite: false
   rule_provider: true
   rule_set: true
+  domain_fallback: true
   proxy_provider: true
   process: false
   sniffer: false
