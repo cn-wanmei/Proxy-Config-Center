@@ -1,0 +1,10 @@
+# Final fallback rules / 其它连接（兜底）
+version: 1
+id: service-final
+group: final
+priority: 999
+
+rules:
+  - type: match
+    action: group
+    target: final
