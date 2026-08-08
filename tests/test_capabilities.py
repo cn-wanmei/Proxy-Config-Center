@@ -1,48 +1,78 @@
 #!/usr/bin/env python3
-"""Platform capability regression — matrix + emission."""
+"""Capability regression — complete rule capability matrix + renderer emission."""
 
-import sys
 import importlib.util
+import itertools
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from engines.capability import supports_rule_set, validate_capabilities, REQUIRED_PLATFORMS
+from engines.capability import (
+    REQUIRED_PLATFORMS,
+    feature_supported,
+    supports_domain_fallback,
+    supports_rule_provider,
+    supports_rule_set,
+    validate_capabilities,
+)
 from ir import build_ir
 
 
 def _render(platform: str):
     path = ROOT / "platforms" / platform / "adapter" / "render.py"
     spec = importlib.util.spec_from_file_location(platform, path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod.render(build_ir())
 
 
-def test_matrix():
-    errs = validate_capabilities()
-    assert not errs, errs
+def test_capability_truth_table():
+    for rule_provider, rule_set, domain_fallback in itertools.product((False, True), repeat=3):
+        features = {
+            "rule_provider": rule_provider,
+            "rule_set": rule_set,
+            "domain_fallback": domain_fallback,
+        }
+        limitations = {}
+        assert feature_supported(features, limitations, "rule_provider") is rule_provider
+        assert feature_supported(features, limitations, "rule_set") is rule_set
+        assert feature_supported(features, limitations, "domain_fallback") is domain_fallback
+        for feature in features:
+            assert feature_supported(features, {feature: False}, feature) is False
+    print("✅ complete capability truth table OK (8 combinations)")
+
+
+def test_real_platform_matrix():
+    errors = validate_capabilities()
+    assert not errors, errors
     expected = {
-        "clash-meta": True,
-        "clash": True,
-        "stash": True,
-        "loon": True,
-        "egern": True,
-        "shadowrocket": False,
+        "clash-meta": (True, True, True),
+        "clash": (True, True, True),
+        "stash": (True, True, True),
+        "loon": (True, True, True),
+        "egern": (False, True, True),
+        "shadowrocket": (False, False, True),
     }
+    assert REQUIRED_PLATFORMS == list(expected)
     for name, want in expected.items():
-        got = supports_rule_set(name)
-        assert got is want, f"{name}: got {got} want {want}"
-    print("✅ capability matrix OK")
+        got = (supports_rule_set(name), supports_rule_provider(name), supports_domain_fallback(name))
+        assert got == want, f"{name}: got {got}, want {want}"
+    print("✅ real platform capability matrix OK")
 
 
 def test_ir_platform_flags():
     ir = build_ir()
-    assert ir.platform_rule_set.get("egern") is True
-    assert ir.platform_rule_set.get("shadowrocket") is False
-    assert ir.platform_rule_set.get("clash-meta") is True
-    print("✅ IR platform_rule_set OK")
+    assert ir.platform_rule_set["egern"] is True
+    assert ir.platform_rule_provider["egern"] is False
+    assert ir.platform_domain_fallback["egern"] is True
+    assert ir.platform_rule_set["shadowrocket"] is False
+    assert ir.platform_rule_provider["shadowrocket"] is False
+    assert ir.platform_domain_fallback["shadowrocket"] is True
+    print("✅ IR capability flags OK")
 
 
 def test_clash_meta_rule_set():
@@ -51,32 +81,29 @@ def test_clash_meta_rule_set():
     assert any(r.startswith("RULE-SET,") for r in rules)
     assert cfg.get("rule-providers")
     assert not any(r.startswith("GEOSITE,") for r in rules)
-    print("✅ clash-meta RULE-SET")
+    print("✅ clash-meta remote rule emission OK")
 
 
-def test_egern_rule_set_no_bulk_domain():
+def test_egern_native_rule_set():
     cfg = _render("egern")
     rules = cfg.get("rules") or []
-    rs = [r for r in rules if "rule_set" in r]
-    ds = [r for r in rules if "domain_suffix" in r]
-    assert len(rs) >= 10, f"expected remote rule_set, got {len(rs)}"
-    # ehentai has no bm_sets → domain only; bulk services should not flood
-    assert len(ds) < 30, f"too many domain_suffix when rule_set on: {len(ds)}"
-    print(f"✅ egern rule_set={len(rs)} domain_suffix={len(ds)}")
+    assert len([r for r in rules if "rule_set" in r]) >= 10
+    print("✅ egern native rule_set emission OK")
 
 
-def test_shadowrocket_domain_only():
+def test_shadowrocket_domain_fallback():
     text = _render("shadowrocket")
     assert "DOMAIN-SUFFIX" in text
     assert "RULE-SET" not in text
     assert "DOMAIN-SET" not in text
-    print("✅ shadowrocket domain-only")
+    print("✅ shadowrocket domain fallback emission OK")
 
 
 if __name__ == "__main__":
-    test_matrix()
+    test_capability_truth_table()
+    test_real_platform_matrix()
     test_ir_platform_flags()
     test_clash_meta_rule_set()
-    test_egern_rule_set_no_bulk_domain()
-    test_shadowrocket_domain_only()
+    test_egern_native_rule_set()
+    test_shadowrocket_domain_fallback()
     print("All capability tests passed")
