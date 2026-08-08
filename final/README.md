@@ -1,16 +1,20 @@
 # 最终配置 / Final Configs
 
-渲染时读取 `platforms/*/capabilities.yaml`：
+> 由 `python scripts/build.py` 自动生成，请勿手改。
 
-| 能力 | 行为 |
-|------|------|
-| `rule_provider` / `rule_set` = true | 远程 blackmatrix7 规则集 |
-| false | `domain_suffix` fallback |
+## 使用前
 
-| 客户端 | 规则形态 |
-|--------|----------|
-| Clash Meta / Clash / Stash | `RULE-SET` + rule-providers |
-| Loon | `DOMAIN-SET`（Loon 列表 URL）+ domain_suffix |
-| Egern / Shadowrocket | 仅 domain_suffix |
+1. 编辑 `core/proxies/providers.yaml`
+   - `subscriptions[].url` → 机场订阅链接
+   - `nodes[]` → 单节点/多节点（`enabled: true`）
+2. 重新执行 `python scripts/build.py`
+3. 从本目录复制对应客户端配置
 
-无 GEOSITE / GEOIP。订阅填 `core/proxies/providers.yaml` 后 rebuild。
+| 客户端 | 文件 |
+|--------|------|
+| Clash Meta | `clash-meta/config.yaml` |
+| Clash | `clash/config.yaml` |
+| Stash | `stash/config.yaml` |
+| Egern | `egern/config.yaml` |
+| Loon | `loon/config.conf` |
+| Shadowrocket | `shadowrocket/config.conf` |

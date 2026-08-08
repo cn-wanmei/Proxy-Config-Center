@@ -1,5 +1,6 @@
 # AUTO-GENERATED from Core — DO NOT EDIT MANUALLY
 # Source: core/ | Build: scripts/build.py
+# 订阅/节点: 编辑 core/proxies/providers.yaml 后重新 build
 
 ipv6: true
 dns:
@@ -18,105 +19,736 @@ dns:
 policy_groups:
 - select:
     name: 代理模式
-    policies: [手动选择, 定向免流, 自动选择, DIRECT, REJECT]
+    policies:
+    - 手动选择
+    - 定向免流
+    - 自动选择
+    - DIRECT
+    - REJECT
     flatten: true
 - select:
     name: 手动选择
-    policies: [DIRECT]
+    policies:
+    - DIRECT
     flatten: true
 - select:
     name: 定向免流
-    policies: [DIRECT]
+    policies:
+    - DIRECT
     flatten: true
 - select:
     name: 自动选择
-    policies: [DIRECT]
+    policies:
+    - DIRECT
     flatten: true
 - select:
     name: 直连模式
-    policies: [DIRECT]
+    policies:
+    - DIRECT
     flatten: true
 - select:
     name: 阻断连接
-    policies: [REJECT]
+    policies:
+    - REJECT
     flatten: true
 - select:
     name: 广告拦截
-    policies: [REJECT, 代理模式, 手动选择, DIRECT]
+    policies:
+    - REJECT
+    - 代理模式
+    - 手动选择
+    - DIRECT
     flatten: true
 - select:
     name: 中国连接
-    policies: [DIRECT, 代理模式, 手动选择, 自动选择, REJECT]
+    policies:
+    - DIRECT
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - REJECT
     flatten: true
 - select:
     name: 代码仓库
-    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
     flatten: true
 - select:
     name: 微软服务
-    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
     flatten: true
 - select:
     name: 游戏平台
-    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
     flatten: true
 - select:
     name: 人工智能
-    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
     flatten: true
 - select:
     name: 谷歌服务
-    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
     flatten: true
 - select:
     name: 油管视频
-    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
     flatten: true
 - select:
     name: 声破天乐
-    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
     flatten: true
 - select:
     name: 电报通讯
-    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
     flatten: true
 - select:
     name: 推特社交
-    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
     flatten: true
 - select:
     name: 奈飞影视
-    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
     flatten: true
 - select:
     name: 抖音国际
-    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
     flatten: true
 - select:
     name: 绅士漫画
-    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
     flatten: true
 - select:
     name: 苹果服务
-    policies: [DIRECT, 代理模式, 手动选择, 自动选择, REJECT]
+    policies:
+    - DIRECT
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - REJECT
     flatten: true
 - select:
     name: 其它连接
-    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
     flatten: true
 rules:
-- domain_suffix: { match: cn, policy: 中国连接 }
-- geoip: { match: CN, policy: 中国连接, no_resolve: true }
-- domain_suffix: { match: apple.com, policy: 苹果服务 }
-- domain_suffix: { match: icloud.com, policy: 苹果服务 }
-- domain_suffix: { match: openai.com, policy: 人工智能 }
-- domain_suffix: { match: chatgpt.com, policy: 人工智能 }
-- domain_suffix: { match: google.com, policy: 谷歌服务 }
-- domain_suffix: { match: youtube.com, policy: 油管视频 }
-- domain_suffix: { match: telegram.org, policy: 电报通讯 }
-- domain_suffix: { match: twitter.com, policy: 推特社交 }
-- domain_suffix: { match: x.com, policy: 推特社交 }
-- domain_suffix: { match: netflix.com, policy: 奈飞影视 }
-- domain_suffix: { match: github.com, policy: 代码仓库 }
-- domain_suffix: { match: microsoft.com, policy: 微软服务 }
-- default: { policy: 其它连接 }
+- domain_suffix:
+    match: doubleclick.net
+    policy: 广告拦截
+- domain_suffix:
+    match: googlesyndication.com
+    policy: 广告拦截
+- domain_suffix:
+    match: googletagmanager.com
+    policy: 广告拦截
+- domain_suffix:
+    match: googleadservices.com
+    policy: 广告拦截
+- domain_suffix:
+    match: adservice.google.com
+    policy: 广告拦截
+- domain_suffix:
+    match: pagead2.googlesyndication.com
+    policy: 广告拦截
+- domain_suffix:
+    match: cn
+    policy: 中国连接
+- domain_suffix:
+    match: baidu.com
+    policy: 中国连接
+- domain_suffix:
+    match: qq.com
+    policy: 中国连接
+- domain_suffix:
+    match: aliyun.com
+    policy: 中国连接
+- domain_suffix:
+    match: taobao.com
+    policy: 中国连接
+- domain_suffix:
+    match: bilibili.com
+    policy: 中国连接
+- domain_suffix:
+    match: weixin.qq.com
+    policy: 中国连接
+- domain_suffix:
+    match: wechat.com
+    policy: 中国连接
+- domain_suffix:
+    match: jd.com
+    policy: 中国连接
+- domain_suffix:
+    match: 163.com
+    policy: 中国连接
+- domain_suffix:
+    match: 126.com
+    policy: 中国连接
+- domain_suffix:
+    match: weibo.com
+    policy: 中国连接
+- domain_suffix:
+    match: zhihu.com
+    policy: 中国连接
+- domain_suffix:
+    match: douyin.com
+    policy: 中国连接
+- domain_suffix:
+    match: iqiyi.com
+    policy: 中国连接
+- domain_suffix:
+    match: youku.com
+    policy: 中国连接
+- domain_suffix:
+    match: meituan.com
+    policy: 中国连接
+- domain_suffix:
+    match: dianping.com
+    policy: 中国连接
+- domain_suffix:
+    match: ctrip.com
+    policy: 中国连接
+- domain_suffix:
+    match: pinduoduo.com
+    policy: 中国连接
+- domain_suffix:
+    match: apple.com
+    policy: 苹果服务
+- domain_suffix:
+    match: icloud.com
+    policy: 苹果服务
+- domain_suffix:
+    match: icloud-content.com
+    policy: 苹果服务
+- domain_suffix:
+    match: mzstatic.com
+    policy: 苹果服务
+- domain_suffix:
+    match: cdn-apple.com
+    policy: 苹果服务
+- domain_suffix:
+    match: aaplimg.com
+    policy: 苹果服务
+- domain_suffix:
+    match: apple-dns.net
+    policy: 苹果服务
+- domain_suffix:
+    match: apple.news
+    policy: 苹果服务
+- domain_suffix:
+    match: apple.co
+    policy: 苹果服务
+- domain_suffix:
+    match: github.com
+    policy: 代码仓库
+- domain_suffix:
+    match: githubusercontent.com
+    policy: 代码仓库
+- domain_suffix:
+    match: githubassets.com
+    policy: 代码仓库
+- domain_suffix:
+    match: gitlab.com
+    policy: 代码仓库
+- domain_suffix:
+    match: github.io
+    policy: 代码仓库
+- domain_suffix:
+    match: github.dev
+    policy: 代码仓库
+- domain_suffix:
+    match: githubcopilot.com
+    policy: 代码仓库
+- domain_suffix:
+    match: githubapp.com
+    policy: 代码仓库
+- domain_suffix:
+    match: githubstatus.com
+    policy: 代码仓库
+- domain_suffix:
+    match: ghcr.io
+    policy: 代码仓库
+- domain_suffix:
+    match: git.io
+    policy: 代码仓库
+- domain_suffix:
+    match: npmjs.com
+    policy: 代码仓库
+- domain_suffix:
+    match: npmjs.org
+    policy: 代码仓库
+- domain_suffix:
+    match: nuget.org
+    policy: 代码仓库
+- domain_suffix:
+    match: atom.io
+    policy: 代码仓库
+- domain_suffix:
+    match: microsoft.com
+    policy: 微软服务
+- domain_suffix:
+    match: live.com
+    policy: 微软服务
+- domain_suffix:
+    match: office.com
+    policy: 微软服务
+- domain_suffix:
+    match: office365.com
+    policy: 微软服务
+- domain_suffix:
+    match: onedrive.com
+    policy: 微软服务
+- domain_suffix:
+    match: outlook.com
+    policy: 微软服务
+- domain_suffix:
+    match: hotmail.com
+    policy: 微软服务
+- domain_suffix:
+    match: bing.com
+    policy: 微软服务
+- domain_suffix:
+    match: azure.com
+    policy: 微软服务
+- domain_suffix:
+    match: azure.net
+    policy: 微软服务
+- domain_suffix:
+    match: azurewebsites.net
+    policy: 微软服务
+- domain_suffix:
+    match: skype.com
+    policy: 微软服务
+- domain_suffix:
+    match: skypeassets.com
+    policy: 微软服务
+- domain_suffix:
+    match: xbox.com
+    policy: 微软服务
+- domain_suffix:
+    match: xboxlive.com
+    policy: 微软服务
+- domain_suffix:
+    match: aka.ms
+    policy: 微软服务
+- domain_suffix:
+    match: msedge.net
+    policy: 微软服务
+- domain_suffix:
+    match: msecnd.net
+    policy: 微软服务
+- domain_suffix:
+    match: sharepoint.com
+    policy: 微软服务
+- domain_suffix:
+    match: visualstudio.com
+    policy: 微软服务
+- domain_suffix:
+    match: vscode.dev
+    policy: 微软服务
+- domain_suffix:
+    match: minecraft.net
+    policy: 微软服务
+- domain_suffix:
+    match: mojang.com
+    policy: 微软服务
+- domain_suffix:
+    match: microsoftonline.com
+    policy: 微软服务
+- domain_suffix:
+    match: windows.net
+    policy: 微软服务
+- domain_suffix:
+    match: windowsupdate.com
+    policy: 微软服务
+- domain_suffix:
+    match: msftauth.net
+    policy: 微软服务
+- domain_suffix:
+    match: msauth.net
+    policy: 微软服务
+- domain_suffix:
+    match: msn.com
+    policy: 微软服务
+- domain_suffix:
+    match: steampowered.com
+    policy: 游戏平台
+- domain_suffix:
+    match: steamcommunity.com
+    policy: 游戏平台
+- domain_suffix:
+    match: steamgames.com
+    policy: 游戏平台
+- domain_suffix:
+    match: steamstatic.com
+    policy: 游戏平台
+- domain_suffix:
+    match: steam.tv
+    policy: 游戏平台
+- domain_suffix:
+    match: steamdeck.com
+    policy: 游戏平台
+- domain_suffix:
+    match: valvesoftware.com
+    policy: 游戏平台
+- domain_suffix:
+    match: s.team
+    policy: 游戏平台
+- domain_suffix:
+    match: steamstat.us
+    policy: 游戏平台
+- domain_suffix:
+    match: humblebundle.com
+    policy: 游戏平台
+- domain_suffix:
+    match: fanatical.com
+    policy: 游戏平台
+- domain_suffix:
+    match: openai.com
+    policy: 人工智能
+- domain_suffix:
+    match: chatgpt.com
+    policy: 人工智能
+- domain_suffix:
+    match: anthropic.com
+    policy: 人工智能
+- domain_suffix:
+    match: claude.ai
+    policy: 人工智能
+- domain_suffix:
+    match: oaistatic.com
+    policy: 人工智能
+- domain_suffix:
+    match: oaiusercontent.com
+    policy: 人工智能
+- domain_suffix:
+    match: ai.com
+    policy: 人工智能
+- domain_suffix:
+    match: sentry.io
+    policy: 人工智能
+- domain_suffix:
+    match: auth0.com
+    policy: 人工智能
+- domain_suffix:
+    match: intercom.io
+    policy: 人工智能
+- domain_suffix:
+    match: intercomcdn.com
+    policy: 人工智能
+- domain_suffix:
+    match: stripe.com
+    policy: 人工智能
+- domain_suffix:
+    match: launchdarkly.com
+    policy: 人工智能
+- domain_suffix:
+    match: google.com
+    policy: 谷歌服务
+- domain_suffix:
+    match: googleapis.com
+    policy: 谷歌服务
+- domain_suffix:
+    match: gstatic.com
+    policy: 谷歌服务
+- domain_suffix:
+    match: googleusercontent.com
+    policy: 谷歌服务
+- domain_suffix:
+    match: gmail.com
+    policy: 谷歌服务
+- domain_suffix:
+    match: googlevideo.com
+    policy: 谷歌服务
+- domain_suffix:
+    match: ggpht.com
+    policy: 谷歌服务
+- domain_suffix:
+    match: gvt1.com
+    policy: 谷歌服务
+- domain_suffix:
+    match: gvt2.com
+    policy: 谷歌服务
+- domain_suffix:
+    match: recaptcha.net
+    policy: 谷歌服务
+- domain_suffix:
+    match: g.co
+    policy: 谷歌服务
+- domain_suffix:
+    match: appspot.com
+    policy: 谷歌服务
+- domain_suffix:
+    match: firebaseio.com
+    policy: 谷歌服务
+- domain_suffix:
+    match: firebaseapp.com
+    policy: 谷歌服务
+- domain_suffix:
+    match: withgoogle.com
+    policy: 谷歌服务
+- domain_suffix:
+    match: googledrive.com
+    policy: 谷歌服务
+- domain_suffix:
+    match: googlemail.com
+    policy: 谷歌服务
+- domain_suffix:
+    match: youtube.com
+    policy: 油管视频
+- domain_suffix:
+    match: youtu.be
+    policy: 油管视频
+- domain_suffix:
+    match: googlevideo.com
+    policy: 油管视频
+- domain_suffix:
+    match: ytimg.com
+    policy: 油管视频
+- domain_suffix:
+    match: youtube-nocookie.com
+    policy: 油管视频
+- domain_suffix:
+    match: yt.be
+    policy: 油管视频
+- domain_suffix:
+    match: youtubekids.com
+    policy: 油管视频
+- domain_suffix:
+    match: youtubegaming.com
+    policy: 油管视频
+- domain_suffix:
+    match: ggpht.com
+    policy: 油管视频
+- domain_suffix:
+    match: spotify.com
+    policy: 声破天乐
+- domain_suffix:
+    match: scdn.co
+    policy: 声破天乐
+- domain_suffix:
+    match: spotifycdn.com
+    policy: 声破天乐
+- domain_suffix:
+    match: spoti.fi
+    policy: 声破天乐
+- domain_suffix:
+    match: spotifycdn.net
+    policy: 声破天乐
+- domain_suffix:
+    match: byspotify.com
+    policy: 声破天乐
+- domain_suffix:
+    match: pscdn.co
+    policy: 声破天乐
+- domain_suffix:
+    match: spotifycharts.com
+    policy: 声破天乐
+- domain_suffix:
+    match: spotifyjobs.com
+    policy: 声破天乐
+- domain_suffix:
+    match: telegram.org
+    policy: 电报通讯
+- domain_suffix:
+    match: t.me
+    policy: 电报通讯
+- domain_suffix:
+    match: tdesktop.com
+    policy: 电报通讯
+- domain_suffix:
+    match: telegra.ph
+    policy: 电报通讯
+- domain_suffix:
+    match: telegram.me
+    policy: 电报通讯
+- domain_suffix:
+    match: cdn-telegram.org
+    policy: 电报通讯
+- domain_suffix:
+    match: graph.org
+    policy: 电报通讯
+- domain_suffix:
+    match: tg.dev
+    policy: 电报通讯
+- domain_suffix:
+    match: tx.me
+    policy: 电报通讯
+- domain_suffix:
+    match: telesco.pe
+    policy: 电报通讯
+- domain_suffix:
+    match: telegram.space
+    policy: 电报通讯
+- domain_suffix:
+    match: telegram-cdn.org
+    policy: 电报通讯
+- domain_suffix:
+    match: twitter.com
+    policy: 推特社交
+- domain_suffix:
+    match: x.com
+    policy: 推特社交
+- domain_suffix:
+    match: twimg.com
+    policy: 推特社交
+- domain_suffix:
+    match: t.co
+    policy: 推特社交
+- domain_suffix:
+    match: twimg.co
+    policy: 推特社交
+- domain_suffix:
+    match: tweetdeck.com
+    policy: 推特社交
+- domain_suffix:
+    match: grok.com
+    policy: 推特社交
+- domain_suffix:
+    match: vine.co
+    policy: 推特社交
+- domain_suffix:
+    match: periscope.tv
+    policy: 推特社交
+- domain_suffix:
+    match: pscp.tv
+    policy: 推特社交
+- domain_suffix:
+    match: netflix.com
+    policy: 奈飞影视
+- domain_suffix:
+    match: nflxvideo.net
+    policy: 奈飞影视
+- domain_suffix:
+    match: nflxso.net
+    policy: 奈飞影视
+- domain_suffix:
+    match: nflximg.net
+    policy: 奈飞影视
+- domain_suffix:
+    match: fast.com
+    policy: 奈飞影视
+- domain_suffix:
+    match: nflxext.com
+    policy: 奈飞影视
+- domain_suffix:
+    match: nflximg.com
+    policy: 奈飞影视
+- domain_suffix:
+    match: netflix.net
+    policy: 奈飞影视
+- domain_suffix:
+    match: netflixtechblog.com
+    policy: 奈飞影视
+- domain_suffix:
+    match: tiktok.com
+    policy: 抖音国际
+- domain_suffix:
+    match: tiktokv.com
+    policy: 抖音国际
+- domain_suffix:
+    match: musical.ly
+    policy: 抖音国际
+- domain_suffix:
+    match: byteoversea.com
+    policy: 抖音国际
+- domain_suffix:
+    match: tiktokcdn.com
+    policy: 抖音国际
+- domain_suffix:
+    match: muscdn.com
+    policy: 抖音国际
+- domain_suffix:
+    match: capcut.com
+    policy: 抖音国际
+- domain_suffix:
+    match: snssdk.com
+    policy: 抖音国际
+- domain_suffix:
+    match: tiktokmusic.app
+    policy: 抖音国际
+- domain_suffix:
+    match: trae.ai
+    policy: 抖音国际
+- domain_suffix:
+    match: marscode.com
+    policy: 抖音国际
+- domain_suffix:
+    match: byteintlapi.com
+    policy: 抖音国际
+- domain_suffix:
+    match: e-hentai.org
+    policy: 绅士漫画
+- domain_suffix:
+    match: exhentai.org
+    policy: 绅士漫画
+- domain_suffix:
+    match: ehgt.org
+    policy: 绅士漫画
+- domain_suffix:
+    match: hath.network
+    policy: 绅士漫画
+- default:
+    policy: 其它连接
