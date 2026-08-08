@@ -1,7 +1,15 @@
 name: Validate & Build
 
-# PR / tests 变更：只做校验与 artifact，不回写仓库（避免与 build.yml 双跑）
+# 唯一校验入口：push/PR 均走这里；成功后由 build.yml workflow_run 回写 final
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'core/**'
+      - 'platforms/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - '.github/workflows/**'
   pull_request:
     branches: [main]
     paths:
@@ -10,11 +18,6 @@ on:
       - 'scripts/**'
       - 'tests/**'
       - '.github/workflows/**'
-  push:
-    branches: [main]
-    paths:
-      - 'tests/**'
-      - '.github/workflows/validate-build.yml'
   workflow_dispatch:
 
 jobs:
@@ -39,6 +42,9 @@ jobs:
         run: python tests/test_semantic.py
       - name: Golden tests
         run: python tests/test_golden.py
+      - name: BM URL health (sample)
+        run: python scripts/check_bm_urls.py
+        continue-on-error: true
 
   build:
     needs: validate
@@ -52,7 +58,7 @@ jobs:
         run: pip install pyyaml
       - name: Build all platforms
         run: python scripts/build.py
-      - name: Structural check
+      - name: Structural check (build + final)
         run: python scripts/check_config.py
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
