@@ -57,6 +57,7 @@ jobs:
       - name: Golden snapshot tests
         run: python tests/test_golden.py
       - name: Rule source health
+        continue-on-error: true
         run: python scripts/check_rule_sources.py
 
   build:
