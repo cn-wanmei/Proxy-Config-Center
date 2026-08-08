@@ -14,7 +14,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,8 +26,14 @@ jobs:
       - name: Install dependencies
         run: pip install pyyaml
 
-      - name: Validate
+      - name: Validate Core + Capabilities
         run: python scripts/validate.py
+
+      - name: Capability tests
+        run: python tests/test_capabilities.py
+
+      - name: Golden tests
+        run: python tests/test_golden.py
 
       - name: Build all platforms
         run: python scripts/build.py
