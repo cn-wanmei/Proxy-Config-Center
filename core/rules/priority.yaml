@@ -1,108 +1,98 @@
-# Rule priority definition / 规则优先级定义
-# Lower number = higher priority
-# 数字越小优先级越高
+# Rule Priority / 规则优先级
+# Platform-agnostic formal definition
+# 数字越小 = 优先级越高（越先匹配）
+# Lower number = higher priority (matched first)
 
 version: 1
 
+# Formal priority list - Build engine MUST respect this order
 priority:
   - id: ad-block
     value: 1
-    description:
-      zh: 广告拦截
-      en: Ad blocking
+    group: ad-block
+    description: { zh: 广告拦截, en: Ad blocking }
 
   - id: lan
     value: 5
-    description:
-      zh: 局域网
-      en: LAN
+    group: direct          # LAN always direct
+    description: { zh: 局域网, en: LAN }
 
   - id: china
     value: 10
-    description:
-      zh: 中国连接
-      en: China
+    group: china
+    description: { zh: 中国连接, en: China }
 
   - id: apple
     value: 15
-    description:
-      zh: 苹果服务
-      en: Apple
+    group: apple
+    description: { zh: 苹果服务, en: Apple }
 
   - id: code-repo
     value: 20
-    description:
-      zh: 代码仓库
-      en: Code Repository
+    group: code-repo
+    description: { zh: 代码仓库, en: Code Repository }
 
   - id: microsoft
     value: 30
-    description:
-      zh: 微软服务
-      en: Microsoft
+    group: microsoft
+    description: { zh: 微软服务, en: Microsoft }
 
   - id: game
     value: 40
-    description:
-      zh: 游戏平台
-      en: Gaming
+    group: game
+    description: { zh: 游戏平台, en: Gaming }
 
   - id: ai
     value: 50
-    description:
-      zh: 人工智能
-      en: AI
+    group: ai
+    description: { zh: 人工智能, en: AI }
 
   - id: google
     value: 60
-    description:
-      zh: 谷歌服务
-      en: Google
+    group: google
+    description: { zh: 谷歌服务, en: Google }
 
   - id: youtube
     value: 70
-    description:
-      zh: 油管视频
-      en: YouTube
+    group: youtube
+    description: { zh: 油管视频, en: YouTube }
 
   - id: spotify
     value: 80
-    description:
-      zh: 声破天乐
-      en: Spotify
+    group: spotify
+    description: { zh: 声破天乐, en: Spotify }
 
   - id: telegram
     value: 90
-    description:
-      zh: 电报通讯
-      en: Telegram
+    group: telegram
+    description: { zh: 电报通讯, en: Telegram }
 
   - id: twitter
     value: 100
-    description:
-      zh: 推特社交
-      en: Twitter / X
+    group: twitter
+    description: { zh: 推特社交, en: Twitter / X }
 
   - id: netflix
     value: 110
-    description:
-      zh: 奈飞影视
-      en: Netflix
+    group: netflix
+    description: { zh: 奈飞影视, en: Netflix }
 
   - id: tiktok
     value: 120
-    description:
-      zh: 抖音国际
-      en: TikTok
+    group: tiktok
+    description: { zh: 抖音国际, en: TikTok }
 
   - id: ehentai
     value: 130
-    description:
-      zh: 绅士漫画
-      en: E-Hentai
+    group: ehentai
+    description: { zh: 绅士漫画, en: E-Hentai }
 
   - id: final
     value: 999
-    description:
-      zh: 其它连接（兜底）
-      en: Final (fallback)
+    group: final
+    description: { zh: 其它连接（兜底）, en: Final (fallback) }
+
+# Build engine notes:
+# 1. Rules must be emitted in ascending order of `value`
+# 2. `group` field points to the strategy group id that should handle the traffic
+# 3. No platform-specific rule syntax allowed here
