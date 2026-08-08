@@ -1,15 +1,20 @@
-# DNS Policies / DNS 策略
-# Final selectable DNS policies that services can bind to
-# 最终可被服务绑定、客户端可手动选择的 DNS 策略
+# ============================================================
+# DNS Layer 3: Policies (what services bind to)
+# ============================================================
+# Service.dns MUST reference a policy id from this file.
+# options = list of resolver ids (must exist in resolvers.yaml)
+# group   = default group (must exist in groups.yaml)
+# default = must be one of options
 
 version: 1
 
 policies:
-  # Fixed policies (usually not shown as selectable, or shown with limited options)
   - id: dns-system
     name: { zh: 系统DNS, en: System DNS }
     group: system
     selectable: false
+    options: [system]
+    default: system
 
   - id: dns-china
     name: { zh: 中国DNS, en: China DNS }
@@ -46,13 +51,9 @@ policies:
     options: [cloudflare, google, alidns, tencent, system]
     default: cloudflare
 
-  # Fully selectable (for services that want maximum flexibility)
   - id: dns-selectable
     name: { zh: 可选DNS, en: Selectable DNS }
     group: foreign
     selectable: true
     options: [cloudflare, google, alidns, tencent, system]
     default: cloudflare
-    description:
-      zh: 完全手动选择的 DNS 策略
-      en: Fully manual selectable DNS policy
