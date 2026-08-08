@@ -3,11 +3,11 @@
   "files": {
     ".gitkeep": "830af0bfa1cc02eabdaad11f919600db853cb0e3",
     "README.md": "40d4745f68e671bdeded027fac417d85d982569a",
-    "clash/config.yaml": "b93a34e1eafe4d4e4dc7848735ed68b6a440af02",
-    "clash-meta/config.yaml": "cf2c662676be7dd924c4226618d95da2ec1404c4",
-    "egern/config.yaml": "ed807f2cb30479c091351753204d17f1a6ff11c1",
-    "loon/config.conf": "359b045fbd90fde568831a741e44235b7ef11925",
-    "shadowrocket/config.conf": "2deaf011d4c40ec462d8b3fcf01634db31577756",
-    "stash/config.yaml": "08c3b45de97df0bd0be5be22c0ac7b661f7a742c"
+    "clash/config.yaml": "d8138925d84a952cab4853455848864c37aa45f2",
+    "clash-meta/config.yaml": "9a2d6d1fe627d2dd2091f49309922fd33e5d69f9",
+    "egern/config.yaml": "f8061a76718047703f2c488a12a87e6afd229981",
+    "loon/config.conf": "1e67c00a78b0748dc404e69b4f9bcaf8455492d1",
+    "shadowrocket/config.conf": "a2e06aa9b7414cd6e169068c1435ce04d6b7471f",
+    "stash/config.yaml": "0b76908f9a137ff5bf54c9de8a87469d1c48b1c0"
   }
-}\n
+}
