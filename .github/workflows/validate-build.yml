@@ -33,9 +33,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - uses: actions/cache@v4
+        with:
+          path: .cache/rule-sources
+          key: rule-sources-${{ hashFiles('core/rules/sources.yaml') }}
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Validate Core + Capabilities + References
@@ -58,6 +64,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -67,7 +75,9 @@ jobs:
         run: python scripts/build.py
       - name: Structural check
         run: python scripts/check_config.py
-      - name: Generated diff safety
+      - name: Large source diff safety
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: python scripts/config_diff.py
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
