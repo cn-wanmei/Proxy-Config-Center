@@ -13,5 +13,7 @@ features:
   proxy_provider: true
   process: true
   sniffer: true
+  icons: true
+  profile_store_selected: false
 
 limitations: {}
