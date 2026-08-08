@@ -1,0 +1,181 @@
+# AUTO-GENERATED from Core — DO NOT EDIT MANUALLY
+# Source: core/ | Build: scripts/build.py
+# 订阅/节点: 编辑 core/proxies/providers.yaml 后重新 build
+
+ipv6: true
+dns:
+  upstreams:
+    alidns:
+    - https://dns.alidns.com/dns-query
+    - h3://dns.alidns.com/dns-query
+    tencent:
+    - https://doh.pub/dns-query
+    - h3://doh.pub/dns-query
+    google:
+    - https://dns.google/dns-query
+    cloudflare:
+    - https://cloudflare-dns.com/dns-query
+    - https://1.1.1.1/dns-query
+proxy_providers:
+- name: 机场订阅1
+  url: YOUR_SUBSCRIBE_URL_1
+  udp_relay: true
+policy_groups:
+- select:
+    name: 代理模式
+    policies: [手动选择, 定向免流, 自动选择, DIRECT, REJECT]
+    flatten: true
+- select:
+    name: 手动选择
+    policies: [DIRECT]
+    flatten: true
+- select:
+    name: 定向免流
+    policies: [DIRECT]
+    flatten: true
+- select:
+    name: 自动选择
+    policies: [DIRECT]
+    flatten: true
+- select:
+    name: 直连模式
+    policies: [DIRECT]
+    flatten: true
+- select:
+    name: 阻断连接
+    policies: [REJECT]
+    flatten: true
+- select:
+    name: 广告拦截
+    policies: [REJECT, 代理模式, 手动选择, DIRECT]
+    flatten: true
+- select:
+    name: 中国连接
+    policies: [DIRECT, 代理模式, 手动选择, 自动选择, REJECT]
+    flatten: true
+- select:
+    name: 代码仓库
+    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    flatten: true
+- select:
+    name: 微软服务
+    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    flatten: true
+- select:
+    name: 游戏平台
+    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    flatten: true
+- select:
+    name: 人工智能
+    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    flatten: true
+- select:
+    name: 谷歌服务
+    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    flatten: true
+- select:
+    name: 油管视频
+    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    flatten: true
+- select:
+    name: 声破天乐
+    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    flatten: true
+- select:
+    name: 电报通讯
+    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    flatten: true
+- select:
+    name: 推特社交
+    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    flatten: true
+- select:
+    name: 奈飞影视
+    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    flatten: true
+- select:
+    name: 抖音国际
+    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    flatten: true
+- select:
+    name: 绅士漫画
+    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    flatten: true
+- select:
+    name: 苹果服务
+    policies: [DIRECT, 代理模式, 手动选择, 自动选择, REJECT]
+    flatten: true
+- select:
+    name: 其它连接
+    policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT]
+    flatten: true
+rules:
+- domain_suffix:
+    match: apple.com
+    policy: 苹果服务
+- domain_suffix:
+    match: icloud.com
+    policy: 苹果服务
+- domain_suffix:
+    match: cn
+    policy: 中国连接
+- geoip:
+    match: CN
+    policy: 中国连接
+    no_resolve: true
+- domain_suffix:
+    match: openai.com
+    policy: 人工智能
+- domain_suffix:
+    match: chatgpt.com
+    policy: 人工智能
+- domain_suffix:
+    match: anthropic.com
+    policy: 人工智能
+- domain_suffix:
+    match: x.ai
+    policy: 人工智能
+- domain_suffix:
+    match: google.com
+    policy: 谷歌服务
+- domain_suffix:
+    match: youtube.com
+    policy: 油管视频
+- domain_suffix:
+    match: spotify.com
+    policy: 声破天乐
+- domain_suffix:
+    match: telegram.org
+    policy: 电报通讯
+- domain_suffix:
+    match: t.me
+    policy: 电报通讯
+- domain_suffix:
+    match: twitter.com
+    policy: 推特社交
+- domain_suffix:
+    match: x.com
+    policy: 推特社交
+- domain_suffix:
+    match: netflix.com
+    policy: 奈飞影视
+- domain_suffix:
+    match: tiktok.com
+    policy: 抖音国际
+- domain_suffix:
+    match: github.com
+    policy: 代码仓库
+- domain_suffix:
+    match: microsoft.com
+    policy: 微软服务
+- domain_suffix:
+    match: steampowered.com
+    policy: 游戏平台
+- domain_suffix:
+    match: e-hentai.org
+    policy: 绅士漫画
+- domain_suffix:
+    match: exhentai.org
+    policy: 绅士漫画
+- default:
+    policy: 其它连接
