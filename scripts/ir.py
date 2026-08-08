@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Core → Resolved IR — rule sources = blackmatrix7 only."""
+"""Core → Resolved IR — rule sources + platform capabilities matrix."""
 
 from pathlib import Path
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 try:
     import yaml
@@ -12,12 +12,25 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parent.parent
 CORE = ROOT / "core"
+sys_path_note = str(ROOT / "scripts")
+import sys
+if sys_path_note not in sys.path:
+    sys.path.insert(0, sys_path_note)
+
+try:
+    from engines.capability import all_platforms, supports_rule_set, REQUIRED_PLATFORMS
+except Exception:
+    all_platforms = lambda: {}
+    supports_rule_set = lambda p: False
+    REQUIRED_PLATFORMS = []
+
 
 def load_yaml(path: Path) -> Any:
     if not path.exists():
         return None
     with open(path, encoding="utf-8") as f:
         return yaml.safe_load(f)
+
 
 @dataclass
 class ResolvedService:
@@ -33,24 +46,25 @@ class ResolvedService:
     icon: str
     rule_source_id: str = ""
 
+
 @dataclass
 class BMSet:
-    """One blackmatrix7 rule-provider set."""
     key: str
     path: str
     url: str
     behavior: str = "classical"
 
+
 @dataclass
 class ResolvedRuleSource:
     id: str
     target_service: str
-    # blackmatrix7 only — no geosite/geoip fields used by renderers
     bm_sets: List[BMSet] = field(default_factory=list)
     domain_suffix: List[str] = field(default_factory=list)
     domain_keyword: List[str] = field(default_factory=list)
     is_match: bool = False
     priority: int = 500
+
 
 @dataclass
 class ResolvedIR:
@@ -66,12 +80,17 @@ class ResolvedIR:
     rule_sources: List[ResolvedRuleSource] = field(default_factory=list)
     blackmatrix7_base: str = ""
     id_to_display: Dict[str, str] = field(default_factory=dict)
+    # platform → capabilities snapshot + derived flags
+    platform_capabilities: Dict[str, dict] = field(default_factory=dict)
+    platform_rule_set: Dict[str, bool] = field(default_factory=dict)
+
 
 def _display_name(g: dict) -> str:
     name = g.get("name", {})
     if isinstance(name, dict):
         return name.get("zh") or name.get("en") or g.get("id", "unknown")
     return str(name)
+
 
 def _parse_bm(base: str, key: str, bm: Any) -> Optional[BMSet]:
     if not bm:
@@ -84,6 +103,7 @@ def _parse_bm(base: str, key: str, bm: Any) -> Optional[BMSet]:
     if not path:
         return None
     return BMSet(key=key, path=path, url=f"{base}/{path}", behavior=beh)
+
 
 def build_ir() -> ResolvedIR:
     ir = ResolvedIR()
@@ -150,10 +170,8 @@ def build_ir() -> ResolvedIR:
             es = _parse_bm(ir.blackmatrix7_base, f"{sid}-extra{i}", extra)
             if es:
                 bm_sets.append(es)
-
         ir.rule_sources.append(ResolvedRuleSource(
-            id=sid,
-            target_service=sid,
+            id=sid, target_service=sid,
             bm_sets=bm_sets,
             domain_suffix=list(meta.get("domain_suffix") or []),
             domain_keyword=list(meta.get("domain_keyword") or []),
@@ -161,7 +179,6 @@ def build_ir() -> ResolvedIR:
             priority=pri_map.get(sid, 500),
         ))
 
-    # legacy services/*.yaml optional supplement (domain only)
     rules_dir = CORE / "rules" / "services"
     all_rules = []
     if rules_dir.exists():
@@ -170,16 +187,22 @@ def build_ir() -> ResolvedIR:
             gid = data.get("group") or str(data.get("id", "")).replace("service-", "")
             for r in data.get("rules") or []:
                 if r.get("type") in ("geosite", "geoip"):
-                    continue  # stripped
+                    continue
                 item = dict(r)
                 item["_group"] = gid
                 item["_priority"] = pri_map.get(gid, 500)
                 all_rules.append(item)
     ir.rules = sorted(all_rules, key=lambda x: x.get("_priority", 999))
+
+    # Platform capability matrix (for renderers / tests)
+    ir.platform_capabilities = all_platforms()
+    for name in REQUIRED_PLATFORMS or list(ir.platform_capabilities.keys()):
+        ir.platform_rule_set[name] = supports_rule_set(name)
+
     return ir
+
 
 if __name__ == "__main__":
     ir = build_ir()
     print(f"services={len(ir.services)} sources={len(ir.rule_sources)}")
-    for rs in ir.rule_sources[:5]:
-        print(f"  p={rs.priority} {rs.id} bm={[b.path for b in rs.bm_sets]}")
+    print("platform_rule_set:", ir.platform_rule_set)
