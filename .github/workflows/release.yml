@@ -6,6 +6,8 @@ on:
       - 'v*'
     branches:
       - 'release/v*'
+  pull_request:
+    types: [opened, synchronize]
   workflow_dispatch:
     inputs:
       tag:
@@ -19,6 +21,7 @@ permissions:
 
 jobs:
   release:
+    if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref_name, 'release/v') || startsWith(github.head_ref, 'release/v')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,6 +34,8 @@ jobs:
         run: |
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             TAG="$GITHUB_REF_NAME"
+          elif [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then
+            TAG="${GITHUB_HEAD_REF#release/}"
           else
             TAG="${GITHUB_REF_NAME#release/}"
           fi
@@ -84,7 +89,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.release_meta.outputs.tag }}
-          target_commitish: ${{ github.sha }}
+          target_commitish: ${{ github.event_name == 'pull_request' && 'main' || github.sha }}
           files: dist/*.zip
           generate_release_notes: true
           make_latest: true
