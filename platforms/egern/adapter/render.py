@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Egern Renderer with subscription placeholders."""
+"""Egern Renderer — no empty proxy_providers."""
 
 import sys
 from pathlib import Path
@@ -14,7 +14,7 @@ except Exception:
     def load_providers():
         return {}
     def enabled_subscriptions(data=None):
-        return [{"name": {"zh": "机场订阅1"}, "url": "YOUR_SUBSCRIBE_URL_1"}]
+        return []
     def enabled_nodes(data=None):
         return []
 
@@ -49,17 +49,15 @@ def render(ir: Any) -> dict:
                     policies.append("DIRECT" if act == "direct" else "REJECT" if act == "reject" else act)
             else:
                 policies.append(_resolve(str(o), id_to_display))
-        # Node groups: leave placeholder comment via DIRECT until Sub-Store/sub injects
         if g.get("include-all-nodes") and not policies:
             policies = ["DIRECT"]
-        entry = {
+        policy_groups.append({
             "select": {
                 "name": id_to_display.get(g["id"], g["id"]),
                 "policies": policies or ["DIRECT"],
                 "flatten": True,
             }
-        }
-        policy_groups.append(entry)
+        })
 
     for s in getattr(ir, "services", []) or []:
         if hasattr(s, "id"):
@@ -126,23 +124,24 @@ def render(ir: Any) -> dict:
         if servers:
             dns_upstreams[rid] = servers
 
-    # Subscription placeholders for Egern (user fills / or uses Sub-Store)
+    config = {
+        "ipv6": True,
+        "dns": {"upstreams": dns_upstreams},
+        "policy_groups": policy_groups,
+        "rules": rules,
+    }
+
+    # 仅真实订阅才写入
     subs = []
     for s in enabled_subscriptions(pdata):
         name = s.get("name", {})
         n = name.get("zh") if isinstance(name, dict) else str(name)
         subs.append({
             "name": n or s.get("id"),
-            "url": s.get("url") or "YOUR_SUBSCRIBE_URL",
+            "url": s.get("url"),
             "udp_relay": True,
         })
+    if subs:
+        config["proxy_providers"] = subs
 
-    config = {
-        "ipv6": True,
-        "dns": {"upstreams": dns_upstreams},
-        # ⬇️ 机场订阅占位 — 修改 core/proxies/providers.yaml
-        "proxy_providers": subs,
-        "policy_groups": policy_groups,
-        "rules": rules,
-    }
     return config
