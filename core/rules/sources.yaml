@@ -17,15 +17,15 @@ sources:
       - googletagmanager.com
       - googleadservices.com
       - adservice.google.com
-      - pagead2.googlesyndication.com
+      - pagead.googlesyndication.com
 
   china:
     blackmatrix7:
       path: China/China.yaml
       behavior: classical
     blackmatrix7_extra:
-      - path: ChinaIPs/ChinaIPs.yaml
-        behavior: classical
+      - path: ChinaIPs/ChinaIPs.list
+        behavior: ipcidr
     domain_suffix:
       - cn
       - baidu.com
@@ -72,16 +72,16 @@ sources:
       - githubusercontent.com
       - githubassets.com
       - gitlab.com
-      - github.io           # GitHub Pages
-      - github.dev          # 在线 IDE
-      - githubcopilot.com   # Copilot
-      - githubapp.com       # OAuth / App
-      - githubstatus.com    # 状态页
-      - ghcr.io             # Container Registry
-      - git.io              # 短链
-      - npmjs.com           # npm 包管理
+      - github.io
+      - github.dev
+      - githubcopilot.com
+      - githubapp.com
+      - githubstatus.com
+      - ghcr.io
+      - git.io
+      - npmjs.com
       - npmjs.org
-      - nuget.org           # .NET 包管理
+      - nuget.org
       - atom.io
 
   microsoft:
@@ -94,7 +94,7 @@ sources:
       - office.com
       - office365.com
       - onedrive.com
-      - outlook.com         # 核心邮件
+      - outlook.com
       - hotmail.com
       - bing.com
       - azure.com
@@ -104,8 +104,8 @@ sources:
       - skypeassets.com
       - xbox.com
       - xboxlive.com
-      - aka.ms              # 微软短链
-      - msedge.net          # Edge CDN
+      - aka.ms
+      - msedge.net
       - msecnd.net
       - sharepoint.com
       - visualstudio.com
@@ -128,15 +128,15 @@ sources:
       - googleapis.com
       - gstatic.com
       - googleusercontent.com
-      - gmail.com           # 核心邮件
-      - googlevideo.com     # 视频流
-      - ggpht.com           # 头像/图片 CDN
-      - gvt1.com            # 下载 CDN
+      - gmail.com
+      - googlevideo.com
+      - ggpht.com
+      - gvt1.com
       - gvt2.com
-      - recaptcha.net       # 人机验证
-      - g.co                # 短链
-      - appspot.com         # Google Cloud 应用
-      - firebaseio.com      # Firebase 实时数据库
+      - recaptcha.net
+      - g.co
+      - appspot.com
+      - firebaseio.com
       - firebaseapp.com
       - withgoogle.com
       - googledrive.com
@@ -151,11 +151,11 @@ sources:
       - youtu.be
       - googlevideo.com
       - ytimg.com
-      - youtube-nocookie.com  # 嵌入播放器
-      - yt.be                 # 短链
+      - youtube-nocookie.com
+      - yt.be
       - youtubekids.com
       - youtubegaming.com
-      - ggpht.com             # 缩略图 CDN
+      - ggpht.com
 
   spotify:
     blackmatrix7:
@@ -165,10 +165,10 @@ sources:
       - spotify.com
       - scdn.co
       - spotifycdn.com
-      - spoti.fi              # 官方短链
-      - spotifycdn.net        # CDN 变体
+      - spoti.fi
+      - spotifycdn.net
       - byspotify.com
-      - pscdn.co              # 播客 CDN
+      - pscdn.co
       - spotifycharts.com
       - spotifyjobs.com
 
@@ -181,13 +181,13 @@ sources:
       - t.me
       - tdesktop.com
       - telegra.ph
-      - telegram.me           # 旧域名仍在用
-      - cdn-telegram.org      # CDN 核心
-      - graph.org             # 即时预览
-      - tg.dev                # 官方开发者域
-      - tx.me                 # 短链
-      - telesco.pe            # 频道预览
-      - telegram.space        # 官方社区
+      - telegram.me
+      - cdn-telegram.org
+      - graph.org
+      - tg.dev
+      - tx.me
+      - telesco.pe
+      - telegram.space
       - telegram-cdn.org
 
   twitter:
@@ -199,11 +199,11 @@ sources:
       - x.com
       - twimg.com
       - t.co
-      - twimg.co              # 图片 CDN 变体
-      - tweetdeck.com         # X 官方客户端
-      - grok.com              # X AI 产品
-      - vine.co               # 存量流量
-      - periscope.tv          # 存量流量
+      - twimg.co
+      - tweetdeck.com
+      - grok.com
+      - vine.co
+      - periscope.tv
       - pscp.tv
 
   netflix:
@@ -215,9 +215,9 @@ sources:
       - nflxvideo.net
       - nflxso.net
       - nflximg.net
-      - fast.com              # Netflix 测速工具
-      - nflxext.com           # 扩展/设备
-      - nflximg.com           # 图片 CDN 变体
+      - fast.com
+      - nflxext.com
+      - nflximg.com
       - netflix.net
       - netflixtechblog.com
 
@@ -230,57 +230,11 @@ sources:
       - tiktokv.com
       - musical.ly
       - byteoversea.com
-      - tiktokcdn.com         # 核心 CDN
-      - muscdn.com            # 旧版 CDN
-      - capcut.com            # 字节系剪辑工具
-      - snssdk.com            # 字节 SDK
+      - tiktokcdn.com
+      - muscdn.com
+      - capcut.com
+      - snssdk.com
       - tiktokmusic.app
-      - trae.ai               # 字节 AI 产品
-      - marscode.com          # 字节 AI IDE
+      - trae.ai
+      - marscode.com
       - byteintlapi.com
-
-  game:
-    blackmatrix7:
-      path: Steam/Steam.yaml
-      behavior: classical
-    domain_suffix:
-      - steampowered.com
-      - steamcommunity.com
-      - steamgames.com
-      - steamstatic.com       # 静态资源主 CDN
-      - steam.tv              # Steam 直播
-      - steamdeck.com
-      - valvesoftware.com     # 母公司
-      - s.team                # 短链
-      - steamstat.us          # 状态监测
-      - humblebundle.com      # 关联平台
-      - fanatical.com
-
-  ai:
-    blackmatrix7:
-      path: OpenAI/OpenAI.yaml
-      behavior: classical
-    domain_suffix:
-      - openai.com
-      - chatgpt.com
-      - anthropic.com
-      - claude.ai
-      - oaistatic.com         # OpenAI 静态资源
-      - oaiusercontent.com    # OpenAI 用户内容
-      - ai.com                # OpenAI 旗下
-      - sentry.io             # 错误追踪
-      - auth0.com             # 登录验证
-      - intercom.io           # 客服系统
-      - intercomcdn.com
-      - stripe.com            # 支付
-      - launchdarkly.com      # 功能开关
-
-  ehentai:
-    domain_suffix:
-      - e-hentai.org
-      - exhentai.org
-      - ehgt.org
-      - hath.network
-
-  final:
-    match: true
