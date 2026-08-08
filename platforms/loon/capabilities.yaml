@@ -12,5 +12,6 @@ features:
   proxy_provider: true
   process: true
   mitm: true
+  icons: true
 
 limitations: {}
