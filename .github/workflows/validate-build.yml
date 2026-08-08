@@ -1,7 +1,8 @@
 name: Validate & Build
 
+# PR / tests 变更：只做校验与 artifact，不回写仓库（避免与 build.yml 双跑）
 on:
-  push:
+  pull_request:
     branches: [main]
     paths:
       - 'core/**'
@@ -9,8 +10,11 @@ on:
       - 'scripts/**'
       - 'tests/**'
       - '.github/workflows/**'
-  pull_request:
+  push:
     branches: [main]
+    paths:
+      - 'tests/**'
+      - '.github/workflows/validate-build.yml'
   workflow_dispatch:
 
 jobs:
