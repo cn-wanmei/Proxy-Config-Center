@@ -1,0 +1,267 @@
+mixed-port: 7890
+allow-lan: true
+mode: rule
+log-level: info
+ipv6: true
+proxy-groups:
+- name: 代理模式
+  type: select
+  proxies:
+  - 手动选择
+  - 定向免流
+  - 自动选择
+  - DIRECT
+  - REJECT
+  icon: proxy-mode
+- name: 手动选择
+  type: select
+  include-all-providers: true
+  icon: manual
+- name: 定向免流
+  type: select
+  include-all-providers: true
+  filter: (?i)免流
+  icon: free-flow
+- name: 自动选择
+  type: url-test
+  include-all-providers: true
+  icon: auto
+- name: 直连模式
+  type: select
+  proxies:
+  - DIRECT
+  icon: direct
+- name: 阻断连接
+  type: select
+  proxies:
+  - REJECT
+  icon: reject
+- name: 广告拦截
+  type: select
+  proxies:
+  - REJECT
+  - 代理模式
+  - 手动选择
+  - DIRECT
+  icon: ad-block
+- name: 中国连接
+  type: select
+  proxies:
+  - DIRECT
+  - 代理模式
+  - 手动选择
+  - 自动选择
+  - REJECT
+  icon: china
+- name: 代码仓库
+  type: select
+  proxies:
+  - 代理模式
+  - 手动选择
+  - 自动选择
+  - DIRECT
+  - REJECT
+  icon: github
+- name: 微软服务
+  type: select
+  proxies:
+  - 代理模式
+  - 手动选择
+  - 自动选择
+  - DIRECT
+  - REJECT
+  icon: microsoft
+- name: 游戏平台
+  type: select
+  proxies:
+  - 代理模式
+  - 手动选择
+  - 自动选择
+  - DIRECT
+  - REJECT
+  icon: game
+- name: 人工智能
+  type: select
+  proxies:
+  - 代理模式
+  - 手动选择
+  - 自动选择
+  - DIRECT
+  - REJECT
+  icon: ai
+- name: 谷歌服务
+  type: select
+  proxies:
+  - 代理模式
+  - 手动选择
+  - 自动选择
+  - DIRECT
+  - REJECT
+  icon: google
+- name: 油管视频
+  type: select
+  proxies:
+  - 代理模式
+  - 手动选择
+  - 自动选择
+  - DIRECT
+  - REJECT
+  icon: youtube
+- name: 声破天乐
+  type: select
+  proxies:
+  - 代理模式
+  - 手动选择
+  - 自动选择
+  - DIRECT
+  - REJECT
+  icon: spotify
+- name: 电报通讯
+  type: select
+  proxies:
+  - 代理模式
+  - 手动选择
+  - 自动选择
+  - DIRECT
+  - REJECT
+  icon: telegram
+- name: 推特社交
+  type: select
+  proxies:
+  - 代理模式
+  - 手动选择
+  - 自动选择
+  - DIRECT
+  - REJECT
+  icon: twitter
+- name: 奈飞影视
+  type: select
+  proxies:
+  - 代理模式
+  - 手动选择
+  - 自动选择
+  - DIRECT
+  - REJECT
+  icon: netflix
+- name: 抖音国际
+  type: select
+  proxies:
+  - 代理模式
+  - 手动选择
+  - 自动选择
+  - DIRECT
+  - REJECT
+  icon: tiktok
+- name: 绅士漫画
+  type: select
+  proxies:
+  - 代理模式
+  - 手动选择
+  - 自动选择
+  - DIRECT
+  - REJECT
+  icon: ehentai
+- name: 苹果服务
+  type: select
+  proxies:
+  - DIRECT
+  - 代理模式
+  - 手动选择
+  - 自动选择
+  - REJECT
+  icon: apple
+- name: 其它连接
+  type: select
+  proxies:
+  - 代理模式
+  - 手动选择
+  - 自动选择
+  - DIRECT
+  - REJECT
+  icon: final
+rules:
+- GEOSITE,category-ads-all,广告拦截
+- GEOIP,CN,中国连接,no-resolve
+- GEOSITE,cn,中国连接
+- DOMAIN-SUFFIX,cn,中国连接
+- DOMAIN-SUFFIX,baidu.com,中国连接
+- DOMAIN-SUFFIX,qq.com,中国连接
+- DOMAIN-SUFFIX,tencent.com,中国连接
+- DOMAIN-SUFFIX,aliyun.com,中国连接
+- DOMAIN-SUFFIX,taobao.com,中国连接
+- DOMAIN-SUFFIX,tmall.com,中国连接
+- DOMAIN-SUFFIX,alipay.com,中国连接
+- DOMAIN-SUFFIX,weixin.qq.com,中国连接
+- DOMAIN-SUFFIX,wechat.com,中国连接
+- DOMAIN-SUFFIX,apple.com,苹果服务
+- DOMAIN-SUFFIX,icloud.com,苹果服务
+- DOMAIN-SUFFIX,icloud-content.com,苹果服务
+- DOMAIN-SUFFIX,apple-cloudkit.com,苹果服务
+- DOMAIN-SUFFIX,apple-dns.net,苹果服务
+- DOMAIN-SUFFIX,push.apple.com,苹果服务
+- DOMAIN-SUFFIX,mzstatic.com,苹果服务
+- DOMAIN-SUFFIX,itunes.apple.com,苹果服务
+- DOMAIN-SUFFIX,cdn-apple.com,苹果服务
+- DOMAIN-SUFFIX,apple-mobile.de,苹果服务
+- DOMAIN-KEYWORD,apple,苹果服务
+- DOMAIN-KEYWORD,icloud,苹果服务
+- GEOSITE,github,代码仓库
+- DOMAIN-SUFFIX,github.com,代码仓库
+- DOMAIN-SUFFIX,githubusercontent.com,代码仓库
+- DOMAIN-SUFFIX,githubassets.com,代码仓库
+- DOMAIN-SUFFIX,gitlab.com,代码仓库
+- GEOSITE,microsoft,微软服务
+- GEOSITE,onedrive,微软服务
+- DOMAIN-SUFFIX,microsoft.com,微软服务
+- DOMAIN-SUFFIX,microsoftonline.com,微软服务
+- DOMAIN-SUFFIX,live.com,微软服务
+- DOMAIN-SUFFIX,office.com,微软服务
+- DOMAIN-SUFFIX,office365.com,微软服务
+- DOMAIN-SUFFIX,onedrive.com,微软服务
+- DOMAIN-SUFFIX,1drv.com,微软服务
+- DOMAIN-SUFFIX,windowsupdate.com,微软服务
+- DOMAIN-SUFFIX,openai.com,人工智能
+- DOMAIN-SUFFIX,chatgpt.com,人工智能
+- DOMAIN-SUFFIX,anthropic.com,人工智能
+- DOMAIN-SUFFIX,claude.ai,人工智能
+- DOMAIN-SUFFIX,x.ai,人工智能
+- DOMAIN-SUFFIX,generativelanguage.googleapis.com,人工智能
+- DOMAIN-SUFFIX,aistudio.google.com,人工智能
+- DOMAIN-SUFFIX,gemini.google.com,人工智能
+- DOMAIN-KEYWORD,openai,人工智能
+- DOMAIN-KEYWORD,chatgpt,人工智能
+- DOMAIN-KEYWORD,anthropic,人工智能
+- DOMAIN-KEYWORD,claude,人工智能
+- DOMAIN-KEYWORD,grok,人工智能
+- GEOSITE,google,谷歌服务
+- GEOSITE,google-cn,谷歌服务
+- DOMAIN-SUFFIX,google.com,谷歌服务
+- DOMAIN-SUFFIX,googleapis.com,谷歌服务
+- DOMAIN-SUFFIX,gstatic.com,谷歌服务
+- DOMAIN-SUFFIX,googleusercontent.com,谷歌服务
+- DOMAIN-SUFFIX,ggpht.com,谷歌服务
+- GEOSITE,youtube,油管视频
+- DOMAIN-SUFFIX,youtube.com,油管视频
+- DOMAIN-SUFFIX,youtu.be,油管视频
+- DOMAIN-SUFFIX,googlevideo.com,油管视频
+- DOMAIN-SUFFIX,ytimg.com,油管视频
+- GEOSITE,spotify,声破天乐
+- DOMAIN-SUFFIX,spotify.com,声破天乐
+- DOMAIN-SUFFIX,scdn.co,声破天乐
+- DOMAIN-SUFFIX,spotifycdn.com,声破天乐
+- GEOSITE,telegram,电报通讯
+- DOMAIN-SUFFIX,telegram.org,电报通讯
+- DOMAIN-SUFFIX,t.me,电报通讯
+- DOMAIN-SUFFIX,tdesktop.com,电报通讯
+- DOMAIN-SUFFIX,telegra.ph,电报通讯
+- GEOSITE,twitter,推特社交
+- DOMAIN-SUFFIX,twitter.com,推特社交
+- DOMAIN-SUFFIX,x.com,推特社交
+- DOMAIN-SUFFIX,twimg.com,推特社交
+- DOMAIN-SUFFIX,t.co,推特社交
+- GEOSITE,netflix,奈飞影视
+- DOMAIN-SUFFIX,netflix.com,奈飞影视
+- DOMAIN-SUFFIX,nflxvideo.net,奈飞影视
+- DOMAIN-SUFFIX,nflxso.net,奈飞影视
+- DOMAIN-SUFFIX,nflximg.net,奈飞影视
+- MATCH,其它连接
