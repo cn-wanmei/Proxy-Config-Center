@@ -1,6 +1,8 @@
-# DNS Resolvers / DNS 解析器
-# Base upstream DNS servers - defined once, reused everywhere
-# 基础上游 DNS，只定义一次，全局复用
+# ============================================================
+# DNS Layer 1: Resolvers (upstream servers)
+# ============================================================
+# Only define actual DNS endpoints here.
+# Groups and Policies reference these by id.
 
 version: 1
 
