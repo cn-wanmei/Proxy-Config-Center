@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Egern — capabilities-aware rules."""
+"""Egern — capabilities-aware rules, policy groups and external nodes."""
 
 import sys
 from pathlib import Path
@@ -8,12 +8,19 @@ from typing import Any, Dict, List
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from engines.capability import supports_rule_set, platform_from_adapter_file
+from engines.capability import supports, supports_rule_set, platform_from_adapter_file
 from engines.rules_emit import emit_egern_style
 
 try:
-    from engines.proxies import load_providers, enabled_subscriptions
+    from engines.icons import icon_url
 except Exception:
+    def icon_url(name):
+        return name if name and str(name).startswith("http") else None
+
+try:
+    from engines.proxies import EXTERNAL_RESOURCE_INTERVAL, load_providers, enabled_subscriptions
+except Exception:
+    EXTERNAL_RESOURCE_INTERVAL = 7 * 24 * 60 * 60
     def load_providers():
         return {}
     def enabled_subscriptions(data=None):
@@ -33,6 +40,7 @@ def _resolve(opt: str, id_to_display: Dict[str, str]) -> str:
 def render(ir: Any) -> dict:
     id_to_display = dict(getattr(ir, "id_to_display", {}) or {})
     pdata = load_providers()
+    subscriptions = enabled_subscriptions(pdata)
 
     for g in getattr(ir, "base_groups", []) or []:
         name = g.get("name", {})
@@ -51,15 +59,25 @@ def render(ir: Any) -> dict:
                     policies.append("DIRECT" if act == "direct" else "REJECT")
             else:
                 policies.append(_resolve(str(o), id_to_display))
-        if g.get("include-all-nodes") and not policies:
-            policies = ["DIRECT"]
-        policy_groups.append({
+
+        entry = {
             "select": {
                 "name": id_to_display.get(g["id"], g["id"]),
                 "policies": policies or ["DIRECT"],
                 "flatten": True,
             }
-        })
+        }
+        select = entry["select"]
+        if g.get("include-all-nodes") and subscriptions:
+            select["urls"] = [s["url"] for s in subscriptions]
+            select["update_interval"] = EXTERNAL_RESOURCE_INTERVAL
+        if g.get("filter"):
+            select["filter"] = g["filter"]
+        if supports(PLATFORM, "icons"):
+            iu = icon_url(g.get("icon"))
+            if iu:
+                select["icon"] = iu
+        policy_groups.append(entry)
 
     for s in getattr(ir, "services", []) or []:
         id_to_display[s.id] = s.name_zh
@@ -67,9 +85,12 @@ def render(ir: Any) -> dict:
         dname = _resolve(s.proxy_default, id_to_display)
         if dname in policies:
             policies = [dname] + [p for p in policies if p != dname]
-        policy_groups.append({
-            "select": {"name": s.name_zh, "policies": policies or ["DIRECT"], "flatten": True}
-        })
+        entry = {"select": {"name": s.name_zh, "policies": policies or ["DIRECT"], "flatten": True}}
+        if supports(PLATFORM, "icons"):
+            iu = icon_url(s.icon)
+            if iu:
+                entry["select"]["icon"] = iu
+        policy_groups.append(entry)
 
     use_rs = supports_rule_set(PLATFORM)
     rules = emit_egern_style(ir, id_to_display, use_rs)
@@ -89,11 +110,4 @@ def render(ir: Any) -> dict:
         "policy_groups": policy_groups,
         "rules": rules,
     }
-    subs = []
-    for s in enabled_subscriptions(pdata):
-        name = s.get("name", {})
-        n = name.get("zh") if isinstance(name, dict) else str(name)
-        subs.append({"name": n or s.get("id"), "url": s.get("url"), "udp_relay": True})
-    if subs:
-        config["proxy_providers"] = subs
     return config
