@@ -24,7 +24,7 @@
 subscriptions:
   - id: airport-1
     name: { zh: 机场订阅1, en: Airport Sub 1 }
-    url: "https://example.com/your-subscribe-link"   # ⬅️ 改这里
+    url: "https://example.com/your-subscribe-link"
     interval: 86400
     enabled: true
 
@@ -35,49 +35,43 @@ nodes:
     port: 443
     cipher: aes-128-gcm
     password: "pass"
-    enabled: true   # ⬅️ 打开后进入配置
+    enabled: true
 ```
 
 然后重新构建：
 
 ```bash
-pip install pyyaml
+pip install -r requirements.txt
+python scripts/validate.py
 python scripts/build.py
 ```
 
 ---
 
-## 最终配置目录 / Final configs
+## 构建与交付 / Build & Distribution
 
-构建后直接使用：
+`build/` 和 `final/` 是生成目录，不再由 CI 自动提交回仓库。
 
-```
-final/
-├── README.md
-├── clash-meta/config.yaml
-├── clash/config.yaml
-├── stash/config.yaml
-├── egern/config.yaml
-├── loon/config.conf
-└── shadowrocket/config.conf
+```text
+Core → Validate → IR → Platform Adapter → build/ → Artifact / Release
 ```
 
-（`build/` 为同内容中间产物，`final/` 为交付目录）
+本地如仍需要旧的 `final/` 交付目录，可执行：
 
-| 客户端 | 路径 |
-|--------|------|
-| Clash Meta | `final/clash-meta/config.yaml` |
-| Clash | `final/clash/config.yaml` |
-| Stash | `final/stash/config.yaml` |
-| Egern | `final/egern/config.yaml` |
-| Loon | `final/loon/config.conf` |
-| Shadowrocket | `final/shadowrocket/config.conf` |
+```bash
+python scripts/build.py --include-final
+```
 
-Clash / Meta / Stash 配置内已预留：
+GitHub Actions 会在验证通过后上传 `build/` Artifact；正式版本通过 `v*` 标签生成 Release，并自动生成 Release Notes。
 
-- `proxy-providers` ← 订阅链接（`YOUR_SUBSCRIBE_URL_*` 占位）
-- `proxies` ← 单/多节点列表
-- `proxy-groups` 中「手动选择 / 自动选择 / 定向免流」自动引用上述节点与订阅
+| 客户端 | 构建文件 |
+|--------|----------|
+| Clash Meta | `build/clash-meta/config.yaml` |
+| Clash | `build/clash/config.yaml` |
+| Stash | `build/stash/config.yaml` |
+| Egern | `build/egern/config.yaml` |
+| Loon | `build/loon/config.conf` |
+| Shadowrocket | `build/shadowrocket/config.conf` |
 
 ---
 
@@ -95,14 +89,20 @@ Clash / Meta / Stash 配置内已预留：
 
 ```bash
 python scripts/validate.py
+python tests/test_capabilities.py
 python tests/test_semantic.py
 python tests/test_golden.py
 python scripts/build.py
 python scripts/check_config.py
+python scripts/check_rule_sources.py
 ```
 
 ## 设计原则
 
-1. Core First — 逻辑只在 `core/`
-2. 订阅/节点与策略分离 — `core/proxies/providers.yaml`
-3. 改一次 Core，六端一起重建
+1. **Core First** — 业务逻辑只在 `core/`
+2. **Capability Driven** — 平台差异由 `capabilities.yaml` 描述，不在 Core 中硬编码
+3. **Reference Safe** — 构建前验证跨文件引用和规则优先级
+4. **Golden Protected** — 六个平台的完整生成结果受 Golden Snapshot 保护
+5. **Fail Fast** — 缺失能力、引用断链或构建异常直接失败，不静默降级
+6. **Build Once, Distribute Artifacts** — CI 构建并发布 Artifact，不回写生成配置
+7. **改一次 Core，六端一起重建**
