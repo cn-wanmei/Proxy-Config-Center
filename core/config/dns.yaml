@@ -1,7 +1,272 @@
-# DNS architecture / DNS 架构
-# Platform-agnostic DNS configuration
-# 平台无关的 DNS 配置
+# DNS Architecture / DNS 架构
+# Platform-agnostic semantic definition
+# 平台无关语义定义
 
 version: 1
 
-# Placeholder - detailed DNS design will be filled later
+# =====================================================
+# 1. Upstream DNS servers (base servers)
+# =====================================================
+upstreams:
+  system:
+    name: { zh: 系统DNS, en: System DNS }
+    type: system
+
+  alidns:
+    name: { zh: 阿里DNS, en: AliDNS }
+    type: doh
+    servers:
+      - https://dns.alidns.com/dns-query
+      - h3://dns.alidns.com/dns-query
+
+  tencent:
+    name: { zh: 腾讯DNS, en: Tencent DNS }
+    type: doh
+    servers:
+      - https://doh.pub/dns-query
+      - h3://doh.pub/dns-query
+
+  google:
+    name: { zh: 谷歌DNS, en: Google DNS }
+    type: doh
+    servers:
+      - https://dns.google/dns-query
+
+  cloudflare:
+    name: { zh: Cloudflare, en: Cloudflare }
+    type: doh
+    servers:
+      - https://cloudflare-dns.com/dns-query
+      - https://1.1.1.1/dns-query
+
+# =====================================================
+# 2. DNS Strategy Groups (selectable per service)
+# =====================================================
+# Each major service category has its own DNS group.
+# User can manually choose which upstream DNS to use.
+
+dns_groups:
+  - id: dns-default
+    name: { zh: 默认DNS, en: Default DNS }
+    type: select
+    options:
+      - ref: cloudflare
+      - ref: google
+      - ref: alidns
+      - ref: tencent
+      - ref: system
+    default: cloudflare
+
+  - id: dns-apple
+    name: { zh: 苹果DNS, en: Apple DNS }
+    type: select
+    options:
+      - ref: system
+      - ref: alidns
+      - ref: tencent
+      - ref: google
+      - ref: cloudflare
+    default: system
+    description:
+      zh: 苹果所有服务（推送、iCloud、App Store等）使用的DNS
+      en: DNS used by all Apple services (Push, iCloud, App Store, etc.)
+
+  - id: dns-china
+    name: { zh: 中国DNS, en: China DNS }
+    type: select
+    options:
+      - ref: alidns
+      - ref: tencent
+      - ref: system
+      - ref: google
+      - ref: cloudflare
+    default: alidns
+    description:
+      zh: 国内域名与服务使用的DNS
+      en: DNS for China domains and services
+
+  - id: dns-google
+    name: { zh: 谷歌DNS组, en: Google DNS Group }
+    type: select
+    options:
+      - ref: google
+      - ref: cloudflare
+      - ref: alidns
+      - ref: tencent
+      - ref: system
+    default: google
+
+  - id: dns-ai
+    name: { zh: 人工智能DNS, en: AI DNS }
+    type: select
+    options:
+      - ref: cloudflare
+      - ref: google
+      - ref: alidns
+      - ref: tencent
+      - ref: system
+    default: cloudflare
+
+  - id: dns-telegram
+    name: { zh: 电报DNS, en: Telegram DNS }
+    type: select
+    options:
+      - ref: cloudflare
+      - ref: google
+      - ref: alidns
+      - ref: tencent
+      - ref: system
+    default: cloudflare
+
+  - id: dns-streaming
+    name: { zh: 流媒体DNS, en: Streaming DNS }
+    type: select
+    options:
+      - ref: cloudflare
+      - ref: google
+      - ref: alidns
+      - ref: tencent
+      - ref: system
+    default: cloudflare
+    description:
+      zh: Netflix / YouTube / Spotify / Disney 等流媒体
+      en: Netflix / YouTube / Spotify / Disney etc.
+
+  - id: dns-microsoft
+    name: { zh: 微软DNS, en: Microsoft DNS }
+    type: select
+    options:
+      - ref: cloudflare
+      - ref: google
+      - ref: alidns
+      - ref: tencent
+      - ref: system
+    default: cloudflare
+
+  - id: dns-github
+    name: { zh: 代码仓库DNS, en: Code Repo DNS }
+    type: select
+    options:
+      - ref: cloudflare
+      - ref: google
+      - ref: alidns
+      - ref: tencent
+      - ref: system
+    default: cloudflare
+
+# =====================================================
+# 3. Domain → DNS Group mapping (nameserver policy)
+# =====================================================
+nameserver_policy:
+  # Apple services - all point to dns-apple group
+  - domains:
+      - "+.apple.com"
+      - "+.icloud.com"
+      - "+.icloud-content.com"
+      - "+.apple-cloudkit.com"
+      - "+.apple-dns.net"
+      - "+.push.apple.com"
+      - "+.mzstatic.com"
+      - "+.itunes.apple.com"
+      - "+.cdn-apple.com"
+    group: dns-apple
+
+  # China domains
+  - domains:
+      - "+.cn"
+      - "+.baidu.com"
+      - "+.qq.com"
+      - "+.tencent.com"
+      - "+.aliyun.com"
+      - "+.taobao.com"
+      - "+.tmall.com"
+      - "+.alipay.com"
+      - "+.weixin.qq.com"
+      - "+.wechat.com"
+    group: dns-china
+
+  # Google services
+  - domains:
+      - "+.google.com"
+      - "+.googleapis.com"
+      - "+.gstatic.com"
+      - "+.googleusercontent.com"
+      - "+.googlevideo.com"
+      - "+.youtube.com"
+      - "+.youtu.be"
+      - "+.ggpht.com"
+    group: dns-google
+
+  # AI services
+  - domains:
+      - "+.openai.com"
+      - "+.chatgpt.com"
+      - "+.anthropic.com"
+      - "+.claude.ai"
+      - "+.x.ai"
+      - "+.generativelanguage.googleapis.com"
+      - "+.aistudio.google.com"
+    group: dns-ai
+
+  # Telegram
+  - domains:
+      - "+.telegram.org"
+      - "+.t.me"
+      - "+.tdesktop.com"
+      - "+.telegra.ph"
+    group: dns-telegram
+
+  # Streaming
+  - domains:
+      - "+.netflix.com"
+      - "+.nflxvideo.net"
+      - "+.nflxso.net"
+      - "+.spotify.com"
+      - "+.scdn.co"
+      - "+.disneyplus.com"
+      - "+.disney.com"
+      - "+.bamgrid.com"
+    group: dns-streaming
+
+  # Microsoft
+  - domains:
+      - "+.microsoft.com"
+      - "+.microsoftonline.com"
+      - "+.live.com"
+      - "+.office.com"
+      - "+.office365.com"
+      - "+.onedrive.com"
+      - "+.1drv.com"
+      - "+.windowsupdate.com"
+    group: dns-microsoft
+
+  # GitHub / Code
+  - domains:
+      - "+.github.com"
+      - "+.githubusercontent.com"
+      - "+.githubassets.com"
+      - "+.gitlab.com"
+    group: dns-github
+
+  # Local / Private (always system)
+  - domains:
+      - "+.lan"
+      - "+.local"
+      - "+.localhost"
+      - "+.arpa"
+      - "+.home.arpa"
+    group: system
+
+# =====================================================
+# 4. Bootstrap & Fallback
+# =====================================================
+bootstrap:
+  - 223.5.5.5
+  - 119.29.29.29
+  - 8.8.8.8
+
+fallback:
+  - cloudflare
+  - google
+
+default_group: dns-default
