@@ -7,11 +7,13 @@ features:
   script: true
   rewrite: true
   rule_provider: false
+  rule_set: false
   proxy_provider: false
   process: false
   mitm: true
 
 limitations:
   rule_provider: false
+  rule_set: false
   proxy_provider: false
   advanced_dns: limited
