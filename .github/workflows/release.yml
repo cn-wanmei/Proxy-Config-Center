@@ -12,6 +12,8 @@ on:
 
 permissions:
   contents: write
+  id-token: write
+  attestations: write
 
 jobs:
   release:
@@ -22,9 +24,20 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install dependencies
-        run: pip install pyyaml
+        run: pip install -r requirements.txt
+      - name: Validate version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          VERSION=$(python scripts/version.py)
+          if [[ "$RELEASE_TAG" == v* && "${RELEASE_TAG#v}" != "$VERSION" ]]; then
+            echo "Tag $RELEASE_TAG does not match VERSION $VERSION"
+            exit 1
+          fi
       - name: Validate
         run: python scripts/validate.py
+      - name: Capability tests
+        run: python tests/test_capabilities.py
       - name: Semantic tests
         run: python tests/test_semantic.py
       - name: Golden tests
@@ -37,15 +50,20 @@ jobs:
         run: |
           mkdir -p dist
           cp -r build dist/configs
-          cd dist && zip -r proxy-config-center-configs.zip configs
+          cd dist
+          zip -r "proxy-config-center-${{ github.ref_name }}.zip" configs
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: release-configs
-          path: dist/proxy-config-center-configs.zip
+          path: dist/*.zip
+      - name: Generate artifact attestation
+        uses: actions/attest@v4
+        with:
+          subject-path: 'dist/*.zip'
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/proxy-config-center-configs.zip
+          files: dist/*.zip
           generate_release_notes: true
