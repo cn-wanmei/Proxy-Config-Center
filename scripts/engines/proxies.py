@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Load subscription + node — skip placeholders for clean output."""
+"""Load subscription + node config. Skip placeholders."""
 
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import List
 
 try:
     import yaml
@@ -12,10 +12,11 @@ except ImportError:
 CORE = Path(__file__).resolve().parents[2] / "core"
 
 PLACEHOLDER_MARKERS = (
+    "YOUR_SUBSCRIBE",
+    "YOUR_SERVER",
+    "YOUR_PASSWORD",
+    "example.com/subscribe",
     "YOUR_",
-    "example.com",
-    "CHANGE_ME",
-    "placeholder",
 )
 
 def load_yaml(path: Path):
@@ -27,17 +28,11 @@ def load_yaml(path: Path):
 def load_providers() -> dict:
     return load_yaml(CORE / "proxies" / "providers.yaml")
 
-def _is_real_url(url: str) -> bool:
-    if not url or not isinstance(url, str):
-        return False
-    u = url.strip()
-    if not u.startswith("http://") and not u.startswith("https://"):
-        return False
-    low = u.lower()
-    for m in PLACEHOLDER_MARKERS:
-        if m.lower() in low:
-            return False
-    return True
+def _is_placeholder(url: str) -> bool:
+    if not url or not str(url).strip():
+        return True
+    u = str(url).upper()
+    return any(m.upper() in u for m in PLACEHOLDER_MARKERS)
 
 def enabled_subscriptions(data: dict = None) -> List[dict]:
     data = data or load_providers()
@@ -45,7 +40,8 @@ def enabled_subscriptions(data: dict = None) -> List[dict]:
     for s in data.get("subscriptions") or []:
         if not s.get("enabled", True):
             continue
-        if not _is_real_url(s.get("url", "")):
+        url = s.get("url") or ""
+        if _is_placeholder(url):
             continue
         out.append(s)
     return out
@@ -55,6 +51,9 @@ def enabled_nodes(data: dict = None) -> List[dict]:
     out = []
     for n in data.get("nodes") or []:
         if not n.get("enabled", False):
+            continue
+        server = str(n.get("server") or "")
+        if _is_placeholder(server):
             continue
         item = {k: v for k, v in n.items() if k != "enabled"}
         out.append(item)
@@ -80,7 +79,7 @@ def clash_proxy_providers(data: dict = None) -> dict:
             pname = str(name)
         providers[pname] = {
             "type": "http",
-            "url": s["url"].strip(),
+            "url": s["url"],
             "interval": s.get("interval", 86400),
             "path": f"./providers/{s.get('id', 'sub')}.yaml",
             "health-check": {
@@ -96,3 +95,8 @@ def clash_inline_proxies(data: dict = None) -> List[dict]:
 
 def provider_names(data: dict = None) -> List[str]:
     return list(clash_proxy_providers(data).keys())
+
+if __name__ == "__main__":
+    d = load_providers()
+    print("subs", enabled_subscriptions(d))
+    print("providers", clash_proxy_providers(d))
