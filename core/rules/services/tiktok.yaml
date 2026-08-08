@@ -1,0 +1,22 @@
+# TikTok rules / 抖音国际
+version: 1
+id: service-tiktok
+group: tiktok
+
+rules:
+  - type: geosite
+    values: [tiktok]
+    action: group
+    target: tiktok
+  - type: domain-suffix
+    values:
+      - tiktok.com
+      - tiktokv.com
+      - tiktokcdn.com
+      - musical.ly
+      - bytedance.com
+      - byteoversea.com
+      - ibytedtos.com
+      - ttlivecdn.com
+    action: group
+    target: tiktok
