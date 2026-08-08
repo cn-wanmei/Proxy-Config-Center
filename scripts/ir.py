@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""
-Core → IR → Resolved IR (P1-6/7)
-"""
+"""Core → Resolved IR with ResolvedRuleSource."""
 
 from pathlib import Path
 from dataclasses import dataclass, field
@@ -33,23 +31,35 @@ class ResolvedService:
     dns_default_resolver: str
     dns_options: List[str]
     icon: str
+    rule_source_id: str = ""
+
+@dataclass
+class ResolvedRuleSource:
+    id: str
+    target_service: str
+    geosite: List[str] = field(default_factory=list)
+    geoip: List[str] = field(default_factory=list)
+    domain_suffix: List[str] = field(default_factory=list)
+    domain_keyword: List[str] = field(default_factory=list)
+    blackmatrix7_path: Optional[str] = None
+    blackmatrix7_behavior: str = "classical"
+    blackmatrix7_url: Optional[str] = None
+    is_match: bool = False
+    priority: int = 500
 
 @dataclass
 class ResolvedIR:
-    """Fully resolved intermediate representation for renderers."""
     config_base: dict = field(default_factory=dict)
     config_runtime: dict = field(default_factory=dict)
-    # DNS resolved
     resolvers: Dict[str, dict] = field(default_factory=dict)
     dns_groups: Dict[str, dict] = field(default_factory=dict)
     dns_policies: Dict[str, dict] = field(default_factory=dict)
-    # Proxy
     base_groups: List[dict] = field(default_factory=list)
     services: List[ResolvedService] = field(default_factory=list)
-    # Rules sorted by priority
     rules: List[dict] = field(default_factory=list)
     priority: List[dict] = field(default_factory=list)
-    # Lookup maps
+    rule_sources: List[ResolvedRuleSource] = field(default_factory=list)
+    blackmatrix7_base: str = ""
     id_to_display: Dict[str, str] = field(default_factory=dict)
 
 def _display_name(g: dict) -> str:
@@ -60,11 +70,9 @@ def _display_name(g: dict) -> str:
 
 def build_ir() -> ResolvedIR:
     ir = ResolvedIR()
-
     ir.config_base = load_yaml(CORE / "config" / "base.yaml") or {}
     ir.config_runtime = load_yaml(CORE / "config" / "runtime.yaml") or {}
 
-    # DNS layers
     resolvers_data = load_yaml(CORE / "dns" / "resolvers.yaml") or {}
     ir.resolvers = resolvers_data.get("resolvers") or {}
 
@@ -76,75 +84,87 @@ def build_ir() -> ResolvedIR:
     for p in policies_data.get("policies") or []:
         ir.dns_policies[p["id"]] = p
 
-    # Base proxy groups
     base = load_yaml(CORE / "proxy-groups" / "base.yaml") or {}
     ir.base_groups = base.get("groups") or []
     for g in ir.base_groups:
         ir.id_to_display[g["id"]] = _display_name(g)
 
-    # Special actions
-    ir.id_to_display["direct"] = "DIRECT"
-    ir.id_to_display["reject"] = "REJECT"
+    svc_data = load_yaml(CORE / "proxy-groups" / "service.yaml") or {}
+    services_raw = svc_data.get("groups") or []
 
-    # Priority
-    prio = load_yaml(CORE / "rules" / "priority.yaml") or {}
-    ir.priority = sorted(prio.get("priority") or [], key=lambda x: x.get("value", 999))
-    priority_map = {p["id"]: p.get("value", 999) for p in ir.priority}
+    pri_data = load_yaml(CORE / "rules" / "priority.yaml") or {}
+    ir.priority = pri_data.get("priority") or []
+    pri_map = {p["id"]: p.get("value", 999) for p in ir.priority}
 
-    # Services resolved
-    service_data = load_yaml(CORE / "proxy-groups" / "service.yaml") or {}
-    for g in service_data.get("groups") or []:
+    for g in services_raw:
         sid = g["id"]
-        name = g.get("name") or {}
+        name = g.get("name", {})
+        zh = name.get("zh", sid) if isinstance(name, dict) else str(name)
+        en = name.get("en", sid) if isinstance(name, dict) else str(name)
+        ir.id_to_display[sid] = zh
+
         proxy_cfg = g.get("proxy") or {}
         options = list(proxy_cfg.get("options") or [])
         default = proxy_cfg.get("default") or (options[0] if options else "proxy-mode")
-        if default not in options and options:
-            default = options[0]
 
-        dns_policy_id = g.get("dns") or "dns-foreign"
-        policy = ir.dns_policies.get(dns_policy_id) or {}
-        dns_options = list(policy.get("options") or ["cloudflare"])
-        dns_default = policy.get("default") or (dns_options[0] if dns_options else "cloudflare")
+        dns_id = g.get("dns") or "dns-foreign"
+        if isinstance(dns_id, dict):
+            dns_id = dns_id.get("policy") or "dns-foreign"
+        policy = ir.dns_policies.get(dns_id) or {}
 
-        rs = ResolvedService(
-            id=sid,
-            name_zh=name.get("zh", sid) if isinstance(name, dict) else str(name),
-            name_en=name.get("en", sid) if isinstance(name, dict) else str(name),
-            type=g.get("type", "select"),
-            proxy_options=options,
-            proxy_default=default,
-            dns_policy_id=dns_policy_id,
-            dns_default_resolver=dns_default,
-            dns_options=dns_options,
-            icon=g.get("icon", ""),
-        )
-        ir.services.append(rs)
-        ir.id_to_display[sid] = rs.name_zh
+        ir.services.append(ResolvedService(
+            id=sid, name_zh=zh, name_en=en, type=g.get("type", "select"),
+            proxy_options=options, proxy_default=default,
+            dns_policy_id=dns_id,
+            dns_default_resolver=policy.get("default") or "cloudflare",
+            dns_options=list(policy.get("options") or []),
+            icon=g.get("icon") or "",
+            rule_source_id=sid,
+        ))
 
-    # Rules
+    src_data = load_yaml(CORE / "rules" / "sources.yaml") or {}
+    ir.blackmatrix7_base = src_data.get("blackmatrix7_base") or (
+        "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash"
+    )
+    sources = src_data.get("sources") or {}
+    for sid in sorted(sources.keys(), key=lambda i: pri_map.get(i, 500)):
+        meta = sources[sid] or {}
+        bm = meta.get("blackmatrix7") or {}
+        if isinstance(bm, str):
+            bm_path, bm_beh = bm, "classical"
+        else:
+            bm_path = bm.get("path")
+            bm_beh = bm.get("behavior") or "classical"
+        bm_url = f"{ir.blackmatrix7_base}/{bm_path}" if bm_path else None
+        ir.rule_sources.append(ResolvedRuleSource(
+            id=sid, target_service=sid,
+            geosite=list(meta.get("geosite") or []),
+            geoip=list(meta.get("geoip") or []),
+            domain_suffix=list(meta.get("domain_suffix") or []),
+            domain_keyword=list(meta.get("domain_keyword") or []),
+            blackmatrix7_path=bm_path,
+            blackmatrix7_behavior=bm_beh,
+            blackmatrix7_url=bm_url,
+            is_match=bool(meta.get("match")),
+            priority=pri_map.get(sid, 500),
+        ))
+
     rules_dir = CORE / "rules" / "services"
     all_rules = []
     if rules_dir.exists():
-        for f in rules_dir.glob("*.yaml"):
+        for f in sorted(rules_dir.glob("*.yaml")):
             data = load_yaml(f) or {}
-            gid = data.get("group") or data.get("id", "").replace("service-", "")
-            order = priority_map.get(gid, 500)
+            gid = data.get("group") or str(data.get("id", "")).replace("service-", "")
             for r in data.get("rules") or []:
-                r = dict(r)
-                r["_group"] = data.get("group", gid)
-                r["_priority"] = order
-                all_rules.append(r)
+                item = dict(r)
+                item["_group"] = gid
+                item["_priority"] = pri_map.get(gid, 500)
+                all_rules.append(item)
     ir.rules = sorted(all_rules, key=lambda x: x.get("_priority", 999))
     return ir
 
-# Backward compatible alias
-def build_raw_ir():
-    return build_ir()
-
 if __name__ == "__main__":
     ir = build_ir()
-    print(f"Resolved IR: {len(ir.base_groups)} base, {len(ir.services)} services, {len(ir.rules)} rules")
-    print(f"DNS: {len(ir.resolvers)} resolvers, {len(ir.dns_policies)} policies")
-    for s in ir.services[:3]:
-        print(f"  {s.id}: proxy_default={s.proxy_default}, dns={s.dns_policy_id} -> {s.dns_default_resolver}")
+    print(f"services={len(ir.services)} sources={len(ir.rule_sources)}")
+    for rs in ir.rule_sources[:4]:
+        print(f"  p={rs.priority} {rs.id} gs={rs.geosite} bm={rs.blackmatrix7_path}")
