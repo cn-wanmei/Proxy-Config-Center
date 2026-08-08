@@ -21,7 +21,6 @@ CAPABILITY_SCHEMA = ROOT / "common" / "schemas" / "capabilities.schema.json"
 REQUIRED_PLATFORMS: List[str] = [
     "clash-meta", "clash", "stash", "egern", "loon", "shadowrocket",
 ]
-
 REQUIRED_FEATURES = ("rule_provider", "rule_set", "domain_fallback")
 
 
@@ -39,32 +38,31 @@ def load_capabilities(platform: str) -> Dict[str, Any]:
     return data
 
 
-def supports(platform: str, feature: str) -> bool:
-    caps = load_capabilities(platform)
-    features = caps.get("features") or {}
-    limitations = caps.get("limitations") or {}
+def feature_supported(features: Dict[str, Any], limitations: Dict[str, Any], feature: str) -> bool:
+    """Resolve one feature: an explicit false limitation always wins."""
     if limitations.get(feature) is False:
         return False
     return features.get(feature) is True
 
 
+def supports(platform: str, feature: str) -> bool:
+    caps = load_capabilities(platform)
+    return feature_supported(caps.get("features") or {}, caps.get("limitations") or {}, feature)
+
+
 def supports_rule_set(platform: str) -> bool:
-    """Native rule_set capability only; rule_provider is deliberately separate."""
     return supports(platform, "rule_set")
 
 
 def supports_rule_provider(platform: str) -> bool:
-    """Clash/provider-style remote rule capability only."""
     return supports(platform, "rule_provider")
 
 
 def supports_domain_fallback(platform: str) -> bool:
-    """Portable DOMAIN-SUFFIX/domain fallback capability."""
     return supports(platform, "domain_fallback")
 
 
 def supports_remote_rules(platform: str) -> bool:
-    """Any remote rule mechanism supported by the platform."""
     return supports_rule_set(platform) or supports_rule_provider(platform)
 
 
@@ -89,12 +87,10 @@ def all_platforms() -> Dict[str, dict]:
 def validate_capabilities() -> List[str]:
     errors: List[str] = []
     found = all_platforms()
-
     if not CAPABILITY_SCHEMA.exists():
         return [f"missing capability schema: {CAPABILITY_SCHEMA}"]
     with CAPABILITY_SCHEMA.open(encoding="utf-8") as f:
         schema = __import__("json").load(f)
-
     validator = jsonschema.Draft202012Validator(schema)
     for name in REQUIRED_PLATFORMS:
         if name not in found:
@@ -112,7 +108,6 @@ def validate_capabilities() -> List[str]:
                 errors.append(f"{name}: features.{key} must be explicit true/false")
             elif not isinstance(features[key], bool):
                 errors.append(f"{name}: features.{key} must be boolean")
-
     return sorted(set(errors))
 
 
