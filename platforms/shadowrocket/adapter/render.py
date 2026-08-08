@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shadowrocket — no rule_provider → domain_suffix fallback."""
+"""Shadowrocket — domain fallback with policy-group icon support."""
 
 import sys
 from pathlib import Path
@@ -9,7 +9,13 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from engines.rules_emit import emit_shadowrocket_style
-from engines.capability import platform_from_adapter_file
+from engines.capability import supports, platform_from_adapter_file
+
+try:
+    from engines.icons import icon_url
+except Exception:
+    def icon_url(name):
+        return name if name and str(name).startswith("http") else None
 
 PLATFORM = platform_from_adapter_file(__file__)
 
@@ -20,6 +26,13 @@ def _resolve(opt: str, m: Dict[str, str]) -> str:
     if opt in ("reject", "REJECT"):
         return "REJECT"
     return m.get(opt, opt)
+
+
+def _icon_suffix(icon_name: str) -> str:
+    if not supports(PLATFORM, "icons"):
+        return ""
+    url = icon_url(icon_name)
+    return f", icon-url={url}" if url else ""
 
 
 def render(ir: Any) -> str:
@@ -46,14 +59,14 @@ def render(ir: Any) -> str:
                 pols.append(_resolve(str(o), m))
         if g.get("include-all-nodes") and not pols:
             pols = ["DIRECT"]
-        lines.append(f"{d} = select, {', '.join(pols or ['DIRECT'])}")
+        lines.append(f"{d} = select, {', '.join(pols or ['DIRECT'])}{_icon_suffix(g.get('icon'))}")
     for s in getattr(ir, "services", []) or []:
         m[s.id] = s.name_zh
         pols = [_resolve(str(o), m) for o in s.proxy_options]
         dd = _resolve(s.proxy_default, m)
         if dd in pols:
             pols = [dd] + [p for p in pols if p != dd]
-        lines.append(f"{s.name_zh} = select, {', '.join(pols or ['DIRECT'])}")
+        lines.append(f"{s.name_zh} = select, {', '.join(pols or ['DIRECT'])}{_icon_suffix(s.icon)}")
 
     lines += ["", "[Rule]"]
     lines.extend(emit_shadowrocket_style(ir, m))
