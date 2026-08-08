@@ -1,0 +1,19 @@
+# E-Hentai rules / 绅士漫画
+version: 1
+id: service-ehentai
+group: ehentai
+
+rules:
+  - type: geosite
+    values: [ehentai]
+    action: group
+    target: ehentai
+  - type: domain-suffix
+    values:
+      - e-hentai.org
+      - exhentai.org
+      - ehgt.org
+      - hath.network
+      - ehentai.org
+    action: group
+    target: ehentai
