@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Egern — no GEOSITE/GEOIP; domain_suffix from IR + BM note."""
+"""Egern — capabilities-aware rules."""
 
 import sys
 from pathlib import Path
@@ -7,6 +7,9 @@ from typing import Any, Dict, List
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "scripts"))
+
+from engines.capability import supports_rule_set, platform_from_adapter_file
+from engines.rules_emit import emit_egern_style
 
 try:
     from engines.proxies import load_providers, enabled_subscriptions
@@ -16,12 +19,16 @@ except Exception:
     def enabled_subscriptions(data=None):
         return []
 
+PLATFORM = platform_from_adapter_file(__file__)
+
+
 def _resolve(opt: str, id_to_display: Dict[str, str]) -> str:
     if opt in ("direct", "DIRECT"):
         return "DIRECT"
     if opt in ("reject", "REJECT"):
         return "REJECT"
     return id_to_display.get(opt, opt)
+
 
 def render(ir: Any) -> dict:
     id_to_display = dict(getattr(ir, "id_to_display", {}) or {})
@@ -64,19 +71,8 @@ def render(ir: Any) -> dict:
             "select": {"name": s.name_zh, "policies": policies or ["DIRECT"], "flatten": True}
         })
 
-    # Egern: domain_suffix patches only (no geoip/geosite)
-    # Full BM lists are for Clash rule-providers; Egern uses domain_suffix from source
-    rules: List[dict] = []
-    for rs in getattr(ir, "rule_sources", []) or []:
-        if rs.is_match:
-            continue
-        target = id_to_display.get(rs.target_service, rs.target_service)
-        for d in rs.domain_suffix:
-            rules.append({"domain_suffix": {"match": d, "policy": target}})
-        for d in rs.domain_keyword:
-            rules.append({"domain_keyword": {"match": d, "policy": target}})
-
-    rules.append({"default": {"policy": id_to_display.get("final", "其它连接")}})
+    use_rs = supports_rule_set(PLATFORM)
+    rules = emit_egern_style(ir, id_to_display, use_rs)
 
     resolvers = getattr(ir, "resolvers", {}) or {}
     dns_upstreams = {}
@@ -93,7 +89,6 @@ def render(ir: Any) -> dict:
         "policy_groups": policy_groups,
         "rules": rules,
     }
-    # 注释：Clash 系用 blackmatrix7 rule-providers；Egern 以策略组 + 域名补丁为主
     subs = []
     for s in enabled_subscriptions(pdata):
         name = s.get("name", {})
