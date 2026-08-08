@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag (e.g. v1.0.0)'
+        description: 'Release tag (e.g. v1.0.1)'
         required: false
 
 permissions:
@@ -72,24 +72,31 @@ jobs:
         env:
           RELEASE_TAG: ${{ steps.release_meta.outputs.tag }}
         run: |
-          mkdir -p dist
-          cp -r build dist/configs
+          rm -rf dist
+          mkdir -p dist/configs
+          cp build/clash-meta/config.yaml dist/clash-meta.yaml
+          cp build/clash/config.yaml dist/clash.yaml
+          cp build/stash/config.yaml dist/stash.yaml
+          cp build/egern/config.yaml dist/egern.yaml
+          cp build/loon/config.conf dist/loon.conf
+          cp build/shadowrocket/config.conf dist/shadowrocket.conf
+          cp -r build/. dist/configs/
           cd dist
           zip -r "proxy-config-center-${RELEASE_TAG}.zip" configs
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: release-configs
-          path: dist/*.zip
+          path: dist/*
       - name: Generate artifact attestation
         uses: actions/attest@v4
         with:
-          subject-path: 'dist/*.zip'
+          subject-path: 'dist/*'
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.release_meta.outputs.tag }}
-          target_commitish: ${{ github.event_name == 'pull_request' && 'main' || github.sha }}
-          files: dist/*.zip
+          target_commitish: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          files: dist/*
           generate_release_notes: true
           make_latest: true

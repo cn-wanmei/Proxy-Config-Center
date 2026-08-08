@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.0.1] - 2026-08-09
+
+发布交付方式优化 / Release distribution refinement。
+
+### Changed
+- 六端配置由 Release 单独文件直接交付，不再要求用户下载 ZIP 后再解压。
+- 保留完整 ZIP 作为六端归档与离线备份。
+- 增加 `latest/download/<file>` 稳定下载入口，适合客户端长期订阅。
+- 固定版本继续使用 `releases/download/vX.Y.Z/<file>`，便于审计、回滚和版本锁定。
+- Release workflow 对六端独立文件、完整 ZIP 统一构建、校验、Artifact 发布和 Attestation。
+- Release tag 在 bootstrap 发布分支场景下指向实际发布分支提交，避免 Release 指向旧的 `main` 提交。
+
+### Release Assets
+- `clash-meta.yaml`
+- `clash.yaml`
+- `stash.yaml`
+- `egern.yaml`
+- `loon.conf`
+- `shadowrocket.conf`
+- `proxy-config-center-v1.0.1.zip`
+
+### Platforms
+- Clash Meta
+- Clash
+- Stash
+- Egern
+- Loon
+- Shadowrocket
+
 ## [1.0.0] - 2026-08-09
 
 首个正式稳定版本 / First Stable Release。
