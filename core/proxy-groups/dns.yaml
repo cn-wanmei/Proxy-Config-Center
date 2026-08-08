@@ -1,0 +1,201 @@
+# DNS Strategy Groups / DNS 策略组
+# Platform-agnostic semantic definition
+# 这些组会在客户端显示，用户可手动选择每个服务使用哪个 DNS
+# These groups will appear in the client UI for manual selection
+
+version: 1
+
+groups:
+  # =====================================================
+  # Base DNS upstreams (shown as selectable options)
+  # =====================================================
+  - id: dns-system
+    name:
+      zh: 系统DNS
+      en: System DNS
+    type: select
+    options:
+      - action: system-dns
+    icon: dns-system
+    hidden: true          # usually used as option, not top-level
+
+  - id: dns-alidns
+    name:
+      zh: 阿里DNS
+      en: AliDNS
+    type: select
+    options:
+      - action: alidns
+    icon: dns-ali
+    hidden: true
+
+  - id: dns-tencent
+    name:
+      zh: 腾讯DNS
+      en: Tencent DNS
+    type: select
+    options:
+      - action: tencent-dns
+    icon: dns-tencent
+    hidden: true
+
+  - id: dns-google-up
+    name:
+      zh: 谷歌DNS
+      en: Google DNS
+    type: select
+    options:
+      - action: google-dns
+    icon: dns-google
+    hidden: true
+
+  - id: dns-cloudflare
+    name:
+      zh: Cloudflare
+      en: Cloudflare
+    type: select
+    options:
+      - action: cloudflare-dns
+    icon: dns-cf
+    hidden: true
+
+  # =====================================================
+  # Per-service DNS Strategy Groups (visible in client)
+  # =====================================================
+  - id: dns-default
+    name:
+      zh: 默认DNS
+      en: Default DNS
+    type: select
+    options:
+      - ref: dns-cloudflare
+      - ref: dns-google-up
+      - ref: dns-alidns
+      - ref: dns-tencent
+      - ref: dns-system
+    default: dns-cloudflare
+    icon: dns-default
+    category: dns
+
+  - id: dns-apple
+    name:
+      zh: 苹果DNS
+      en: Apple DNS
+    type: select
+    options:
+      - ref: dns-system
+      - ref: dns-alidns
+      - ref: dns-tencent
+      - ref: dns-google-up
+      - ref: dns-cloudflare
+    default: dns-system
+    icon: apple
+    category: dns
+    description:
+      zh: 苹果所有服务（推送、iCloud、App Store等）使用的DNS
+      en: DNS for all Apple services
+
+  - id: dns-china
+    name:
+      zh: 中国DNS
+      en: China DNS
+    type: select
+    options:
+      - ref: dns-alidns
+      - ref: dns-tencent
+      - ref: dns-system
+      - ref: dns-google-up
+      - ref: dns-cloudflare
+    default: dns-alidns
+    icon: china
+    category: dns
+
+  - id: dns-google
+    name:
+      zh: 谷歌DNS组
+      en: Google DNS Group
+    type: select
+    options:
+      - ref: dns-google-up
+      - ref: dns-cloudflare
+      - ref: dns-alidns
+      - ref: dns-tencent
+      - ref: dns-system
+    default: dns-google-up
+    icon: google
+    category: dns
+
+  - id: dns-ai
+    name:
+      zh: 人工智能DNS
+      en: AI DNS
+    type: select
+    options:
+      - ref: dns-cloudflare
+      - ref: dns-google-up
+      - ref: dns-alidns
+      - ref: dns-tencent
+      - ref: dns-system
+    default: dns-cloudflare
+    icon: ai
+    category: dns
+
+  - id: dns-telegram
+    name:
+      zh: 电报DNS
+      en: Telegram DNS
+    type: select
+    options:
+      - ref: dns-cloudflare
+      - ref: dns-google-up
+      - ref: dns-alidns
+      - ref: dns-tencent
+      - ref: dns-system
+    default: dns-cloudflare
+    icon: telegram
+    category: dns
+
+  - id: dns-streaming
+    name:
+      zh: 流媒体DNS
+      en: Streaming DNS
+    type: select
+    options:
+      - ref: dns-cloudflare
+      - ref: dns-google-up
+      - ref: dns-alidns
+      - ref: dns-tencent
+      - ref: dns-system
+    default: dns-cloudflare
+    icon: streaming
+    category: dns
+
+  - id: dns-microsoft
+    name:
+      zh: 微软DNS
+      en: Microsoft DNS
+    type: select
+    options:
+      - ref: dns-cloudflare
+      - ref: dns-google-up
+      - ref: dns-alidns
+      - ref: dns-tencent
+      - ref: dns-system
+    default: dns-cloudflare
+    icon: microsoft
+    category: dns
+
+  - id: dns-github
+    name:
+      zh: 代码仓库DNS
+      en: Code Repo DNS
+    type: select
+    options:
+      - ref: dns-cloudflare
+      - ref: dns-google-up
+      - ref: dns-alidns
+      - ref: dns-tencent
+      - ref: dns-system
+    default: dns-cloudflare
+    icon: github
+    category: dns
