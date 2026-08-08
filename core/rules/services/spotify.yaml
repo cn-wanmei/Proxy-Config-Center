@@ -1,0 +1,14 @@
+# Spotify service rules
+version: 1
+id: service-spotify
+group: spotify
+
+rules:
+  - type: geosite
+    values: [spotify]
+    action: group
+    target: spotify
+  - type: domain-suffix
+    values: [spotify.com, scdn.co, spotifycdn.com]
+    action: group
+    target: spotify
