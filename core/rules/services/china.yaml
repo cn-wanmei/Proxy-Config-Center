@@ -1,0 +1,36 @@
+# China service rules / 中国连接规则
+# Platform-agnostic semantic
+
+version: 1
+id: service-china
+group: china
+priority: 10
+
+rules:
+  - type: geoip
+    values:
+      - CN
+    action: group
+    target: china
+    no_resolve: true
+
+  - type: geosite
+    values:
+      - cn
+    action: group
+    target: china
+
+  - type: domain-suffix
+    values:
+      - cn
+      - baidu.com
+      - qq.com
+      - tencent.com
+      - aliyun.com
+      - taobao.com
+      - tmall.com
+      - alipay.com
+      - weixin.qq.com
+      - wechat.com
+    action: group
+    target: china
