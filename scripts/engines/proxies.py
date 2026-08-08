@@ -10,6 +10,7 @@ except ImportError:
     raise SystemExit("PyYAML required")
 
 CORE = Path(__file__).resolve().parents[2] / "core"
+EXTERNAL_RESOURCE_INTERVAL = 7 * 24 * 60 * 60
 
 PLACEHOLDER_MARKERS = (
     "YOUR_SUBSCRIBE",
@@ -19,20 +20,24 @@ PLACEHOLDER_MARKERS = (
     "YOUR_",
 )
 
+
 def load_yaml(path: Path):
     if not path.exists():
         return {}
     with open(path, encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
 
+
 def load_providers() -> dict:
     return load_yaml(CORE / "proxies" / "providers.yaml")
+
 
 def _is_placeholder(url: str) -> bool:
     if not url or not str(url).strip():
         return True
     u = str(url).upper()
     return any(m.upper() in u for m in PLACEHOLDER_MARKERS)
+
 
 def enabled_subscriptions(data: dict = None) -> List[dict]:
     data = data or load_providers()
@@ -45,6 +50,7 @@ def enabled_subscriptions(data: dict = None) -> List[dict]:
             continue
         out.append(s)
     return out
+
 
 def enabled_nodes(data: dict = None) -> List[dict]:
     data = data or load_providers()
@@ -59,6 +65,7 @@ def enabled_nodes(data: dict = None) -> List[dict]:
         out.append(item)
     return out
 
+
 def health_check(data: dict = None) -> dict:
     data = data or load_providers()
     return data.get("health_check") or {
@@ -66,6 +73,7 @@ def health_check(data: dict = None) -> dict:
         "url": "http://www.gstatic.com/generate_204",
         "interval": 300,
     }
+
 
 def clash_proxy_providers(data: dict = None) -> dict:
     data = data or load_providers()
@@ -80,7 +88,7 @@ def clash_proxy_providers(data: dict = None) -> dict:
         providers[pname] = {
             "type": "http",
             "url": s["url"],
-            "interval": s.get("interval", 86400),
+            "interval": EXTERNAL_RESOURCE_INTERVAL,
             "path": f"./providers/{s.get('id', 'sub')}.yaml",
             "health-check": {
                 "enable": hc.get("enable", True),
@@ -90,11 +98,14 @@ def clash_proxy_providers(data: dict = None) -> dict:
         }
     return providers
 
+
 def clash_inline_proxies(data: dict = None) -> List[dict]:
     return enabled_nodes(data)
 
+
 def provider_names(data: dict = None) -> List[str]:
     return list(clash_proxy_providers(data).keys())
+
 
 if __name__ == "__main__":
     d = load_providers()
