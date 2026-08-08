@@ -7,6 +7,7 @@ on:
       - 'core/**'
       - 'platforms/**'
       - 'scripts/**'
+      - 'tests/**'
       - '.github/workflows/**'
   pull_request:
     branches: [main]
@@ -24,6 +25,10 @@ jobs:
         run: pip install pyyaml
       - name: Validate Core
         run: python scripts/validate.py
+      - name: Semantic tests
+        run: python tests/test_semantic.py
+      - name: Golden tests
+        run: python tests/test_golden.py
 
   build:
     needs: validate
