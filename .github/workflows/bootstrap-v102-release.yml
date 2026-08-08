@@ -23,11 +23,15 @@ jobs:
           python-version: '3.12'
       - name: Install dependencies
         run: pip install -r requirements.txt
-      - name: Verify v1.0.2 tag and VERSION
+      - name: Align v1.0.2 tag to this clean main commit
         run: |
           VERSION=$(python scripts/version.py)
           test "$VERSION" = "1.0.2"
-          git rev-parse v1.0.2^{commit}
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git tag -f v1.0.2 HEAD
+          git push --force origin refs/tags/v1.0.2
+          test "$(git rev-list -n1 v1.0.2)" = "$(git rev-parse HEAD)"
       - name: Validate
         run: python scripts/validate.py
       - name: Capability tests
@@ -74,8 +78,6 @@ jobs:
           make_latest: true
       - name: Remove one-time bootstrap workflow
         run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           rm -f .github/workflows/bootstrap-v102-release.yml
           git add .github/workflows/bootstrap-v102-release.yml
           git commit -m 'chore: remove one-time v1.0.2 release bootstrap [v102-release-cleanup]'
