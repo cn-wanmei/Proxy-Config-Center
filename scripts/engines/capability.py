@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Platform capability engine — strict, data-driven feature gating."""
 
+import json
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -90,7 +91,7 @@ def validate_capabilities() -> List[str]:
     if not CAPABILITY_SCHEMA.exists():
         return [f"missing capability schema: {CAPABILITY_SCHEMA}"]
     with CAPABILITY_SCHEMA.open(encoding="utf-8") as f:
-        schema = __import__("json").load(f)
+        schema = json.load(f)
     validator = jsonschema.Draft202012Validator(schema)
     for name in REQUIRED_PLATFORMS:
         if name not in found:
