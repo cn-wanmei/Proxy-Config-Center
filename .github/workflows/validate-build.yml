@@ -1,6 +1,5 @@
 name: Validate & Build
 
-# 唯一校验入口：push/PR 均走这里；成功后由 build.yml workflow_run 回写 final
 on:
   push:
     branches: [main]
@@ -9,6 +8,9 @@ on:
       - 'platforms/**'
       - 'scripts/**'
       - 'tests/**'
+      - 'common/schemas/**'
+      - 'requirements.txt'
+      - 'VERSION'
       - '.github/workflows/**'
   pull_request:
     branches: [main]
@@ -17,8 +19,14 @@ on:
       - 'platforms/**'
       - 'scripts/**'
       - 'tests/**'
+      - 'common/schemas/**'
+      - 'requirements.txt'
+      - 'VERSION'
       - '.github/workflows/**'
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   validate:
@@ -29,8 +37,8 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install dependencies
-        run: pip install pyyaml
-      - name: Validate Core + Capabilities
+        run: pip install -r requirements.txt
+      - name: Validate Core + Capabilities + References
         run: python scripts/validate.py
       - name: Capability matrix
         run: python scripts/engines/capability.py
@@ -40,11 +48,10 @@ jobs:
         run: python tests/test_rule_sources.py
       - name: Semantic tests
         run: python tests/test_semantic.py
-      - name: Golden tests
+      - name: Golden snapshot tests
         run: python tests/test_golden.py
-      - name: BM URL health (sample)
-        run: python scripts/check_bm_urls.py
-        continue-on-error: true
+      - name: Rule source health
+        run: python scripts/check_rule_sources.py
 
   build:
     needs: validate
@@ -55,16 +62,17 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install dependencies
-        run: pip install pyyaml
+        run: pip install -r requirements.txt
       - name: Build all platforms
         run: python scripts/build.py
-      - name: Structural check (build + final)
+      - name: Structural check
         run: python scripts/check_config.py
-      - name: Upload artifacts
+      - name: Generated diff safety
+        run: python scripts/config_diff.py
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: proxy-configs
-          path: |
-            build/
-            final/
-          if-no-files-found: warn
+          name: proxy-configs-${{ github.sha }}
+          path: build/
+          if-no-files-found: error
+          retention-days: 14
