@@ -23,12 +23,16 @@ jobs:
           python-version: '3.12'
       - name: Install dependencies
         run: pip install pyyaml
-      - name: Validate Core
+      - name: Validate Core + Capabilities
         run: python scripts/validate.py
-      - name: Semantic tests
-        run: python tests/test_semantic.py
+      - name: Capability matrix
+        run: python scripts/engines/capability.py
+      - name: Capability tests
+        run: python tests/test_capabilities.py
       - name: Rule Source regression
         run: python tests/test_rule_sources.py
+      - name: Semantic tests
+        run: python tests/test_semantic.py
       - name: Golden tests
         run: python tests/test_golden.py
 
