@@ -8,6 +8,7 @@ features:
   rewrite: true
   rule_provider: false
   rule_set: false
+  domain_fallback: true
   proxy_provider: false
   process: false
   mitm: true

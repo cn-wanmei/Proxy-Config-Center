@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Core + capability validation."""
+"""Strict Core + capability validation entrypoint."""
 
 import sys
 from pathlib import Path
@@ -17,77 +17,54 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 def load_yaml(path: Path):
     if not path.exists():
-        return None
-    with open(path, encoding="utf-8") as f:
-        return yaml.safe_load(f)
+        raise FileNotFoundError(path)
+    with path.open(encoding="utf-8") as f:
+        return yaml.safe_load(f) or {}
 
 
 def main() -> int:
     errors = []
     print("=== Core Validation ===")
 
-    resolvers = (load_yaml(CORE / "dns" / "resolvers.yaml") or {}).get("resolvers") or {}
-    groups = {g["id"]: g for g in ((load_yaml(CORE / "dns" / "groups.yaml") or {}).get("groups") or [])}
-    policies = {p["id"]: p for p in ((load_yaml(CORE / "dns" / "policies.yaml") or {}).get("policies") or [])}
-
-    for gid, g in groups.items():
-        for rid in g.get("resolvers") or []:
-            if rid not in resolvers:
-                errors.append(f"dns group '{gid}' unknown resolver '{rid}'")
-    for pid, p in policies.items():
-        if p.get("group") not in groups:
-            errors.append(f"dns policy '{pid}' unknown group")
-        for opt in p.get("options") or []:
-            if opt not in resolvers:
-                errors.append(f"dns policy '{pid}' bad option '{opt}'")
-
-    svc = load_yaml(CORE / "proxy-groups" / "service.yaml") or {}
-    services = {g["id"]: g for g in (svc.get("groups") or [])}
-
-    pri = load_yaml(CORE / "rules" / "priority.yaml") or {}
-    priority_ids = {p["id"] for p in (pri.get("priority") or [])}
-
-    src = load_yaml(CORE / "rules" / "sources.yaml") or {}
-    sources = src.get("sources") or {}
-    if not sources:
-        errors.append("core/rules/sources.yaml is empty or missing")
-
-    for sid in services:
-        if sid not in sources:
-            errors.append(f"service '{sid}' has no rule source in sources.yaml")
-    for sid in sources:
-        if sid == "final":
-            continue
-        if sid not in services:
-            errors.append(f"rule source '{sid}' has no matching service")
-
-    for sid, meta in sources.items():
-        if not any([
-            meta.get("geosite"),
-            meta.get("geoip"),
-            meta.get("domain_suffix"),
-            meta.get("blackmatrix7"),
-            meta.get("match"),
-        ]):
-            errors.append(f"rule source '{sid}' has no geosite/geoip/domain/bm/match")
-
-    print(f"Resolvers: {len(resolvers)} | Services: {len(services)} | Sources: {len(sources)} | Priority: {len(priority_ids)}")
-
-    # Capability matrix
-    print("=== Capability Validation ===")
     try:
-        from engines.capability import validate_capabilities, supports_rule_set, REQUIRED_PLATFORMS
+        from engines.capability import validate_capabilities, REQUIRED_PLATFORMS
         cap_errs = validate_capabilities()
         errors.extend(cap_errs)
         for name in REQUIRED_PLATFORMS:
-            print(f"  {name}: rule_set={supports_rule_set(name)}")
-    except Exception as e:
-        errors.append(f"capability validate failed: {e}")
+            from engines.capability import supports_domain_fallback, supports_rule_provider, supports_rule_set
+            print(
+                f"  {name}: rule_set={supports_rule_set(name)} "
+                f"rule_provider={supports_rule_provider(name)} "
+                f"domain_fallback={supports_domain_fallback(name)}"
+            )
+    except Exception as exc:
+        errors.append(f"capability validation failed: {exc}")
+
+    try:
+        from reference_validator import validate as validate_references
+        errors.extend(validate_references())
+    except Exception as exc:
+        errors.append(f"reference validation failed: {exc}")
+
+    try:
+        resolvers = load_yaml(CORE / "dns" / "resolvers.yaml").get("resolvers") or {}
+        groups = load_yaml(CORE / "dns" / "groups.yaml").get("groups") or []
+        policies = load_yaml(CORE / "dns" / "policies.yaml").get("policies") or []
+        services = load_yaml(CORE / "proxy-groups" / "service.yaml").get("groups") or []
+        sources = load_yaml(CORE / "rules" / "sources.yaml").get("sources") or {}
+        priority = load_yaml(CORE / "rules" / "priority.yaml").get("priority") or []
+        print(
+            f"Resolvers: {len(resolvers)} | DNS groups: {len(groups)} | "
+            f"Policies: {len(policies)} | Services: {len(services)} | "
+            f"Sources: {len(sources)} | Priority: {len(priority)}"
+        )
+    except Exception as exc:
+        errors.append(f"core load failed: {exc}")
 
     if errors:
         print("\n❌ Errors:")
-        for e in errors:
-            print(" ", e)
+        for error in sorted(set(errors)):
+            print(" ", error)
         return 1
     print("\n✅ All checks passed")
     return 0

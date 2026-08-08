@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Core → Resolved IR — rule sources + platform capabilities matrix."""
+"""Core → Resolved IR — rules, references, and platform capabilities."""
 
 from pathlib import Path
 from dataclasses import dataclass, field
@@ -12,23 +12,22 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parent.parent
 CORE = ROOT / "core"
-sys_path_note = str(ROOT / "scripts")
 import sys
-if sys_path_note not in sys.path:
-    sys.path.insert(0, sys_path_note)
+sys.path.insert(0, str(ROOT / "scripts"))
 
-try:
-    from engines.capability import all_platforms, supports_rule_set, REQUIRED_PLATFORMS
-except Exception:
-    all_platforms = lambda: {}
-    supports_rule_set = lambda p: False
-    REQUIRED_PLATFORMS = []
+from engines.capability import (
+    all_platforms,
+    supports_domain_fallback,
+    supports_rule_provider,
+    supports_rule_set,
+    REQUIRED_PLATFORMS,
+)
 
 
 def load_yaml(path: Path) -> Any:
     if not path.exists():
-        return None
-    with open(path, encoding="utf-8") as f:
+        raise FileNotFoundError(f"missing core file: {path}")
+    with path.open(encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
@@ -53,6 +52,7 @@ class BMSet:
     path: str
     url: str
     behavior: str = "classical"
+    sha256: str = ""
 
 
 @dataclass
@@ -80,9 +80,10 @@ class ResolvedIR:
     rule_sources: List[ResolvedRuleSource] = field(default_factory=list)
     blackmatrix7_base: str = ""
     id_to_display: Dict[str, str] = field(default_factory=dict)
-    # platform → capabilities snapshot + derived flags
     platform_capabilities: Dict[str, dict] = field(default_factory=dict)
     platform_rule_set: Dict[str, bool] = field(default_factory=dict)
+    platform_rule_provider: Dict[str, bool] = field(default_factory=dict)
+    platform_domain_fallback: Dict[str, bool] = field(default_factory=dict)
 
 
 def _display_name(g: dict) -> str:
@@ -96,13 +97,14 @@ def _parse_bm(base: str, key: str, bm: Any) -> Optional[BMSet]:
     if not bm:
         return None
     if isinstance(bm, str):
-        path, beh = bm, "classical"
+        path, beh, sha256 = bm, "classical", ""
     else:
         path = bm.get("path")
         beh = bm.get("behavior") or "classical"
+        sha256 = bm.get("sha256") or ""
     if not path:
         return None
-    return BMSet(key=key, path=path, url=f"{base}/{path}", behavior=beh)
+    return BMSet(key=key, path=path, url=f"{base}/{path}", behavior=beh, sha256=sha256)
 
 
 def build_ir() -> ResolvedIR:
@@ -194,10 +196,11 @@ def build_ir() -> ResolvedIR:
                 all_rules.append(item)
     ir.rules = sorted(all_rules, key=lambda x: x.get("_priority", 999))
 
-    # Platform capability matrix (for renderers / tests)
     ir.platform_capabilities = all_platforms()
-    for name in REQUIRED_PLATFORMS or list(ir.platform_capabilities.keys()):
+    for name in REQUIRED_PLATFORMS:
         ir.platform_rule_set[name] = supports_rule_set(name)
+        ir.platform_rule_provider[name] = supports_rule_provider(name)
+        ir.platform_domain_fallback[name] = supports_domain_fallback(name)
 
     return ir
 
@@ -206,3 +209,5 @@ if __name__ == "__main__":
     ir = build_ir()
     print(f"services={len(ir.services)} sources={len(ir.rule_sources)}")
     print("platform_rule_set:", ir.platform_rule_set)
+    print("platform_rule_provider:", ir.platform_rule_provider)
+    print("platform_domain_fallback:", ir.platform_domain_fallback)

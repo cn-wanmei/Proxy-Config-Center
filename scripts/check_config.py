@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """
-Structural check for generated configs (blocks silent rule_set regression).
-Checks BOTH build/ and final/ for delivery consistency.
+Structural check for generated build artifacts.
+
+The repository no longer tracks final/ as source-controlled generated output.
+Build artifacts are validated from build/ and published by CI as artifacts or
+GitHub Releases.
 """
 
 import sys
@@ -15,7 +18,6 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parent.parent
 BUILD = ROOT / "build"
-FINAL = ROOT / "final"
 
 MIN_EGERN_RULE_SET = 10
 MIN_CLASH_RULE_SET = 10
@@ -113,25 +115,24 @@ def _suite(root: Path) -> list:
 
 def main():
     failed = 0
-    print("=== Config structural check (build/ + final/) ===")
-    for label, root in (("build", BUILD), ("final", FINAL)):
-        if not root.exists():
-            print(f"⚠️  missing {label}/")
+    print("=== Config structural check (build artifacts) ===")
+    if not BUILD.exists():
+        print("❌ missing build/")
+        return 1
+
+    for path, fn in _suite(BUILD):
+        rel = path.relative_to(ROOT)
+        if not path.exists():
+            print(f"❌ missing {rel}")
             failed += 1
             continue
-        print(f"-- {label}/ --")
-        for path, fn in _suite(root):
-            rel = path.relative_to(ROOT)
-            if not path.exists():
-                print(f"⚠️  missing {rel}")
-                failed += 1
-                continue
-            errs = fn(path)
-            if errs:
-                failed += 1
-                print(f"❌ {rel}: {', '.join(errs)}")
-            else:
-                print(f"✅ {rel}")
+        errs = fn(path)
+        if errs:
+            failed += 1
+            print(f"❌ {rel}: {', '.join(errs)}")
+        else:
+            print(f"✅ {rel}")
+
     return 1 if failed else 0
 
 

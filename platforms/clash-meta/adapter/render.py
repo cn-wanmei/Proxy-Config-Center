@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Clash Meta family renderer — platform kwarg for capability routing."""
+"""Clash Meta family renderer — capability-driven platform routing."""
 
 import sys
 from pathlib import Path
@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from engines.capability import supports_rule_set, platform_from_adapter_file
+from engines.capability import supports, supports_remote_rules, platform_from_adapter_file
 from engines.rules_emit import emit_clash_style
 
 try:
@@ -41,7 +41,7 @@ def _resolve_proxy_ref(opt: str, id_to_display: Dict[str, str]) -> str:
 
 
 def render(ir: Any, platform: Optional[str] = None) -> dict:
-    """platform: clash-meta | clash | stash — drives capabilities.supports_rule_set."""
+    """Render Clash-family syntax using the platform capability profile."""
     plat = platform or DEFAULT_PLATFORM
     id_to_display = dict(getattr(ir, "id_to_display", {}) or {})
     pdata = load_providers()
@@ -83,8 +83,7 @@ def render(ir: Any, platform: Optional[str] = None) -> dict:
                     proxies.append(_resolve_proxy_ref(str(o), id_to_display))
             if proxies:
                 entry["proxies"] = proxies
-        # icons: Meta/Stash useful; plain Clash may ignore
-        if plat != "clash":
+        if supports(plat, "icons"):
             iu = icon_url(g.get("icon"))
             if iu:
                 entry["icon"] = iu
@@ -97,7 +96,7 @@ def render(ir: Any, platform: Optional[str] = None) -> dict:
         if dname in proxies:
             proxies = [dname] + [p for p in proxies if p != dname]
         entry = {"name": s.name_zh, "type": s.type, "proxies": proxies or ["DIRECT"]}
-        if plat != "clash":
+        if supports(plat, "icons"):
             iu = icon_url(s.icon)
             if iu:
                 entry["icon"] = iu
@@ -112,7 +111,7 @@ def render(ir: Any, platform: Optional[str] = None) -> dict:
     if not nameserver:
         nameserver = ["https://dns.alidns.com/dns-query", "https://cloudflare-dns.com/dns-query"]
 
-    use_rs = supports_rule_set(plat)
+    use_rs = supports_remote_rules(plat)
     rule_providers, rules = emit_clash_style(ir, id_to_display, use_rs)
 
     config = {
@@ -139,8 +138,7 @@ def render(ir: Any, platform: Optional[str] = None) -> dict:
     if inline_proxies:
         config["proxies"] = inline_proxies
 
-    # Stash-oriented marker (harmless for Clash Meta)
-    if plat == "stash":
+    if supports(plat, "profile_store_selected"):
         config.setdefault("profile", {})
         if isinstance(config["profile"], dict):
             config["profile"]["store-selected"] = True

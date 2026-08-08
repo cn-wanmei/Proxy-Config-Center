@@ -9,8 +9,11 @@ features:
   rewrite: false
   rule_provider: true
   rule_set: true
+  domain_fallback: true
   proxy_provider: true
   process: true
   sniffer: true
+  icons: true
+  profile_store_selected: false
 
 limitations: {}

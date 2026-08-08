@@ -8,8 +8,11 @@ features:
   rewrite: true
   rule_provider: true
   rule_set: true
+  domain_fallback: true
   proxy_provider: true
   process: true
   mitm: true
+  icons: true
+  profile_store_selected: true
 
 limitations: {}

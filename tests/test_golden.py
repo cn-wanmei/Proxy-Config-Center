@@ -1,72 +1,73 @@
 #!/usr/bin/env python3
-"""Golden invariants across platforms."""
+"""Full generated-config golden regression plus semantic invariants."""
 
+import hashlib
+import json
+import subprocess
 import sys
-import importlib.util
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from ir import build_ir
-from engines.capability import supports_rule_set
+from engines.capability import supports_domain_fallback, supports_remote_rules
+
+GOLDEN = ROOT / "tests" / "golden" / "manifest.json"
 
 
-def _render(platform: str):
-    path = ROOT / "platforms" / platform / "adapter" / "render.py"
-    spec = importlib.util.spec_from_file_location(platform, path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod.render(build_ir())
+def git_blob_sha(path: Path) -> str:
+    data = path.read_bytes()
+    header = f"blob {len(data)}\0".encode()
+    return hashlib.sha1(header + data).hexdigest()
 
 
-def test_clash_meta():
-    cfg = _render("clash-meta")
-    assert cfg.get("proxy-groups"), "missing proxy-groups"
-    names = [g["name"] for g in cfg["proxy-groups"]]
-    assert "代理模式" in names
-    assert "中国连接" in names
+def test_full_snapshot():
+    manifest = json.loads(GOLDEN.read_text(encoding="utf-8"))
+    subprocess.run([sys.executable, str(ROOT / "scripts" / "build.py")], check=True, cwd=ROOT)
+    failures = []
+    for rel, expected in manifest["files"].items():
+        path = ROOT / "build" / rel
+        if not path.exists():
+            failures.append(f"missing generated file: {rel}")
+            continue
+        actual = git_blob_sha(path)
+        if actual != expected:
+            failures.append(f"{rel}: expected {expected}, got {actual}")
+    assert not failures, "\n".join(failures)
+    print("✅ full golden snapshot OK")
+
+
+def test_clash_meta_invariants():
+    import yaml
+    cfg = yaml.safe_load((ROOT / "build/clash-meta/config.yaml").read_text(encoding="utf-8"))
+    assert cfg.get("proxy-groups")
     rules = [str(r) for r in cfg.get("rules") or []]
     assert rules[-1].startswith("MATCH,")
     assert any(r.startswith("RULE-SET,") for r in rules)
-    assert not any(r.startswith("GEOSITE,") or r.startswith("GEOIP,") for r in rules)
-    # apple first option DIRECT
-    apple = next(g for g in cfg["proxy-groups"] if g["name"] == "苹果服务")
-    assert apple["proxies"][0] == "DIRECT"
-    print("✅ golden: clash-meta invariants OK")
+    assert cfg.get("rule-providers")
+    print("✅ clash-meta semantic invariants OK")
 
 
-def test_egern():
-    cfg = _render("egern")
+def test_egern_invariants():
+    import yaml
+    cfg = yaml.safe_load((ROOT / "build/egern/config.yaml").read_text(encoding="utf-8"))
     assert cfg.get("policy_groups")
-    assert cfg.get("rules")
-    assert supports_rule_set("egern") is True
-    assert any("rule_set" in r for r in cfg["rules"])
-    assert any("default" in r for r in cfg["rules"])
-    print("✅ golden: egern invariants OK")
+    assert any("rule_set" in r for r in cfg.get("rules") or [])
+    print("✅ egern semantic invariants OK")
 
 
-def test_loon():
-    text = _render("loon")
-    assert "[Proxy Group]" in text
-    assert "代理模式" in text
-    assert "FINAL," in text
-    if supports_rule_set("loon"):
-        assert "DOMAIN-SET," in text
-    print("✅ golden: loon invariants OK")
-
-
-def test_shadowrocket():
-    text = _render("shadowrocket")
-    assert "[Proxy Group]" in text
+def test_non_clash_fallback_invariants():
+    assert supports_domain_fallback("shadowrocket") is True
+    assert supports_remote_rules("shadowrocket") is False
+    text = (ROOT / "build/shadowrocket/config.conf").read_text(encoding="utf-8")
     assert "DOMAIN-SUFFIX," in text
     assert "RULE-SET" not in text
-    print("✅ golden: shadowrocket invariants OK")
+    print("✅ shadowrocket fallback invariants OK")
 
 
 if __name__ == "__main__":
-    test_clash_meta()
-    test_egern()
-    test_loon()
-    test_shadowrocket()
+    test_full_snapshot()
+    test_clash_meta_invariants()
+    test_egern_invariants()
+    test_non_clash_fallback_invariants()
     print("All golden tests passed")
