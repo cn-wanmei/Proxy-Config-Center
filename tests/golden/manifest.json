@@ -1,12 +1,13 @@
 {
-  "schema_version": 1,
-  "description": "Git blob fingerprints of the last known-good generated configuration set.",
+  "version": "1.0.2",
   "files": {
-    "clash-meta/config.yaml": "ad07fa980f0dfe330b1b66859aeaca6b03fd535e",
-    "clash/config.yaml": "7007dc891858d664f148dd7f3a5225b16a077324",
-    "egern/config.yaml": "d71e7b9041637e489c6a8d685b8d9cea0290a1ad",
-    "stash/config.yaml": "2db5f7cdeca7ac2f244ca6bdfc87d6645810ae1d",
-    "loon/config.conf": "5765efcad4a9c51328cd5c0084c1f86280bf5756",
-    "shadowrocket/config.conf": "1d1c4de9f0119682add1fd5d94b290ed2cff2640"
+    ".gitkeep": "830af0bfa1cc02eabdaad11f919600db853cb0e3",
+    "README.md": "40d4745f68e671bdeded027fac417d85d982569a",
+    "clash/config.yaml": "b93a34e1eafe4d4e4dc7848735ed68b6a440af02",
+    "clash-meta/config.yaml": "cf2c662676be7dd924c4226618d95da2ec1404c4",
+    "egern/config.yaml": "ed807f2cb30479c091351753204d17f1a6ff11c1",
+    "loon/config.conf": "359b045fbd90fde568831a741e44235b7ef11925",
+    "shadowrocket/config.conf": "2deaf011d4c40ec462d8b3fcf01634db31577756",
+    "stash/config.yaml": "08c3b45de97df0bd0be5be22c0ac7b661f7a742c"
   }
-}
+}\n
