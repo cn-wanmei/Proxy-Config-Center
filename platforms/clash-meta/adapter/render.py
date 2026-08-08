@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Clash Meta — capabilities-aware rule emission."""
+"""Clash Meta family renderer — platform kwarg for capability routing."""
 
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -29,7 +29,7 @@ except Exception:
     def provider_names(data=None):
         return []
 
-PLATFORM = platform_from_adapter_file(__file__)
+DEFAULT_PLATFORM = platform_from_adapter_file(__file__)
 
 
 def _resolve_proxy_ref(opt: str, id_to_display: Dict[str, str]) -> str:
@@ -40,7 +40,9 @@ def _resolve_proxy_ref(opt: str, id_to_display: Dict[str, str]) -> str:
     return id_to_display.get(opt, opt)
 
 
-def render(ir: Any) -> dict:
+def render(ir: Any, platform: Optional[str] = None) -> dict:
+    """platform: clash-meta | clash | stash — drives capabilities.supports_rule_set."""
+    plat = platform or DEFAULT_PLATFORM
     id_to_display = dict(getattr(ir, "id_to_display", {}) or {})
     pdata = load_providers()
     pnames = provider_names(pdata)
@@ -81,9 +83,11 @@ def render(ir: Any) -> dict:
                     proxies.append(_resolve_proxy_ref(str(o), id_to_display))
             if proxies:
                 entry["proxies"] = proxies
-        iu = icon_url(g.get("icon"))
-        if iu:
-            entry["icon"] = iu
+        # icons: Meta/Stash useful; plain Clash may ignore
+        if plat != "clash":
+            iu = icon_url(g.get("icon"))
+            if iu:
+                entry["icon"] = iu
         proxy_groups.append(entry)
 
     for s in getattr(ir, "services", []) or []:
@@ -93,21 +97,22 @@ def render(ir: Any) -> dict:
         if dname in proxies:
             proxies = [dname] + [p for p in proxies if p != dname]
         entry = {"name": s.name_zh, "type": s.type, "proxies": proxies or ["DIRECT"]}
-        iu = icon_url(s.icon)
-        if iu:
-            entry["icon"] = iu
+        if plat != "clash":
+            iu = icon_url(s.icon)
+            if iu:
+                entry["icon"] = iu
         proxy_groups.append(entry)
 
     resolvers = getattr(ir, "resolvers", {}) or {}
     nameserver = []
     for rid in ("alidns", "tencent", "google", "cloudflare"):
-        for s in (resolvers.get(rid) or {}).get("servers") or []:
-            if s not in nameserver:
-                nameserver.append(s)
+        for srv in (resolvers.get(rid) or {}).get("servers") or []:
+            if srv not in nameserver:
+                nameserver.append(srv)
     if not nameserver:
         nameserver = ["https://dns.alidns.com/dns-query", "https://cloudflare-dns.com/dns-query"]
 
-    use_rs = supports_rule_set(PLATFORM)
+    use_rs = supports_rule_set(plat)
     rule_providers, rules = emit_clash_style(ir, id_to_display, use_rs)
 
     config = {
@@ -133,4 +138,11 @@ def render(ir: Any) -> dict:
         config["proxy-providers"] = providers
     if inline_proxies:
         config["proxies"] = inline_proxies
+
+    # Stash-oriented marker (harmless for Clash Meta)
+    if plat == "stash":
+        config.setdefault("profile", {})
+        if isinstance(config["profile"], dict):
+            config["profile"]["store-selected"] = True
+
     return config
