@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Clash — reuse Clash Meta IR renderer."""
+"""Clash — shared Meta renderer with platform=clash."""
 import importlib.util
 from pathlib import Path
 
@@ -8,4 +8,4 @@ def render(ir):
     spec = importlib.util.spec_from_file_location("cm", path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
-    return mod.render(ir)
+    return mod.render(ir, platform="clash")
