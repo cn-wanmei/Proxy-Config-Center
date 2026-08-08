@@ -1,0 +1,31 @@
+# AI service rules / 人工智能规则
+# Platform-agnostic semantic
+
+version: 1
+id: service-ai
+group: ai
+priority: 50
+
+rules:
+  - type: domain-suffix
+    values:
+      - openai.com
+      - chatgpt.com
+      - anthropic.com
+      - claude.ai
+      - x.ai
+      - generativelanguage.googleapis.com
+      - aistudio.google.com
+      - gemini.google.com
+    action: group
+    target: ai
+
+  - type: domain-keyword
+    values:
+      - openai
+      - chatgpt
+      - anthropic
+      - claude
+      - grok
+    action: group
+    target: ai
