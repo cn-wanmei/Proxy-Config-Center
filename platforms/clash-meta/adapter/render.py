@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Clash Meta Renderer — reads ONLY IR (rule_sources)."""
+"""Clash Meta — rules only RULE-SET (blackmatrix7) + MATCH."""
 
 import sys
 from pathlib import Path
@@ -83,19 +83,17 @@ def render(ir: Any) -> dict:
         proxy_groups.append(entry)
 
     for s in getattr(ir, "services", []) or []:
-        sid, name_zh = s.id, s.name_zh
-        id_to_display[sid] = name_zh
+        id_to_display[s.id] = s.name_zh
         proxies = [_resolve_proxy_ref(o, id_to_display) for o in s.proxy_options]
         dname = _resolve_proxy_ref(s.proxy_default, id_to_display)
         if dname in proxies:
             proxies = [dname] + [p for p in proxies if p != dname]
-        entry = {"name": name_zh, "type": s.type, "proxies": proxies or ["DIRECT"]}
+        entry = {"name": s.name_zh, "type": s.type, "proxies": proxies or ["DIRECT"]}
         iu = icon_url(s.icon)
         if iu:
             entry["icon"] = iu
         proxy_groups.append(entry)
 
-    # DNS multi-upstream (not hardcoded per-domain)
     resolvers = getattr(ir, "resolvers", {}) or {}
     nameserver = []
     for rid in ("alidns", "tencent", "google", "cloudflare"):
@@ -105,8 +103,7 @@ def render(ir: Any) -> dict:
     if not nameserver:
         nameserver = ["https://dns.alidns.com/dns-query", "https://cloudflare-dns.com/dns-query"]
 
-    # ---- Rules ONLY from IR.rule_sources ----
-    # Order: GEOSITE/GEOIP → BlackMatrix7 RULE-SET → domain → MATCH
+    # ---- ONLY blackmatrix7 RULE-SET (+ rare domain_suffix) + MATCH ----
     rule_providers = {}
     rules: List[str] = []
 
@@ -115,21 +112,15 @@ def render(ir: Any) -> dict:
             continue
         target = id_to_display.get(rs.target_service, rs.target_service)
 
-        for gs in rs.geosite:
-            rules.append(f"GEOSITE,{gs},{target}")
-        for gi in rs.geoip:
-            rules.append(f"GEOIP,{gi},{target},no-resolve")
-
-        if rs.blackmatrix7_url:
-            pname = rs.id
-            rule_providers[pname] = {
+        for bm in getattr(rs, "bm_sets", None) or []:
+            rule_providers[bm.key] = {
                 "type": "http",
-                "behavior": rs.blackmatrix7_behavior or "classical",
-                "url": rs.blackmatrix7_url,
-                "path": f"./ruleset/{pname}.yaml",
+                "behavior": bm.behavior or "classical",
+                "url": bm.url,
+                "path": f"./ruleset/{bm.key}.yaml",
                 "interval": 86400,
             }
-            rules.append(f"RULE-SET,{pname},{target}")
+            rules.append(f"RULE-SET,{bm.key},{target}")
 
         for d in rs.domain_suffix:
             rules.append(f"DOMAIN-SUFFIX,{d},{target}")
