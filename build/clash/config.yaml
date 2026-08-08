@@ -33,35 +33,29 @@ proxy-groups:
   - 自动选择
   - DIRECT
   - REJECT
-  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/SS.png
 - name: 手动选择
   type: select
   proxies:
   - DIRECT
-  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/El.png
 - name: 定向免流
   type: select
   proxies:
   - DIRECT
   filter: (?i)免流
-  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/free_mianliu.png
 - name: 自动选择
   type: url-test
   proxies:
   - DIRECT
   url: http://www.gstatic.com/generate_204
   interval: 300
-  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Auto_Speed.png
 - name: 直连模式
   type: select
   proxies:
   - DIRECT
-  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/China.png
 - name: 阻断连接
   type: select
   proxies:
   - REJECT
-  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Reject.png
 - name: 广告拦截
   type: select
   proxies:
@@ -69,7 +63,6 @@ proxy-groups:
   - 代理模式
   - 手动选择
   - DIRECT
-  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Reject.png
 - name: 中国连接
   type: select
   proxies:
@@ -78,7 +71,6 @@ proxy-groups:
   - 手动选择
   - 自动选择
   - REJECT
-  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/China.png
 - name: 代码仓库
   type: select
   proxies:
@@ -87,7 +79,6 @@ proxy-groups:
   - 自动选择
   - DIRECT
   - REJECT
-  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/github.png
 - name: 微软服务
   type: select
   proxies:
@@ -96,7 +87,6 @@ proxy-groups:
   - 自动选择
   - DIRECT
   - REJECT
-  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Microsoft.png
 - name: 游戏平台
   type: select
   proxies:
@@ -105,7 +95,6 @@ proxy-groups:
   - 自动选择
   - DIRECT
   - REJECT
-  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/ico/steam.ico
 - name: 人工智能
   type: select
   proxies:
@@ -114,7 +103,6 @@ proxy-groups:
   - 自动选择
   - DIRECT
   - REJECT
-  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/OpenAI.png
 - name: 谷歌服务
   type: select
   proxies:
@@ -123,7 +111,6 @@ proxy-groups:
   - 自动选择
   - DIRECT
   - REJECT
-  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/ico/google.ico
 - name: 油管视频
   type: select
   proxies:
@@ -132,7 +119,6 @@ proxy-groups:
   - 自动选择
   - DIRECT
   - REJECT
-  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/YouTube.png
 - name: 声破天乐
   type: select
   proxies:
@@ -141,7 +127,6 @@ proxy-groups:
   - 自动选择
   - DIRECT
   - REJECT
-  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Spotify.png
 - name: 电报通讯
   type: select
   proxies:
@@ -150,7 +135,6 @@ proxy-groups:
   - 自动选择
   - DIRECT
   - REJECT
-  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Telegram.png
 - name: 推特社交
   type: select
   proxies:
@@ -159,7 +143,6 @@ proxy-groups:
   - 自动选择
   - DIRECT
   - REJECT
-  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/x.png
 - name: 奈飞影视
   type: select
   proxies:
@@ -168,7 +151,6 @@ proxy-groups:
   - 自动选择
   - DIRECT
   - REJECT
-  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/netflix.png
 - name: 抖音国际
   type: select
   proxies:
@@ -177,7 +159,6 @@ proxy-groups:
   - 自动选择
   - DIRECT
   - REJECT
-  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/ico/tiktok.ico
 - name: 绅士漫画
   type: select
   proxies:
@@ -186,7 +167,6 @@ proxy-groups:
   - 自动选择
   - DIRECT
   - REJECT
-  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Eh.png
 - name: 苹果服务
   type: select
   proxies:
@@ -195,7 +175,6 @@ proxy-groups:
   - 手动选择
   - 自动选择
   - REJECT
-  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Apple.png
 - name: 其它连接
   type: select
   proxies:
@@ -204,7 +183,6 @@ proxy-groups:
   - 自动选择
   - DIRECT
   - REJECT
-  icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Vpn.png
 rules:
 - RULE-SET,ad-block,广告拦截
 - RULE-SET,china,中国连接
