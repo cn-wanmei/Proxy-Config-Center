@@ -82,3 +82,5 @@ jobs:
           git add .github/workflows/bootstrap-v102-release.yml
           git commit -m 'chore: remove one-time v1.0.2 release bootstrap [v102-release-cleanup]'
           git push origin HEAD:main
+          git tag -f v1.0.2 HEAD
+          git push --force origin refs/tags/v1.0.2
