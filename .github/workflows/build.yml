@@ -1,25 +1,28 @@
-name: Build Platform Configs
+name: Publish Configs
 
-# 唯一负责：core/platforms/scripts 变更 → 测试 → 构建 → 回写 build/final
+# 仅在「Validate & Build」于 main 的 push 成功后回写 build/final，避免双触发
 on:
+  workflow_run:
+    workflows: ["Validate & Build"]
+    types: [completed]
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'core/**'
-      - 'platforms/**'
-      - 'scripts/**'
-      - '.github/workflows/build.yml'
 
 permissions:
   contents: write
 
 jobs:
-  build:
+  publish:
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout triggering commit
+        uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
           fetch-depth: 0
 
       - uses: actions/setup-python@v5
@@ -29,22 +32,10 @@ jobs:
       - name: Install dependencies
         run: pip install pyyaml
 
-      - name: Validate Core + Capabilities
-        run: python scripts/validate.py
-
-      - name: Capability tests
-        run: python tests/test_capabilities.py
-
-      - name: Rule Source regression
-        run: python tests/test_rule_sources.py
-
-      - name: Golden tests
-        run: python tests/test_golden.py
-
       - name: Build all platforms
         run: python scripts/build.py
 
-      - name: Structural check
+      - name: Structural check (build + final)
         run: python scripts/check_config.py
 
       - name: Commit generated configs
@@ -56,5 +47,5 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "chore: auto-build [skip ci]"
-            git push
+            git push origin HEAD:main
           fi
