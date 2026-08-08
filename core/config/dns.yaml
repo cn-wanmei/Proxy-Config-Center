@@ -1,0 +1,7 @@
+# DNS architecture / DNS 架构
+# Platform-agnostic DNS configuration
+# 平台无关的 DNS 配置
+
+version: 1
+
+# Placeholder - detailed DNS design will be filled later
