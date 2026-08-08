@@ -1,0 +1,59 @@
+# ============================================================
+# Proxy Providers & Nodes (placeholders)
+# 机场订阅 / 单节点 / 多节点 占位
+# ============================================================
+# Replace YOUR_* with real values. Nodes can also come from Sub-Store.
+# 将 YOUR_* 替换为真实值；也可继续用 Sub-Store 注入节点。
+
+version: 1
+
+# ---- Subscriptions (机场订阅) ----
+# Multiple subscriptions supported
+subscriptions:
+  - id: airport-1
+    name: { zh: 机场订阅1, en: Airport Sub 1 }
+    # ⬇️ 替换为你的订阅链接
+    url: "YOUR_SUBSCRIBE_URL_1"
+    interval: 86400
+    enabled: true
+
+  - id: airport-2
+    name: { zh: 机场订阅2, en: Airport Sub 2 }
+    url: "YOUR_SUBSCRIBE_URL_2"
+    interval: 86400
+    enabled: false
+
+# ---- Health check ----
+health_check:
+  enable: true
+  url: "http://www.gstatic.com/generate_204"
+  interval: 300
+
+# ---- Manual single / multi nodes (可选手写节点) ----
+# type: ss / ssr / vmess / vless / trojan / hysteria2 / tuic ...
+nodes:
+  # 单节点示例 — 复制并修改
+  - name: "示例单节点"
+    type: ss
+    server: "YOUR_SERVER"
+    port: 443
+    cipher: aes-128-gcm
+    password: "YOUR_PASSWORD"
+    enabled: false
+
+  # 多节点：继续追加即可
+  # - name: "节点2"
+  #   type: trojan
+  #   server: "..."
+  #   port: 443
+  #   password: "..."
+  #   enabled: true
+
+# ---- How groups use nodes ----
+# manual-select / auto-select / free-flow 会引用：
+#   - 所有 enabled 的 subscriptions
+#   - 所有 enabled 的 nodes
+use_in_groups:
+  - manual-select
+  - auto-select
+  - free-flow
