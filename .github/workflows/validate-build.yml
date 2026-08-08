@@ -1,0 +1,45 @@
+name: Validate & Build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'core/**'
+      - 'platforms/**'
+      - 'scripts/**'
+      - '.github/workflows/**'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install pyyaml
+      - name: Validate Core
+        run: python scripts/validate.py
+
+  build:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install pyyaml
+      - name: Build all platforms
+        run: python scripts/build.py
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: proxy-configs
+          path: build/
+          if-no-files-found: warn
