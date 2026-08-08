@@ -1,5 +1,4 @@
-# AUTO-GENERATED from Core — DO NOT EDIT MANUALLY
-# 订阅: core/proxies/providers.yaml 填真实 URL 后 rebuild
+# AUTO-GENERATED from Core | IR rule_sources
 
 ipv6: true
 dns:
@@ -39,22 +38,23 @@ policy_groups:
   - select: { name: 苹果服务, policies: [DIRECT, 代理模式, 手动选择, 自动选择, REJECT], flatten: true }
   - select: { name: 其它连接, policies: [代理模式, 手动选择, 自动选择, DIRECT, REJECT], flatten: true }
 rules:
+  - domain_suffix: { match: category-ads-all, policy: 广告拦截 }
   - domain_suffix: { match: cn, policy: 中国连接 }
   - geoip: { match: CN, policy: 中国连接, no_resolve: true }
-  - domain_suffix: { match: apple.com, policy: 苹果服务 }
-  - domain_suffix: { match: icloud.com, policy: 苹果服务 }
-  - domain_suffix: { match: openai.com, policy: 人工智能 }
-  - domain_suffix: { match: chatgpt.com, policy: 人工智能 }
-  - domain_suffix: { match: google.com, policy: 谷歌服务 }
-  - domain_suffix: { match: youtube.com, policy: 油管视频 }
-  - domain_suffix: { match: telegram.org, policy: 电报通讯 }
-  - domain_suffix: { match: twitter.com, policy: 推特社交 }
-  - domain_suffix: { match: x.com, policy: 推特社交 }
-  - domain_suffix: { match: netflix.com, policy: 奈飞影视 }
-  - domain_suffix: { match: tiktok.com, policy: 抖音国际 }
-  - domain_suffix: { match: github.com, policy: 代码仓库 }
-  - domain_suffix: { match: microsoft.com, policy: 微软服务 }
-  - domain_suffix: { match: steampowered.com, policy: 游戏平台 }
+  - domain_suffix: { match: apple, policy: 苹果服务 }
+  - domain_suffix: { match: github, policy: 代码仓库 }
+  - domain_suffix: { match: microsoft, policy: 微软服务 }
+  - domain_suffix: { match: steam, policy: 游戏平台 }
+  - domain_suffix: { match: openai, policy: 人工智能 }
+  - domain_suffix: { match: google, policy: 谷歌服务 }
+  - domain_suffix: { match: youtube, policy: 油管视频 }
+  - domain_suffix: { match: spotify, policy: 声破天乐 }
+  - domain_suffix: { match: telegram, policy: 电报通讯 }
+  - domain_suffix: { match: twitter, policy: 推特社交 }
+  - domain_suffix: { match: netflix, policy: 奈飞影视 }
+  - domain_suffix: { match: tiktok, policy: 抖音国际 }
   - domain_suffix: { match: e-hentai.org, policy: 绅士漫画 }
   - domain_suffix: { match: exhentai.org, policy: 绅士漫画 }
+  - domain_suffix: { match: ehgt.org, policy: 绅士漫画 }
+  - domain_suffix: { match: hath.network, policy: 绅士漫画 }
   - default: { policy: 其它连接 }
