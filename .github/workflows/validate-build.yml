@@ -27,6 +27,8 @@ jobs:
         run: python scripts/validate.py
       - name: Semantic tests
         run: python tests/test_semantic.py
+      - name: Rule Source regression
+        run: python tests/test_rule_sources.py
       - name: Golden tests
         run: python tests/test_golden.py
 
@@ -48,5 +50,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: proxy-configs
-          path: build/
+          path: |
+            build/
+            final/
           if-no-files-found: warn
