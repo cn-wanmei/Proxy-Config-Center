@@ -11,7 +11,6 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[2]
 PLATFORMS = ROOT / "platforms"
-RULE_SET_KEYS = ("rule_provider", "rule_set", "rule-provider")
 
 
 def load_capabilities(platform: str) -> Dict[str, Any]:
@@ -32,17 +31,20 @@ def supports(platform: str, feature: str) -> bool:
 
 
 def supports_rule_set(platform: str) -> bool:
-    """Remote rule-set supported → RULE-SET / DOMAIN-SET; else domain_suffix."""
+    """Remote rule-set supported → RULE-SET / DOMAIN-SET; else domain_suffix.
+
+    rule_set 和 rule_provider 独立判断：
+    - rule_provider 指 Clash 格式的远程规则集（proxy-providers 体系）
+    - rule_set 指平台原生远程规则集（如 Egern 自身的 rule_set 格式）
+    两者互不影响，limitations.rule_provider=false 不应阻断 rule_set 判断。
+    """
     caps = load_capabilities(platform)
     features = caps.get("features") or {}
     limitations = caps.get("limitations") or {}
-    for k in RULE_SET_KEYS:
-        if limitations.get(k) is False:
-            return False
-    for k in RULE_SET_KEYS:
-        if features.get(k):
-            return True
-    return False
+    # 只有明确标注 rule_set: false 才视为不支持
+    if limitations.get("rule_set") is False:
+        return False
+    return bool(features.get("rule_set", False))
 
 
 def platform_from_adapter_file(file: str) -> str:
