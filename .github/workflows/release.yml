@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - 'v*'
+    branches:
+      - 'release/v*'
   workflow_dispatch:
     inputs:
       tag:
@@ -23,15 +25,30 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Resolve release tag
+        id: release_meta
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            TAG="$GITHUB_REF_NAME"
+          else
+            TAG="${GITHUB_REF_NAME#release/}"
+          fi
+          if [[ "$TAG" != v* ]]; then
+            echo "Invalid release tag: $TAG"
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Release tag: $TAG"
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Validate version
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ steps.release_meta.outputs.tag }}
         run: |
           VERSION=$(python scripts/version.py)
-          if [[ "$RELEASE_TAG" == v* && "${RELEASE_TAG#v}" != "$VERSION" ]]; then
-            echo "Tag $RELEASE_TAG does not match VERSION $VERSION"
+          if [[ "${RELEASE_TAG#v}" != "$VERSION" ]]; then
+            echo "Release $RELEASE_TAG does not match VERSION $VERSION"
             exit 1
           fi
       - name: Validate
@@ -47,11 +64,13 @@ jobs:
       - name: Structural check
         run: python scripts/check_config.py
       - name: Pack configs
+        env:
+          RELEASE_TAG: ${{ steps.release_meta.outputs.tag }}
         run: |
           mkdir -p dist
           cp -r build dist/configs
           cd dist
-          zip -r "proxy-config-center-${{ github.ref_name }}.zip" configs
+          zip -r "proxy-config-center-${RELEASE_TAG}.zip" configs
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -62,8 +81,10 @@ jobs:
         with:
           subject-path: 'dist/*.zip'
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.release_meta.outputs.tag }}
+          target_commitish: ${{ github.sha }}
           files: dist/*.zip
           generate_release_notes: true
+          make_latest: true
