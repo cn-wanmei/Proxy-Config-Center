@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Clash Meta Renderer with icon map + DNS."""
+"""Clash Meta Renderer — subscriptions + single/multi nodes + icons + DNS."""
 
 import sys
 from pathlib import Path
@@ -13,6 +13,35 @@ try:
 except Exception:
     def icon_url(name):
         return name if name and str(name).startswith("http") else None
+
+try:
+    from engines.proxies import (
+        load_providers,
+        clash_proxy_providers,
+        clash_inline_proxies,
+        provider_names,
+    )
+except Exception:
+    def load_providers():
+        return {}
+    def clash_proxy_providers(data=None):
+        return {
+            "机场订阅1": {
+                "type": "http",
+                "url": "YOUR_SUBSCRIBE_URL_1",
+                "interval": 86400,
+                "path": "./providers/airport-1.yaml",
+                "health-check": {
+                    "enable": True,
+                    "url": "http://www.gstatic.com/generate_204",
+                    "interval": 300,
+                },
+            }
+        }
+    def clash_inline_proxies(data=None):
+        return []
+    def provider_names(data=None):
+        return ["机场订阅1"]
 
 
 def _resolve_proxy_ref(opt: str, id_to_display: Dict[str, str]) -> str:
@@ -32,6 +61,10 @@ def _resolver_to_clash(resolver_id: str, resolvers: dict) -> List[str]:
 
 def render(ir: Any) -> dict:
     id_to_display = dict(getattr(ir, "id_to_display", {}) or {})
+    pdata = load_providers()
+    pnames = provider_names(pdata)
+    inline_proxies = clash_inline_proxies(pdata)
+    providers = clash_proxy_providers(pdata)
 
     for g in getattr(ir, "base_groups", []) or []:
         name = g.get("name", {})
@@ -45,22 +78,40 @@ def render(ir: Any) -> dict:
             "name": id_to_display.get(g["id"], g["id"]),
             "type": g.get("type", "select"),
         }
-        if g.get("include-all-nodes"):
+        # Node-bearing groups: use providers + inline proxies
+        if g.get("include-all-nodes") or g["id"] in ("manual-select", "auto-select", "free-flow"):
             entry["include-all-providers"] = True
-        if g.get("filter"):
-            entry["filter"] = g["filter"]
-        proxies = []
-        for o in g.get("options") or []:
-            if isinstance(o, dict):
-                if "ref" in o:
-                    proxies.append(id_to_display.get(o["ref"], o["ref"]))
-                elif "action" in o:
-                    act = o["action"]
-                    proxies.append("DIRECT" if act == "direct" else "REJECT" if act == "reject" else act)
-            else:
-                proxies.append(_resolve_proxy_ref(str(o), id_to_display))
-        if proxies:
-            entry["proxies"] = proxies
+            if pnames:
+                entry["use"] = list(pnames)
+            # include inline node names if any
+            if inline_proxies:
+                entry.setdefault("proxies", [])
+                for n in inline_proxies:
+                    if n.get("name"):
+                        entry["proxies"].append(n["name"])
+            if not entry.get("proxies") and not pnames:
+                entry["proxies"] = ["DIRECT"]
+            if g.get("filter"):
+                entry["filter"] = g["filter"]
+            if g.get("type") == "url-test":
+                entry["url"] = "http://www.gstatic.com/generate_204"
+                entry["interval"] = 300
+        else:
+            proxies = []
+            for o in g.get("options") or []:
+                if isinstance(o, dict):
+                    if "ref" in o:
+                        proxies.append(id_to_display.get(o["ref"], o["ref"]))
+                    elif "action" in o:
+                        act = o["action"]
+                        proxies.append(
+                            "DIRECT" if act == "direct" else "REJECT" if act == "reject" else act
+                        )
+                else:
+                    proxies.append(_resolve_proxy_ref(str(o), id_to_display))
+            if proxies:
+                entry["proxies"] = proxies
+
         iu = icon_url(g.get("icon"))
         if iu:
             entry["icon"] = iu
@@ -127,11 +178,7 @@ def render(ir: Any) -> dict:
         from engines.dns_engine import DNSEngine
         nsp = DNSEngine().build_nameserver_policy()
     except Exception:
-        nsp = {
-            "+.apple.com": "system",
-            "+.icloud.com": "system",
-            "+.cn": _resolver_to_clash("alidns", resolvers),
-        }
+        nsp = {"+.apple.com": "system", "+.icloud.com": "system"}
 
     config = {
         "mixed-port": 7890,
@@ -147,7 +194,14 @@ def render(ir: Any) -> dict:
             "nameserver": default_servers,
             "nameserver-policy": nsp,
         },
+        # ⬇️ 订阅占位 — 修改 core/proxies/providers.yaml 后重新 build
+        "proxy-providers": providers,
+        # ⬇️ 单节点/多节点手写占位（enabled: true 的节点会进入）
+        "proxies": inline_proxies,
         "proxy-groups": proxy_groups,
         "rules": rules,
     }
+    # Clash dislikes empty proxies key sometimes — keep list (may be empty)
+    if not config["proxies"]:
+        config["proxies"] = []
     return config
