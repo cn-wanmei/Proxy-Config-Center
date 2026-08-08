@@ -1,10 +1,22 @@
 #!/usr/bin/env python3
-"""
-Egern Renderer (P2-12)
-Resolved IR → Egern YAML
-"""
+"""Egern Renderer with subscription placeholders."""
 
+import sys
+from pathlib import Path
 from typing import Any, Dict, List
+
+ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT / "scripts"))
+
+try:
+    from engines.proxies import load_providers, enabled_subscriptions, enabled_nodes
+except Exception:
+    def load_providers():
+        return {}
+    def enabled_subscriptions(data=None):
+        return [{"name": {"zh": "机场订阅1"}, "url": "YOUR_SUBSCRIBE_URL_1"}]
+    def enabled_nodes(data=None):
+        return []
 
 
 def _resolve(opt: str, id_to_display: Dict[str, str]) -> str:
@@ -17,6 +29,7 @@ def _resolve(opt: str, id_to_display: Dict[str, str]) -> str:
 
 def render(ir: Any) -> dict:
     id_to_display = dict(getattr(ir, "id_to_display", {}) or {})
+    pdata = load_providers()
 
     for g in getattr(ir, "base_groups", []) or []:
         name = g.get("name", {})
@@ -25,7 +38,6 @@ def render(ir: Any) -> dict:
 
     policy_groups: List[dict] = []
 
-    # Base groups
     for g in getattr(ir, "base_groups", []) or []:
         policies = []
         for o in g.get("options") or []:
@@ -37,6 +49,9 @@ def render(ir: Any) -> dict:
                     policies.append("DIRECT" if act == "direct" else "REJECT" if act == "reject" else act)
             else:
                 policies.append(_resolve(str(o), id_to_display))
+        # Node groups: leave placeholder comment via DIRECT until Sub-Store/sub injects
+        if g.get("include-all-nodes") and not policies:
+            policies = ["DIRECT"]
         entry = {
             "select": {
                 "name": id_to_display.get(g["id"], g["id"]),
@@ -46,7 +61,6 @@ def render(ir: Any) -> dict:
         }
         policy_groups.append(entry)
 
-    # Services
     for s in getattr(ir, "services", []) or []:
         if hasattr(s, "id"):
             sid, name_zh = s.id, s.name_zh
@@ -74,7 +88,6 @@ def render(ir: Any) -> dict:
             }
         })
 
-    # Rules
     rules: List[dict] = []
     for r in getattr(ir, "rules", []) or []:
         target = id_to_display.get(r.get("_group"), r.get("_group", "其它连接"))
@@ -88,7 +101,6 @@ def render(ir: Any) -> dict:
                 rules.append({"domain_keyword": {"match": v, "policy": target}})
         elif rtype == "geosite":
             for v in values:
-                # Prefer domain_suffix approximation; real rule_set can be added later
                 rules.append({"domain_suffix": {"match": v, "policy": target}})
         elif rtype == "geoip":
             for v in values:
@@ -105,7 +117,6 @@ def render(ir: Any) -> dict:
     if not any("default" in x for x in rules):
         rules.append({"default": {"policy": id_to_display.get("final", "其它连接")}})
 
-    # DNS fragment for Egern-style (simplified)
     resolvers = getattr(ir, "resolvers", {}) or {}
     dns_upstreams = {}
     for rid, r in resolvers.items():
@@ -115,11 +126,22 @@ def render(ir: Any) -> dict:
         if servers:
             dns_upstreams[rid] = servers
 
+    # Subscription placeholders for Egern (user fills / or uses Sub-Store)
+    subs = []
+    for s in enabled_subscriptions(pdata):
+        name = s.get("name", {})
+        n = name.get("zh") if isinstance(name, dict) else str(name)
+        subs.append({
+            "name": n or s.get("id"),
+            "url": s.get("url") or "YOUR_SUBSCRIBE_URL",
+            "udp_relay": True,
+        })
+
     config = {
         "ipv6": True,
-        "dns": {
-            "upstreams": dns_upstreams,
-        },
+        "dns": {"upstreams": dns_upstreams},
+        # ⬇️ 机场订阅占位 — 修改 core/proxies/providers.yaml
+        "proxy_providers": subs,
         "policy_groups": policy_groups,
         "rules": rules,
     }
