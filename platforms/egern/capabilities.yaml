@@ -6,10 +6,13 @@ features:
   dns_rules: true
   script: true
   rewrite: true
-  rule_provider: true
+  rule_provider: false
+  rule_set: false
   proxy_provider: true
   process: true
   mitm: true
   module: true
 
-limitations: {}
+limitations:
+  rule_provider: false
+  clash_rule_provider: false
