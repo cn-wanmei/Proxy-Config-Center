@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Rule Source Regression — blackmatrix7 only."""
+"""Rule Source Regression — BM-only + multi-platform emission."""
 
 import sys
 import importlib.util
@@ -10,19 +10,27 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from ir import build_ir
 
+
+def _render(platform: str):
+    path = ROOT / "platforms" / platform / "adapter" / "render.py"
+    spec = importlib.util.spec_from_file_location(platform, path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.render(build_ir())
+
+
 def test_sources_bm_only():
     ir = build_ir()
     assert ir.rule_sources
     for rs in ir.rule_sources:
         if rs.is_match:
             continue
-        # no geosite/geoip attributes required; must have bm_sets or domain
         has = bool(rs.bm_sets) or bool(rs.domain_suffix)
         assert has, f"{rs.id} empty source"
-        # legacy attrs must not be relied upon
         assert not getattr(rs, "geosite", None)
         assert not getattr(rs, "geoip", None)
     print(f"✅ sources BM-only: {len(ir.rule_sources)}")
+
 
 def test_service_binding():
     ir = build_ir()
@@ -31,12 +39,9 @@ def test_service_binding():
         assert s.id in src_ids, f"missing source for {s.id}"
     print("✅ service↔source OK")
 
+
 def test_clash_no_geosite_geoip():
-    path = ROOT / "platforms" / "clash-meta" / "adapter" / "render.py"
-    spec = importlib.util.spec_from_file_location("cm", path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    cfg = mod.render(build_ir())
+    cfg = _render("clash-meta")
     rules = [str(r) for r in (cfg.get("rules") or [])]
     assert rules, "empty rules"
     assert rules[-1].startswith("MATCH,")
@@ -47,8 +52,37 @@ def test_clash_no_geosite_geoip():
     assert cfg.get("rule-providers"), "missing rule-providers"
     print(f"✅ clash-meta: {len(rules)} rules, no GEOSITE/GEOIP")
 
+
+def test_egern_rule_set_list_url():
+    cfg = _render("egern")
+    rules = cfg.get("rules") or []
+    rs = [r for r in rules if isinstance(r, dict) and "rule_set" in r]
+    assert len(rs) >= 10, f"egern rule_set count {len(rs)}"
+    for r in rs:
+        url = (r.get("rule_set") or {}).get("url") or ""
+        assert url.endswith(".list"), f"expect .list got {url}"
+        assert "/Clash/" not in url, f"must not use Clash yaml path: {url}"
+        assert "/Surge/" in url or "/Loon/" in url, f"unexpected list host path: {url}"
+    ds = [r for r in rules if isinstance(r, dict) and "domain_suffix" in r]
+    assert len(ds) < 30, f"domain flood {len(ds)}"
+    print(f"✅ egern rule_set={len(rs)} .list OK, domain={len(ds)}")
+
+
+def test_shadowrocket_domain_fallback():
+    text = _render("shadowrocket")
+    assert "DOMAIN-SUFFIX," in text
+    assert "RULE-SET" not in text
+    assert "DOMAIN-SET," not in text
+    assert "FINAL," in text
+    # sample fallback domains from sources
+    assert "youtube.com" in text or "google.com" in text
+    print("✅ shadowrocket domain fallback OK")
+
+
 if __name__ == "__main__":
     test_sources_bm_only()
     test_service_binding()
     test_clash_no_geosite_geoip()
+    test_egern_rule_set_list_url()
+    test_shadowrocket_domain_fallback()
     print("All rule source tests passed")
