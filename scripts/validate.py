@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Core validation including Rule Source."""
+"""Core + capability validation."""
 
 import sys
 from pathlib import Path
@@ -12,12 +12,15 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parent.parent
 CORE = ROOT / "core"
+sys.path.insert(0, str(ROOT / "scripts"))
+
 
 def load_yaml(path: Path):
     if not path.exists():
         return None
     with open(path, encoding="utf-8") as f:
         return yaml.safe_load(f)
+
 
 def main() -> int:
     errors = []
@@ -49,13 +52,9 @@ def main() -> int:
     if not sources:
         errors.append("core/rules/sources.yaml is empty or missing")
 
-    # Service ↔ Rule Source strong ref
     for sid in services:
-        if sid not in sources and sid != "final":
-            # final may only exist in sources
-            if sid not in sources:
-                errors.append(f"service '{sid}' has no rule source in sources.yaml")
-
+        if sid not in sources:
+            errors.append(f"service '{sid}' has no rule source in sources.yaml")
     for sid in sources:
         if sid == "final":
             continue
@@ -74,6 +73,17 @@ def main() -> int:
 
     print(f"Resolvers: {len(resolvers)} | Services: {len(services)} | Sources: {len(sources)} | Priority: {len(priority_ids)}")
 
+    # Capability matrix
+    print("=== Capability Validation ===")
+    try:
+        from engines.capability import validate_capabilities, supports_rule_set, REQUIRED_PLATFORMS
+        cap_errs = validate_capabilities()
+        errors.extend(cap_errs)
+        for name in REQUIRED_PLATFORMS:
+            print(f"  {name}: rule_set={supports_rule_set(name)}")
+    except Exception as e:
+        errors.append(f"capability validate failed: {e}")
+
     if errors:
         print("\n❌ Errors:")
         for e in errors:
@@ -81,6 +91,7 @@ def main() -> int:
         return 1
     print("\n✅ All checks passed")
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())
