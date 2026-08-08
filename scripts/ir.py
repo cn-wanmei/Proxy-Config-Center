@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Core → Resolved IR with ResolvedRuleSource."""
+"""Core → Resolved IR — rule sources = blackmatrix7 only."""
 
 from pathlib import Path
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 try:
     import yaml
 except ImportError:
-    raise SystemExit("PyYAML required: pip install pyyaml")
+    raise SystemExit("PyYAML required")
 
 ROOT = Path(__file__).resolve().parent.parent
 CORE = ROOT / "core"
@@ -34,16 +34,21 @@ class ResolvedService:
     rule_source_id: str = ""
 
 @dataclass
+class BMSet:
+    """One blackmatrix7 rule-provider set."""
+    key: str
+    path: str
+    url: str
+    behavior: str = "classical"
+
+@dataclass
 class ResolvedRuleSource:
     id: str
     target_service: str
-    geosite: List[str] = field(default_factory=list)
-    geoip: List[str] = field(default_factory=list)
+    # blackmatrix7 only — no geosite/geoip fields used by renderers
+    bm_sets: List[BMSet] = field(default_factory=list)
     domain_suffix: List[str] = field(default_factory=list)
     domain_keyword: List[str] = field(default_factory=list)
-    blackmatrix7_path: Optional[str] = None
-    blackmatrix7_behavior: str = "classical"
-    blackmatrix7_url: Optional[str] = None
     is_match: bool = False
     priority: int = 500
 
@@ -68,6 +73,18 @@ def _display_name(g: dict) -> str:
         return name.get("zh") or name.get("en") or g.get("id", "unknown")
     return str(name)
 
+def _parse_bm(base: str, key: str, bm: Any) -> Optional[BMSet]:
+    if not bm:
+        return None
+    if isinstance(bm, str):
+        path, beh = bm, "classical"
+    else:
+        path = bm.get("path")
+        beh = bm.get("behavior") or "classical"
+    if not path:
+        return None
+    return BMSet(key=key, path=path, url=f"{base}/{path}", behavior=beh)
+
 def build_ir() -> ResolvedIR:
     ir = ResolvedIR()
     ir.config_base = load_yaml(CORE / "config" / "base.yaml") or {}
@@ -90,28 +107,23 @@ def build_ir() -> ResolvedIR:
         ir.id_to_display[g["id"]] = _display_name(g)
 
     svc_data = load_yaml(CORE / "proxy-groups" / "service.yaml") or {}
-    services_raw = svc_data.get("groups") or []
-
     pri_data = load_yaml(CORE / "rules" / "priority.yaml") or {}
     ir.priority = pri_data.get("priority") or []
     pri_map = {p["id"]: p.get("value", 999) for p in ir.priority}
 
-    for g in services_raw:
+    for g in svc_data.get("groups") or []:
         sid = g["id"]
         name = g.get("name", {})
         zh = name.get("zh", sid) if isinstance(name, dict) else str(name)
         en = name.get("en", sid) if isinstance(name, dict) else str(name)
         ir.id_to_display[sid] = zh
-
         proxy_cfg = g.get("proxy") or {}
         options = list(proxy_cfg.get("options") or [])
         default = proxy_cfg.get("default") or (options[0] if options else "proxy-mode")
-
         dns_id = g.get("dns") or "dns-foreign"
         if isinstance(dns_id, dict):
             dns_id = dns_id.get("policy") or "dns-foreign"
         policy = ir.dns_policies.get(dns_id) or {}
-
         ir.services.append(ResolvedService(
             id=sid, name_zh=zh, name_en=en, type=g.get("type", "select"),
             proxy_options=options, proxy_default=default,
@@ -127,28 +139,29 @@ def build_ir() -> ResolvedIR:
         "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash"
     )
     sources = src_data.get("sources") or {}
+
     for sid in sorted(sources.keys(), key=lambda i: pri_map.get(i, 500)):
         meta = sources[sid] or {}
-        bm = meta.get("blackmatrix7") or {}
-        if isinstance(bm, str):
-            bm_path, bm_beh = bm, "classical"
-        else:
-            bm_path = bm.get("path")
-            bm_beh = bm.get("behavior") or "classical"
-        bm_url = f"{ir.blackmatrix7_base}/{bm_path}" if bm_path else None
+        bm_sets: List[BMSet] = []
+        primary = _parse_bm(ir.blackmatrix7_base, sid, meta.get("blackmatrix7"))
+        if primary:
+            bm_sets.append(primary)
+        for i, extra in enumerate(meta.get("blackmatrix7_extra") or []):
+            es = _parse_bm(ir.blackmatrix7_base, f"{sid}-extra{i}", extra)
+            if es:
+                bm_sets.append(es)
+
         ir.rule_sources.append(ResolvedRuleSource(
-            id=sid, target_service=sid,
-            geosite=list(meta.get("geosite") or []),
-            geoip=list(meta.get("geoip") or []),
+            id=sid,
+            target_service=sid,
+            bm_sets=bm_sets,
             domain_suffix=list(meta.get("domain_suffix") or []),
             domain_keyword=list(meta.get("domain_keyword") or []),
-            blackmatrix7_path=bm_path,
-            blackmatrix7_behavior=bm_beh,
-            blackmatrix7_url=bm_url,
             is_match=bool(meta.get("match")),
             priority=pri_map.get(sid, 500),
         ))
 
+    # legacy services/*.yaml optional supplement (domain only)
     rules_dir = CORE / "rules" / "services"
     all_rules = []
     if rules_dir.exists():
@@ -156,6 +169,8 @@ def build_ir() -> ResolvedIR:
             data = load_yaml(f) or {}
             gid = data.get("group") or str(data.get("id", "")).replace("service-", "")
             for r in data.get("rules") or []:
+                if r.get("type") in ("geosite", "geoip"):
+                    continue  # stripped
                 item = dict(r)
                 item["_group"] = gid
                 item["_priority"] = pri_map.get(gid, 500)
@@ -166,5 +181,5 @@ def build_ir() -> ResolvedIR:
 if __name__ == "__main__":
     ir = build_ir()
     print(f"services={len(ir.services)} sources={len(ir.rule_sources)}")
-    for rs in ir.rule_sources[:4]:
-        print(f"  p={rs.priority} {rs.id} gs={rs.geosite} bm={rs.blackmatrix7_path}")
+    for rs in ir.rule_sources[:5]:
+        print(f"  p={rs.priority} {rs.id} bm={[b.path for b in rs.bm_sets]}")
