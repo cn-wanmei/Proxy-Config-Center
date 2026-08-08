@@ -1,7 +1,8 @@
 # Service strategy groups / 分流策略组
 # Platform-agnostic semantic definition
 # Each service binds both proxy strategy and DNS policy
-# 每个服务同时绑定代理策略 + DNS 策略，二者可独立选择
+# Priority is defined ONLY in core/rules/priority.yaml (single source of truth)
+# 优先级只在 priority.yaml 中定义，此处不重复
 
 version: 1
 
@@ -14,7 +15,6 @@ groups:
       default: reject
     dns: dns-system
     icon: ad-block
-    priority: 1
 
   - id: china
     name: { zh: 中国连接, en: China }
@@ -24,7 +24,6 @@ groups:
       default: direct
     dns: dns-china
     icon: china
-    priority: 10
 
   - id: code-repo
     name: { zh: 代码仓库, en: Code Repository }
@@ -34,7 +33,6 @@ groups:
       default: proxy-mode
     dns: dns-cloudflare
     icon: github
-    priority: 20
 
   - id: microsoft
     name: { zh: 微软服务, en: Microsoft }
@@ -44,7 +42,6 @@ groups:
       default: proxy-mode
     dns: dns-cloudflare
     icon: microsoft
-    priority: 30
 
   - id: game
     name: { zh: 游戏平台, en: Gaming }
@@ -54,7 +51,6 @@ groups:
       default: proxy-mode
     dns: dns-foreign
     icon: game
-    priority: 40
 
   - id: ai
     name: { zh: 人工智能, en: Artificial Intelligence }
@@ -64,7 +60,6 @@ groups:
       default: proxy-mode
     dns: dns-foreign
     icon: ai
-    priority: 50
 
   - id: google
     name: { zh: 谷歌服务, en: Google }
@@ -74,7 +69,6 @@ groups:
       default: proxy-mode
     dns: dns-google
     icon: google
-    priority: 60
 
   - id: youtube
     name: { zh: 油管视频, en: YouTube }
@@ -84,7 +78,6 @@ groups:
       default: proxy-mode
     dns: dns-cloudflare
     icon: youtube
-    priority: 70
 
   - id: spotify
     name: { zh: 声破天乐, en: Spotify }
@@ -94,7 +87,6 @@ groups:
       default: proxy-mode
     dns: dns-cloudflare
     icon: spotify
-    priority: 80
 
   - id: telegram
     name: { zh: 电报通讯, en: Telegram }
@@ -104,7 +96,6 @@ groups:
       default: proxy-mode
     dns: dns-foreign
     icon: telegram
-    priority: 90
 
   - id: twitter
     name: { zh: 推特社交, en: Twitter / X }
@@ -114,7 +105,6 @@ groups:
       default: proxy-mode
     dns: dns-foreign
     icon: twitter
-    priority: 100
 
   - id: netflix
     name: { zh: 奈飞影视, en: Netflix }
@@ -124,7 +114,6 @@ groups:
       default: proxy-mode
     dns: dns-cloudflare
     icon: netflix
-    priority: 110
 
   - id: tiktok
     name: { zh: 抖音国际, en: TikTok }
@@ -134,7 +123,6 @@ groups:
       default: proxy-mode
     dns: dns-foreign
     icon: tiktok
-    priority: 120
 
   - id: ehentai
     name: { zh: 绅士漫画, en: E-Hentai }
@@ -144,7 +132,6 @@ groups:
       default: proxy-mode
     dns: dns-foreign
     icon: ehentai
-    priority: 130
 
   - id: apple
     name: { zh: 苹果服务, en: Apple }
@@ -154,7 +141,6 @@ groups:
       default: direct
     dns: dns-system
     icon: apple
-    priority: 140
 
   - id: final
     name: { zh: 其它连接, en: Final }
@@ -164,4 +150,3 @@ groups:
       default: proxy-mode
     dns: dns-foreign
     icon: final
-    priority: 999
