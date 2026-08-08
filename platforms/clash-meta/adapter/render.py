@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Clash Meta — rules only RULE-SET (blackmatrix7) + MATCH."""
+"""Clash Meta — capabilities-aware rule emission."""
 
 import sys
 from pathlib import Path
@@ -7,6 +7,9 @@ from typing import Any, Dict, List
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "scripts"))
+
+from engines.capability import supports_rule_set, platform_from_adapter_file
+from engines.rules_emit import emit_clash_style
 
 try:
     from engines.icons import icon_url
@@ -25,6 +28,8 @@ except Exception:
         return []
     def provider_names(data=None):
         return []
+
+PLATFORM = platform_from_adapter_file(__file__)
 
 
 def _resolve_proxy_ref(opt: str, id_to_display: Dict[str, str]) -> str:
@@ -48,7 +53,6 @@ def render(ir: Any) -> dict:
         id_to_display[g["id"]] = display or g["id"]
 
     proxy_groups: List[dict] = []
-
     for g in getattr(ir, "base_groups", []) or []:
         entry = {"name": id_to_display.get(g["id"], g["id"]), "type": g.get("type", "select")}
         if g.get("include-all-nodes") or g["id"] in ("manual-select", "auto-select", "free-flow"):
@@ -103,31 +107,8 @@ def render(ir: Any) -> dict:
     if not nameserver:
         nameserver = ["https://dns.alidns.com/dns-query", "https://cloudflare-dns.com/dns-query"]
 
-    # ---- ONLY blackmatrix7 RULE-SET (+ rare domain_suffix) + MATCH ----
-    rule_providers = {}
-    rules: List[str] = []
-
-    for rs in getattr(ir, "rule_sources", []) or []:
-        if rs.is_match:
-            continue
-        target = id_to_display.get(rs.target_service, rs.target_service)
-
-        for bm in getattr(rs, "bm_sets", None) or []:
-            rule_providers[bm.key] = {
-                "type": "http",
-                "behavior": bm.behavior or "classical",
-                "url": bm.url,
-                "path": f"./ruleset/{bm.key}.yaml",
-                "interval": 86400,
-            }
-            rules.append(f"RULE-SET,{bm.key},{target}")
-
-        for d in rs.domain_suffix:
-            rules.append(f"DOMAIN-SUFFIX,{d},{target}")
-        for d in rs.domain_keyword:
-            rules.append(f"DOMAIN-KEYWORD,{d},{target}")
-
-    rules.append(f"MATCH,{id_to_display.get('final', '其它连接')}")
+    use_rs = supports_rule_set(PLATFORM)
+    rule_providers, rules = emit_clash_style(ir, id_to_display, use_rs)
 
     config = {
         "mixed-port": 7890,
@@ -144,9 +125,10 @@ def render(ir: Any) -> dict:
             "default-nameserver": ["223.5.5.5", "119.29.29.29", "1.1.1.1"],
         },
         "proxy-groups": proxy_groups,
-        "rule-providers": rule_providers,
         "rules": rules,
     }
+    if use_rs and rule_providers:
+        config["rule-providers"] = rule_providers
     if providers:
         config["proxy-providers"] = providers
     if inline_proxies:
