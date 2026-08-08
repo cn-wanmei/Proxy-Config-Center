@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Build Engine (P2-13)
-Core → Resolved IR → Platform Renderers → build/
+Build Engine — all platforms
+Core → Resolved IR → Renderers → build/
 """
 
 import sys
@@ -19,7 +19,15 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from ir import build_ir
 
-PLATFORMS = ("clash-meta", "egern")
+# platform -> output relative path
+PLATFORMS = {
+    "clash-meta": "clash-meta/config.yaml",
+    "clash": "clash/config.yaml",
+    "egern": "egern/config.yaml",
+    "stash": "stash/config.yaml",
+    "loon": "loon/config.conf",
+    "shadowrocket": "shadowrocket/config.conf",
+}
 
 def load_renderer(platform: str):
     path = ROOT / "platforms" / platform / "adapter" / "render.py"
@@ -28,10 +36,24 @@ def load_renderer(platform: str):
     spec.loader.exec_module(mod)
     return mod.render
 
+def write_config(out_path: Path, config):
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    header = (
+        "# AUTO-GENERATED from Core — DO NOT EDIT MANUALLY\n"
+        "# Source: core/ | Build: scripts/build.py\n\n"
+    )
+    with open(out_path, "w", encoding="utf-8") as f:
+        if isinstance(config, str):
+            if not config.startswith("#"):
+                f.write(header)
+            f.write(config)
+        else:
+            f.write(header)
+            yaml.dump(config, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+
 def main():
     print("=== Proxy-Config-Center Build ===")
 
-    # Validate first
     try:
         from validate import main as validate_main
         rc = validate_main()
@@ -43,22 +65,20 @@ def main():
 
     ir = build_ir()
     print(f"Resolved IR: {len(ir.base_groups)} base, {len(ir.services)} services, {len(ir.rules)} rules")
-    print(f"DNS: {len(ir.resolvers)} resolvers, {len(ir.dns_policies)} policies")
 
     build_dir = ROOT / "build"
     build_dir.mkdir(exist_ok=True)
 
-    for platform in PLATFORMS:
-        render = load_renderer(platform)
-        out_dir = build_dir / platform
-        out_dir.mkdir(exist_ok=True)
-        config = render(ir)
-        out_path = out_dir / "config.yaml"
-        with open(out_path, "w", encoding="utf-8") as f:
-            f.write("# AUTO-GENERATED from Core — DO NOT EDIT MANUALLY\n")
-            f.write("# Source: core/ | Build: scripts/build.py\n\n")
-            yaml.dump(config, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
-        print(f"✅ Wrote {out_path}")
+    for platform, rel in PLATFORMS.items():
+        try:
+            render = load_renderer(platform)
+            config = render(ir)
+            out_path = build_dir / rel
+            write_config(out_path, config)
+            print(f"✅ Wrote {out_path}")
+        except Exception as e:
+            print(f"❌ {platform}: {e}")
+            return 1
 
     print("Build finished.")
     return 0
