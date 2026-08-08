@@ -1,19 +1,17 @@
-# 最终配置 / Final Configs
+# 最终配置
 
-由 `python scripts/build.py` 从 Core IR 生成。
+分流规则**仅**来自 [blackmatrix7/ios_rule_script](https://github.com/blackmatrix7/ios_rule_script)。
+
+- **无** GEOSITE / GEOIP
+- Clash Meta / Clash / Stash：`rule-providers` + `RULE-SET`
+- 中国：`China.yaml` + `ChinaIPs.yaml`
+- 绅士漫画等无 BM 集：少量 `DOMAIN-SUFFIX` 补丁
 
 | 客户端 | 文件 |
 |--------|------|
-| Clash Meta | [clash-meta/config.yaml](./clash-meta/config.yaml) |
-| Clash | [clash/config.yaml](./clash/config.yaml) |
-| Stash | [stash/config.yaml](./stash/config.yaml) |
-| Egern | [egern/config.yaml](./egern/config.yaml) |
-| Loon | [loon/config.conf](./loon/config.conf) |
-| Shadowrocket | [shadowrocket/config.conf](./shadowrocket/config.conf) |
-
-## 说明
-
-- **策略组**：六端均含完整 22 组（代理模式 + 分流）
-- **规则**：GEOSITE/GEOIP → blackmatrix7 RULE-SET → MATCH（Clash 系）
-- **无订阅占位符**：填 `core/proxies/providers.yaml` 后 rebuild 才会出现 proxy-providers
-- **DNS**：多上游列表，不写死单域名
+| Clash Meta | `clash-meta/config.yaml` |
+| Clash | `clash/config.yaml` |
+| Stash | `stash/config.yaml` |
+| Egern | `egern/config.yaml` |
+| Loon | `loon/config.conf` |
+| Shadowrocket | `shadowrocket/config.conf` |
