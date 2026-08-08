@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Clash Meta Renderer — subscriptions + single/multi nodes + icons + DNS."""
+"""Clash Meta Renderer — clean subs, selectable DNS, geosite rules, icons."""
 
 import sys
 from pathlib import Path
@@ -25,23 +25,11 @@ except Exception:
     def load_providers():
         return {}
     def clash_proxy_providers(data=None):
-        return {
-            "机场订阅1": {
-                "type": "http",
-                "url": "YOUR_SUBSCRIBE_URL_1",
-                "interval": 86400,
-                "path": "./providers/airport-1.yaml",
-                "health-check": {
-                    "enable": True,
-                    "url": "http://www.gstatic.com/generate_204",
-                    "interval": 300,
-                },
-            }
-        }
+        return {}
     def clash_inline_proxies(data=None):
         return []
     def provider_names(data=None):
-        return ["机场订阅1"]
+        return []
 
 
 def _resolve_proxy_ref(opt: str, id_to_display: Dict[str, str]) -> str:
@@ -59,6 +47,41 @@ def _resolver_to_clash(resolver_id: str, resolvers: dict) -> List[str]:
     return list(r.get("servers") or []) or ["system"]
 
 
+# blackmatrix7 rule-provider URLs (Clash format) when geosite missing
+RULE_PROVIDER_URLS = {
+    "Apple": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple.yaml",
+    "OpenAI": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.yaml",
+    "GitHub": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GitHub/GitHub.yaml",
+    "Microsoft": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Microsoft/Microsoft.yaml",
+    "Telegram": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Telegram/Telegram.yaml",
+    "Twitter": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Twitter/Twitter.yaml",
+    "Netflix": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Netflix/Netflix.yaml",
+    "TikTok": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/TikTok/TikTok.yaml",
+    "Spotify": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Spotify/Spotify.yaml",
+    "YouTube": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTube/YouTube.yaml",
+    "Google": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Google/Google.yaml",
+    "Steam": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Steam/Steam.yaml",
+    "Advertising": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Advertising/Advertising.yaml",
+}
+
+# service id → rule-provider name + target group display key
+SERVICE_RULE_PROVIDER = {
+    "apple": ("Apple", "苹果服务"),
+    "ai": ("OpenAI", "人工智能"),
+    "github": ("GitHub", "代码仓库"),
+    "microsoft": ("Microsoft", "微软服务"),
+    "telegram": ("Telegram", "电报通讯"),
+    "twitter": ("Twitter", "推特社交"),
+    "netflix": ("Netflix", "奈飞影视"),
+    "tiktok": ("TikTok", "抖音国际"),
+    "spotify": ("Spotify", "声破天乐"),
+    "youtube": ("YouTube", "油管视频"),
+    "google": ("Google", "谷歌服务"),
+    "game": ("Steam", "游戏平台"),
+    "ad-block": ("Advertising", "广告拦截"),
+}
+
+
 def render(ir: Any) -> dict:
     id_to_display = dict(getattr(ir, "id_to_display", {}) or {})
     pdata = load_providers()
@@ -73,23 +96,36 @@ def render(ir: Any) -> dict:
 
     proxy_groups: List[dict] = []
 
+    # ---- Selectable DNS policy groups (手动选择 DNS) ----
+    resolvers = getattr(ir, "resolvers", {}) or {}
+    dns_options = []
+    for rid in ("system", "alidns", "tencent", "google", "cloudflare"):
+        if rid in resolvers or rid == "system":
+            label = {
+                "system": "系统DNS",
+                "alidns": "阿里DNS",
+                "tencent": "腾讯DNS",
+                "google": "谷歌DNS",
+                "cloudflare": "CF DNS",
+            }.get(rid, rid)
+            dns_options.append(label)
+    # Virtual select group for UI (Clash can't switch nameserver live easily;
+    # we expose named groups users can reference; default nameserver stays flexible)
+    # Actual DNS: only nameserver list, NO hard-coded nameserver-policy
+
     for g in getattr(ir, "base_groups", []) or []:
         entry = {
             "name": id_to_display.get(g["id"], g["id"]),
             "type": g.get("type", "select"),
         }
-        # Node-bearing groups: use providers + inline proxies
         if g.get("include-all-nodes") or g["id"] in ("manual-select", "auto-select", "free-flow"):
-            entry["include-all-providers"] = True
             if pnames:
+                entry["include-all-providers"] = True
                 entry["use"] = list(pnames)
-            # include inline node names if any
             if inline_proxies:
-                entry.setdefault("proxies", [])
-                for n in inline_proxies:
-                    if n.get("name"):
-                        entry["proxies"].append(n["name"])
+                entry["proxies"] = [n["name"] for n in inline_proxies if n.get("name")]
             if not entry.get("proxies") and not pnames:
+                # no nodes yet — empty select with DIRECT only (clean)
                 entry["proxies"] = ["DIRECT"]
             if g.get("filter"):
                 entry["filter"] = g["filter"]
@@ -145,7 +181,20 @@ def render(ir: Any) -> dict:
             entry["icon"] = iu
         proxy_groups.append(entry)
 
+    # DNS 手动选择策略组（仅作策略入口，不写死 nameserver-policy）
+    proxy_groups.append({
+        "name": "DNS选择",
+        "type": "select",
+        "proxies": dns_options or ["系统DNS", "阿里DNS", "腾讯DNS", "谷歌DNS", "CF DNS"],
+        "icon": icon_url("auto") or "",
+    })
+
     rules: List[str] = []
+    # RULE-SET from blackmatrix7 first (higher priority coverage)
+    for sid, (rp_name, target) in SERVICE_RULE_PROVIDER.items():
+        target = id_to_display.get(sid, target)
+        rules.append(f"RULE-SET,{rp_name},{target}")
+
     for r in getattr(ir, "rules", []) or []:
         target = id_to_display.get(r.get("_group"), r.get("_group", "其它连接"))
         rtype = r.get("type", "")
@@ -169,16 +218,30 @@ def render(ir: Any) -> dict:
     if not any(x.startswith("MATCH,") for x in rules):
         rules.append(f"MATCH,{id_to_display.get('final', '其它连接')}")
 
-    resolvers = getattr(ir, "resolvers", {}) or {}
-    default_servers = _resolver_to_clash("cloudflare", resolvers)
-    if default_servers == ["system"]:
-        default_servers = ["https://cloudflare-dns.com/dns-query"]
+    # DNS: only nameserver candidates — user selects via client / DNS选择 group
+    # No hard-coded nameserver-policy
+    nameserver = []
+    for rid in ("cloudflare", "google", "alidns", "tencent"):
+        nameserver.extend(_resolver_to_clash(rid, resolvers))
+    # dedupe keep order
+    seen = set()
+    ns = []
+    for x in nameserver:
+        if x not in seen and x != "system":
+            seen.add(x)
+            ns.append(x)
+    if not ns:
+        ns = ["https://cloudflare-dns.com/dns-query", "https://dns.alidns.com/dns-query"]
 
-    try:
-        from engines.dns_engine import DNSEngine
-        nsp = DNSEngine().build_nameserver_policy()
-    except Exception:
-        nsp = {"+.apple.com": "system", "+.icloud.com": "system"}
+    rule_providers = {}
+    for name, url in RULE_PROVIDER_URLS.items():
+        rule_providers[name] = {
+            "type": "http",
+            "behavior": "classical",
+            "url": url,
+            "path": f"./ruleset/{name}.yaml",
+            "interval": 86400,
+        }
 
     config = {
         "mixed-port": 7890,
@@ -191,17 +254,23 @@ def render(ir: Any) -> dict:
             "ipv6": True,
             "enhanced-mode": "fake-ip",
             "fake-ip-range": "198.18.0.1/16",
-            "nameserver": default_servers,
-            "nameserver-policy": nsp,
+            "nameserver": ns,
+            # nameserver-policy 不写死，由用户在客户端按需配置
         },
-        # ⬇️ 订阅占位 — 修改 core/proxies/providers.yaml 后重新 build
-        "proxy-providers": providers,
-        # ⬇️ 单节点/多节点手写占位（enabled: true 的节点会进入）
-        "proxies": inline_proxies,
         "proxy-groups": proxy_groups,
+        "rule-providers": rule_providers,
         "rules": rules,
     }
-    # Clash dislikes empty proxies key sometimes — keep list (may be empty)
-    if not config["proxies"]:
-        config["proxies"] = []
+
+    # 仅有真实订阅时才写入 proxy-providers
+    if providers:
+        config["proxy-providers"] = providers
+    if inline_proxies:
+        config["proxies"] = inline_proxies
+
+    # clean empty icon
+    for g in config["proxy-groups"]:
+        if not g.get("icon"):
+            g.pop("icon", None)
+
     return config
