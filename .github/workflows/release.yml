@@ -23,6 +23,7 @@ permissions:
 env:
   PYTHONPATH: ${{ github.workspace }}/scripts
   RAW_RULE_BASE: https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/
+  RAW_CLIENT_BASE: https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/clients/
 
 jobs:
   release:
@@ -105,6 +106,10 @@ jobs:
           python scripts/pack_remote_rules.py --output dist/rules
           cp core/rules/priority.yaml dist/rules/priority.yaml
           cp core/rules/sources.yaml dist/rules/sources.yaml
+          for f in rules/manual/direct.list rules/manual/proxy.list rules/manual/ehentai.list; do
+            [[ -s "$f" ]] || { echo "Missing manual rule file: $f"; exit 1; }
+            cp "$f" "dist/rules/rule-$(basename "$f")"
+          done
           cp dist/rules/rule-* dist/
           cp dist/rules/priority.yaml dist/priority.yaml
           cp dist/rules/sources.yaml dist/sources.yaml
@@ -121,13 +126,14 @@ jobs:
                   for chunk in iter(lambda: f.read(1024 * 1024), b''):
                       h.update(chunk)
               return h.hexdigest()
-          base = 'https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/'
-          manifest = {'release': '${{ steps.release_meta.outputs.tag }}', 'version': '${{ steps.release_meta.outputs.tag }}'[1:], 'remote_policy': 'latest-rules', 'remote_base': base, 'clients': [], 'rules': []}
+          rule_base = 'https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/'
+          client_base = 'https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/clients/'
+          manifest = {'release': '${{ steps.release_meta.outputs.tag }}', 'version': '${{ steps.release_meta.outputs.tag }}'[1:], 'remote_policy': 'latest-rules', 'remote_base': rule_base, 'client_base': client_base, 'clients': [], 'rules': []}
           for name in clients:
               p = root / name
-              manifest['clients'].append({'name': name, 'asset': name, 'sha256': sha256(p), 'size': p.stat().st_size})
+              manifest['clients'].append({'name': name, 'asset': name, 'latest_url': client_base + name, 'sha256': sha256(p), 'size': p.stat().st_size})
           for p in rules:
-              manifest['rules'].append({'name': p.stem, 'asset': p.name, 'source': p.name, 'latest_url': base + p.name, 'sha256': sha256(p), 'size': p.stat().st_size})
+              manifest['rules'].append({'name': p.stem, 'asset': p.name, 'source': p.name, 'latest_url': rule_base + p.name, 'sha256': sha256(p), 'size': p.stat().st_size})
           (root / 'release-manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
           PY
           cp dist/release-manifest.json dist/configs/release-manifest.json
@@ -144,12 +150,12 @@ jobs:
           RELEASE_TAG: ${{ steps.release_meta.outputs.tag }}
         run: |
           set -euo pipefail
-          required=("dist/clash.yaml" "dist/clash-meta.yaml" "dist/stash.yaml" "dist/egern.yaml" "dist/loon.conf" "dist/shadowrocket.conf" "dist/sing-box.json" "dist/release-manifest.json" "dist/SHA256SUMS" "dist/proxy-config-center-${RELEASE_TAG}-rules.tar.gz" "dist/proxy-config-center-${RELEASE_TAG}.zip")
+          required=("dist/clash.yaml" "dist/clash-meta.yaml" "dist/stash.yaml" "dist/egern.yaml" "dist/loon.conf" "dist/shadowrocket.conf" "dist/sing-box.json" "dist/release-manifest.json" "dist/SHA256SUMS" "dist/proxy-config-center-${RELEASE_TAG}-rules.tar.gz" "dist/proxy-config-center-${RELEASE_TAG}.zip" "dist/rule-direct.list" "dist/rule-proxy.list" "dist/rule-ehentai.list")
           for file in "${required[@]}"; do
             [[ -s "$file" ]] || { echo "Missing or empty release asset: $file"; exit 1; }
           done
           rule_count=$(find dist -maxdepth 1 -type f \( -name 'rule-*.yaml' -o -name 'rule-*.list' \) | wc -l)
-          [[ "$rule_count" -ge 1 ]] || { echo "No remote rule assets generated"; exit 1; }
+          [[ "$rule_count" -ge 3 ]] || { echo "Insufficient remote rule assets generated"; exit 1; }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -211,7 +217,7 @@ jobs:
             gh release create "$RELEASE_TAG" --title "$RELEASE_TAG" --generate-notes --latest "${assets[@]}"
           fi
 
-      - name: Publish verified rules to latest-rules
+      - name: Publish verified clients and rules to latest-rules
         env:
           RELEASE_TAG: ${{ steps.release_meta.outputs.tag }}
         shell: bash
@@ -224,15 +230,18 @@ jobs:
           git worktree add /tmp/pcc-latest-rules origin/latest-rules
           cd /tmp/pcc-latest-rules
           git rm -rf . >/dev/null 2>&1 || true
-          mkdir -p rules
+          mkdir -p clients rules
+          for client in clash.yaml clash-meta.yaml stash.yaml egern.yaml loon.conf shadowrocket.conf sing-box.json; do
+            cp "$GITHUB_WORKSPACE/dist/$client" "clients/$client"
+          done
           cp "$GITHUB_WORKSPACE"/dist/rules/* rules/
           cp "$GITHUB_WORKSPACE"/dist/release-manifest.json release-manifest.json
           cp "$GITHUB_WORKSPACE"/dist/SHA256SUMS SHA256SUMS
           git add -A
-          git commit -m "release: publish ${RELEASE_TAG} rules" || true
+          git commit -m "release: publish ${RELEASE_TAG} clients and rules" || true
           git push origin HEAD:latest-rules
 
-      - name: Verify Raw remote rules
+      - name: Verify Raw clients and rules
         shell: bash
         run: |
           set -euo pipefail
@@ -240,7 +249,8 @@ jobs:
           import hashlib, json, subprocess, time
           from pathlib import Path
           manifest = json.loads(Path('dist/release-manifest.json').read_text(encoding='utf-8'))
-          for item in manifest['rules']:
+          checks = manifest['clients'] + manifest['rules']
+          for item in checks:
               url = item['latest_url']
               target = Path('/tmp') / item['asset']
               ok = False
@@ -253,7 +263,7 @@ jobs:
                           break
                   time.sleep(3)
               if not ok:
-                  raise SystemExit(f'Raw rule verification failed: {url}')
+                  raise SystemExit(f'Raw verification failed: {url}')
               print(f'OK {url}')
           PY
 
