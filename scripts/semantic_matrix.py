@@ -62,18 +62,18 @@ def platform_targets(path: Path, platform: str) -> set[str]:
         data = yaml.safe_load(text) or {}
         for rule in data.get("rules") or []:
             if isinstance(rule, dict) and isinstance(rule.get("rule_set"), dict):
-                result.add(str(rule["rule_set"].get("policy", "")))
+                policy = rule.get("policy")
+                if policy:
+                    result.add(str(policy))
+    elif platform == "sing-box":
+        data = json.loads(text)
+        for rule in (data.get("route") or {}).get("rules") or []:
+            if isinstance(rule, dict):
+                target = rule.get("outbound")
+                if isinstance(target, str):
+                    result.add(target)
     else:
         result.update(re.findall(r"(?:RULE-SET|DOMAIN-SUFFIX),[^,\n]+,([^,\n]+)", text))
-        try:
-            data = json.loads(text)
-            for rule in (data.get("route") or {}).get("rules") or []:
-                if isinstance(rule, dict):
-                    target = rule.get("action") or rule.get("outbound")
-                    if isinstance(target, str):
-                        result.add(target)
-        except Exception:
-            pass
     return {x for x in result if x}
 
 
@@ -83,15 +83,18 @@ def run(root: Path) -> dict:
     matrix = []
     errors = []
     for row in rows:
-        expected = names_by_id.get(row["group"], row["group"])
+        expected_id = row["group"]
+        expected_name = names_by_id.get(expected_id, expected_id)
         platforms = {}
         for platform, rel in PLATFORMS.items():
             path = root / rel
             targets = platform_targets(path, platform) if path.exists() else set()
-            ok = expected in targets or row["group"] in targets
-            platforms[platform] = {"expected": expected, "matched": sorted(targets & {expected, row["group"]}), "ok": ok}
+            accepted = {expected_id, expected_name}
+            matched = sorted(targets & accepted)
+            ok = bool(matched)
+            platforms[platform] = {"expected": accepted, "matched": matched, "ok": ok}
             if not ok:
-                errors.append(f"{row['group']} representative {row['value']} missing on {platform}")
+                errors.append(f"{expected_id} representative {row['value']} missing on {platform}")
         matrix.append({**row, "platforms": platforms})
     return {"version": 1, "platforms": list(PLATFORMS), "rows": matrix, "errors": errors, "ok": not errors}
 
