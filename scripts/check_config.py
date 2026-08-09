@@ -44,6 +44,12 @@ def check_yaml_clash(path: Path) -> list:
 
 
 def check_yaml_egern(path: Path) -> list:
+    """Validate the native Egern rule_set contract.
+
+    Egern uses rule_set.match as the remote list URL.  ``url`` is a legacy
+    contract and must not be required here.  Keeping this check aligned with
+    the renderer prevents CI from rejecting a semantically valid configuration.
+    """
     errs = []
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
@@ -62,12 +68,32 @@ def check_yaml_egern(path: Path) -> list:
         errs.append(f"rule_set count {len(rs)} < {MIN_EGERN_RULE_SET} (Egern remote rules degraded?)")
     if not has_default:
         errs.append("missing default policy rule")
+
+    group_names = {
+        g.get("select", {}).get("name")
+        for g in data.get("policy_groups") or []
+        if isinstance(g, dict) and isinstance(g.get("select"), dict)
+        and g.get("select", {}).get("name")
+    }
     for r in rs:
-        url = (r.get("rule_set") or {}).get("url") or ""
-        if not url:
-            errs.append("rule_set missing url")
-        elif url.endswith(".yaml") and "/Clash/" in url:
-            errs.append(f"rule_set still Clash yaml: {url[:80]}")
+        rule_set = r.get("rule_set") or {}
+        if not isinstance(rule_set, dict):
+            errs.append("rule_set must be an object")
+            continue
+        match = str(rule_set.get("match") or "")
+        if not match:
+            errs.append("rule_set missing match")
+        elif not match.endswith(".list"):
+            errs.append(f"rule_set match must end .list: {match}")
+        elif "/Clash/" in match:
+            errs.append(f"rule_set still Clash yaml: {match[:80]}")
+        if "url" in rule_set:
+            errs.append("rule_set contains legacy url; use match")
+        policy = rule_set.get("policy")
+        if not policy:
+            errs.append("rule_set missing policy")
+        elif policy not in group_names:
+            errs.append(f"rule_set policy is not declared: {policy}")
     if len(ds) > MAX_EGERN_DOMAIN_FALLBACK:
         errs.append(f"too many domain_suffix ({len(ds)}); expected rule_set-primary with <= {MAX_EGERN_DOMAIN_FALLBACK} fallback rules")
     return errs
