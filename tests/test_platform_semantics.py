@@ -76,6 +76,31 @@ def normalize_targets(targets: list[str], ir) -> set[str]:
     return result
 
 
+def _validate_egern_native_semantics(config: Any) -> None:
+    if not isinstance(config, dict):
+        raise AssertionError("egern renderer must return a mapping")
+    groups = config.get("policy_groups") or []
+    names = {g.get("name") for g in groups if isinstance(g, dict) and g.get("name")}
+    if not names:
+        raise AssertionError("egern: policy_groups missing")
+    rules = config.get("rules") or []
+    rule_sets = [r.get("rule_set") for r in rules if isinstance(r, dict) and "rule_set" in r]
+    if not rule_sets:
+        raise AssertionError("egern: rule_set coverage missing")
+    for rule_set in rule_sets:
+        if not isinstance(rule_set, dict):
+            raise AssertionError("egern: rule_set must be an object")
+        if not rule_set.get("match"):
+            raise AssertionError("egern: rule_set.match is required")
+        if "url" in rule_set:
+            raise AssertionError("egern: rule_set.url is invalid; use match")
+        policy = rule_set.get("policy")
+        if not policy:
+            raise AssertionError("egern: rule_set.policy is required")
+        if policy not in names:
+            raise AssertionError(f"egern: rule_set policy is not declared: {policy}")
+
+
 def main() -> int:
     ir = build_ir()
     expected = {source.target_service for source in ir.rule_sources if source.target_service}
@@ -84,6 +109,8 @@ def main() -> int:
     for platform in PLATFORMS:
         renderer = load_renderer(platform)
         config = renderer(ir, platform=platform) if "platform" in inspect.signature(renderer).parameters else renderer(ir)
+        if platform == "egern":
+            _validate_egern_native_semantics(config)
         actual = normalize_targets(_targets_from_config(config), ir)
         missing = sorted(expected - actual)
         if missing:
