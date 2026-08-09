@@ -11,13 +11,13 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 CLIENTS = {
-    "clash": ("clash.yaml", "yaml"),
-    "clash-meta": ("clash-meta.yaml", "yaml"),
-    "stash": ("stash.yaml", "yaml"),
-    "egern": ("egern.yaml", "yaml"),
-    "loon": ("loon.conf", "text"),
-    "shadowrocket": ("shadowrocket.conf", "text"),
-    "sing-box": ("sing-box.json", "json"),
+    "clash": ("clash.yaml", "clash/config.yaml", "yaml"),
+    "clash-meta": ("clash-meta.yaml", "clash-meta/config.yaml", "yaml"),
+    "stash": ("stash.yaml", "stash/config.yaml", "yaml"),
+    "egern": ("egern.yaml", "egern/config.yaml", "yaml"),
+    "loon": ("loon.conf", "loon/config.conf", "text"),
+    "shadowrocket": ("shadowrocket.conf", "shadowrocket/config.conf", "text"),
+    "sing-box": ("sing-box.json", "sing-box/config.json", "json"),
 }
 RAW_RULE_PREFIX = "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/"
 
@@ -104,8 +104,8 @@ def _check_json(path: Path) -> list[str]:
 
 def validate(root: Path) -> dict:
     result = {"version": 1, "clients": {}, "errors": []}
-    for platform, (filename, kind) in CLIENTS.items():
-        path = root / filename
+    for platform, (flat, nested, kind) in CLIENTS.items():
+        path = root / flat if (root / flat).exists() else root / nested
         errors: list[str] = []
         if not path.exists():
             errors.append("missing file")
@@ -119,7 +119,7 @@ def validate(root: Path) -> dict:
                     errors.extend(_check_text(path, platform))
             except Exception as exc:
                 errors.append(f"parse error: {type(exc).__name__}: {exc}")
-        result["clients"][platform] = {"file": filename, "ok": not errors, "errors": errors}
+        result["clients"][platform] = {"file": str(path.relative_to(root)) if path.exists() else flat, "ok": not errors, "errors": errors}
         result["errors"].extend(f"{platform}: {e}" for e in errors)
     result["ok"] = not result["errors"]
     return result
