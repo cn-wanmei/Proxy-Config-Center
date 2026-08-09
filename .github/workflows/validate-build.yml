@@ -48,19 +48,32 @@ jobs:
         run: pip install -r requirements.txt
       - name: Validate Core + Capabilities + References
         run: python scripts/validate.py
+      - name: Rule coverage audit
+        run: python scripts/rule_audit.py --write
       - name: Capability matrix
         run: python scripts/engines/capability.py
       - name: Capability tests
         run: python tests/test_capabilities.py
+      - name: Rule audit regression
+        run: python tests/test_rule_audit.py
       - name: Rule Source regression
         run: python tests/test_rule_sources.py
       - name: Semantic tests
         run: python tests/test_semantic.py
+      - name: Seven-platform semantic equivalence
+        run: python tests/test_platform_semantics.py
       - name: Golden snapshot tests
         run: python tests/test_golden.py
       - name: Rule source health
         continue-on-error: true
         run: python scripts/check_rule_sources.py
+      - name: Upload rule audit index
+        uses: actions/upload-artifact@v4
+        with:
+          name: rule-strategy-audit-${{ github.sha }}
+          path: build/audit/
+          if-no-files-found: error
+          retention-days: 14
 
   build:
     needs: validate
