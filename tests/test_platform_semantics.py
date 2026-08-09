@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Seven-platform semantic equivalence tests.
 
-The test intentionally compares routing semantics, not serialized syntax. Each adapter
-may express the same rule using a different native representation.
+The test compares routing semantics, not serialized syntax. Each adapter may
+express the same rule using a different native representation.
 """
 
 import importlib.util
@@ -77,16 +77,29 @@ def normalize_targets(targets: list[str], ir) -> set[str]:
 
 
 def _validate_egern_native_semantics(config: Any) -> None:
+    """Validate Egern's actual native shape: policy_groups[].select.name."""
     if not isinstance(config, dict):
         raise AssertionError("egern renderer must return a mapping")
     groups = config.get("policy_groups") or []
-    names = {g.get("name") for g in groups if isinstance(g, dict) and g.get("name")}
+    names = {
+        group["select"].get("name")
+        for group in groups
+        if isinstance(group, dict)
+        and isinstance(group.get("select"), dict)
+        and group["select"].get("name")
+    }
     if not names:
         raise AssertionError("egern: policy_groups missing")
+
     rules = config.get("rules") or []
-    rule_sets = [r.get("rule_set") for r in rules if isinstance(r, dict) and "rule_set" in r]
+    rule_sets = [
+        rule.get("rule_set")
+        for rule in rules
+        if isinstance(rule, dict) and "rule_set" in rule
+    ]
     if not rule_sets:
         raise AssertionError("egern: rule_set coverage missing")
+
     for rule_set in rule_sets:
         if not isinstance(rule_set, dict):
             raise AssertionError("egern: rule_set must be an object")
