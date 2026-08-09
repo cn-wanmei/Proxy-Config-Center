@@ -45,9 +45,7 @@ def test_full_snapshot():
     for rel, expected in manifest["files"].items():
         path = BUILD / rel
         if not path.exists():
-            failures.append(
-                f"missing generated file: {rel} (run build.py --include-final and refresh the manifest only after review)"
-            )
+            failures.append(f"missing generated file: {rel}")
             continue
         actual = git_blob_sha(path)
         if actual != expected:
@@ -82,7 +80,12 @@ def test_egern_invariants():
     cfg = yaml.safe_load((BUILD / "egern/config.yaml").read_text(encoding="utf-8"))
     groups = cfg.get("policy_groups") or []
     assert groups, "egern policy_groups missing"
-    group_names = {g.get("name") for g in groups if isinstance(g, dict) and g.get("name")}
+    # Egern groups are wrapped in a select object; policy references use select.name.
+    group_names = {
+        g["select"].get("name")
+        for g in groups
+        if isinstance(g, dict) and isinstance(g.get("select"), dict) and g["select"].get("name")
+    }
     rules = cfg.get("rules") or []
     assert rules, "egern rules missing"
     rule_sets = [r.get("rule_set") for r in rules if isinstance(r, dict) and "rule_set" in r]
