@@ -1,8 +1,8 @@
 {
-  "release": "v1.6.2",
-  "version": "1.6.2",
-  "source_commit": "928fed3a64199e967ba41094b7ad671561c56c55",
-  "generator_commit": "928fed3a64199e967ba41094b7ad671561c56c55",
+  "release": "v1.7.0",
+  "version": "1.7.0",
+  "source_commit": "047f371eb39f553a7e70d1d67488bd8a5e3f430b",
+  "generator_commit": "047f371eb39f553a7e70d1d67488bd8a5e3f430b",
   "schema_version": "1.0",
   "remote_policy": "latest-rules",
   "remote_base": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/",
