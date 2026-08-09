@@ -3,7 +3,9 @@
 
 import argparse
 import importlib.util
+import json
 import sys
+from functools import lru_cache
 from pathlib import Path
 
 try:
@@ -20,18 +22,20 @@ from ir import build_ir
 PLATFORMS = {
     "clash-meta": ("clash-meta/config.yaml", "yaml"),
     "clash": ("clash/config.yaml", "yaml"),
-    "egern": ("egern/config.yaml", "yaml"),
     "stash": ("stash/config.yaml", "yaml"),
+    "egern": ("egern/config.yaml", "yaml"),
     "loon": ("loon/config.conf", "text"),
     "shadowrocket": ("shadowrocket/config.conf", "text"),
+    "sing-box": ("sing-box/config.json", "json"),
 }
 
 
+@lru_cache(maxsize=None)
 def load_renderer(platform: str):
     path = ROOT / "platforms" / platform / "adapter" / "render.py"
     if not path.exists():
         raise FileNotFoundError(f"missing renderer: {path}")
-    spec = importlib.util.spec_from_file_location(f"{platform}_render", path)
+    spec = importlib.util.spec_from_file_location(f"{platform.replace('-', '_')}_render", path)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"cannot load renderer: {path}")
     mod = importlib.util.module_from_spec(spec)
@@ -39,13 +43,16 @@ def load_renderer(platform: str):
     return mod.render
 
 
-def write_config(out_path: Path, config):
+def write_config(out_path: Path, config, kind: str):
     out_path.parent.mkdir(parents=True, exist_ok=True)
     header = (
         "# AUTO-GENERATED from Core — DO NOT EDIT MANUALLY\n"
         "# Source: core/ | Build: scripts/build.py\n"
         "# 订阅/节点: 编辑 core/proxies/providers.yaml 后重新 build\n\n"
     )
+    if kind == "json":
+        out_path.write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        return
     with out_path.open("w", encoding="utf-8") as f:
         if isinstance(config, str):
             if not config.lstrip().startswith("#"):
@@ -59,11 +66,11 @@ def write_config(out_path: Path, config):
 def build_root(root_name: str, ir) -> None:
     out_root = ROOT / root_name
     out_root.mkdir(exist_ok=True)
-    for platform, (rel, _kind) in PLATFORMS.items():
+    for platform, (rel, kind) in PLATFORMS.items():
         render = load_renderer(platform)
-        config = render(ir)
+        config = render(ir, platform=platform)
         out_path = out_root / rel
-        write_config(out_path, config)
+        write_config(out_path, config, kind)
         print(f"✅ Wrote {out_path}")
 
 
