@@ -30,14 +30,15 @@ def _render(platform: str):
         raise RuntimeError(path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
-    return mod.render(build_ir(), platform=platform) if "platform" in mod.render.__code__.co_varnames else mod.render(build_ir())
+    render = mod.render
+    return render(build_ir(), platform=platform) if "platform" in render.__code__.co_varnames else render(build_ir())
 
 
 def test_capability_truth_table():
     for rule_provider, rule_set, domain_fallback in itertools.product((False, True), repeat=3):
         features = {"rule_provider": rule_provider, "rule_set": rule_set, "domain_fallback": domain_fallback}
-        assert all(feature_supported(features, {}, feature) is value for feature, value in features.items())
-        for feature in features:
+        for feature, value in features.items():
+            assert feature_supported(features, {}, feature) is value
             assert feature_supported(features, {feature: False}, feature) is False
     print("✅ complete capability truth table OK (8 combinations)")
 
@@ -58,7 +59,8 @@ def test_real_platform_matrix():
     for name in required_platforms():
         got = (supports_rule_set(name), supports_rule_provider(name), supports_domain_fallback(name))
         assert got == expected[name], f"{name}: got {got}, want {expected[name]}"
-        assert all(key in (supports(name, key) or supports(name, key) is False for key in REQUIRED_FEATURES) for key in REQUIRED_FEATURES)
+        for feature in REQUIRED_FEATURES:
+            assert isinstance(supports(name, feature), bool)
     print("✅ real platform capability matrix OK")
 
 
@@ -83,14 +85,10 @@ def test_client_group_icon_capabilities():
     assert supports("shadowrocket", "icons") is True
     assert supports("clash", "icons") is False
     assert supports("sing-box", "icons") is False
-
     egern = _render("egern")
-    egern_groups = egern.get("policy_groups") or []
-    assert any("icon" in group.get("select", {}) for group in egern_groups)
-    loon = _render("loon")
-    assert "img-url =" in loon
-    shadowrocket = _render("shadowrocket")
-    assert "icon-url=" in shadowrocket
+    assert any("icon" in group.get("select", {}) for group in (egern.get("policy_groups") or []))
+    assert "img-url =" in _render("loon")
+    assert "icon-url=" in _render("shadowrocket")
     print("✅ client policy-group icon emission OK")
 
 
@@ -111,8 +109,7 @@ def test_clash_meta_rule_set():
 
 def test_egern_native_rule_set():
     cfg = _render("egern")
-    rules = cfg.get("rules") or []
-    assert len([r for r in rules if "rule_set" in r]) >= 10
+    assert len([r for r in cfg.get("rules") or [] if "rule_set" in r]) >= 10
     assert cfg.get("policy_groups")
     print("✅ egern native rule_set + policy group emission OK")
 
