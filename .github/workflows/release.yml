@@ -68,12 +68,16 @@ jobs:
         run: python scripts/check_config.py --root final
       - name: Rule source health
         run: python scripts/check_rule_sources.py
-      - name: Pack configs
+      - name: Pack complete release
         env:
           RELEASE_TAG: ${{ steps.release_meta.outputs.tag }}
+        shell: bash
         run: |
+          set -euo pipefail
           rm -rf dist
-          mkdir -p dist/configs
+          mkdir -p dist/configs dist/rules
+
+          # Complete client configurations.
           cp build/clash-meta/config.yaml dist/clash-meta.yaml
           cp build/clash/config.yaml dist/clash.yaml
           cp build/stash/config.yaml dist/stash.yaml
@@ -82,9 +86,83 @@ jobs:
           cp build/shadowrocket/config.conf dist/shadowrocket.conf
           cp build/sing-box/config.json dist/sing-box.json
           cp -r build/. dist/configs/
+
+          # Complete rule source bundle. Keep service files flat so every
+          # rule is directly downloadable from GitHub Releases latest assets.
+          cp core/rules/priority.yaml dist/rules/priority.yaml
+          cp core/rules/sources.yaml dist/rules/sources.yaml
+          cp core/rules/services/*.yaml dist/rules/
+
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          root = Path("dist")
+          rules = sorted((root / "rules").glob("*.yaml"))
+          clients = [
+              "clash.yaml", "clash-meta.yaml", "stash.yaml", "egern.yaml",
+              "loon.conf", "shadowrocket.conf", "sing-box.json",
+          ]
+
+          def sha256(path):
+              h = hashlib.sha256()
+              with path.open("rb") as f:
+                  for chunk in iter(lambda: f.read(1024 * 1024), b""):
+                      h.update(chunk)
+              return h.hexdigest()
+
+          manifest = {
+              "release": "${{ github.ref_name }}",
+              "version": "${{ github.ref_name }}"[1:],
+              "remote_policy": "latest",
+              "remote_base": "https://github.com/cn-wanmei/Proxy-Config-Center/releases/latest/download/",
+              "clients": [],
+              "rules": [],
+          }
+          for name in clients:
+              p = root / name
+              manifest["clients"].append({
+                  "name": name,
+                  "asset": name,
+                  "latest_url": manifest["remote_base"] + name,
+                  "sha256": sha256(p),
+                  "size": p.stat().st_size,
+              })
+          for p in rules:
+              asset = f"rule-{p.name}"
+              manifest["rules"].append({
+                  "name": p.stem,
+                  "asset": asset,
+                  "source": str(p.relative_to(root)),
+                  "latest_url": manifest["remote_base"] + asset,
+                  "sha256": sha256(p),
+                  "size": p.stat().st_size,
+              })
+              p.rename(root / asset)
+
+          # Recompute rule metadata after flattening/renaming.
+          for item in manifest["rules"]:
+              p = root / item["asset"]
+              item["sha256"] = sha256(p)
+              item["size"] = p.stat().st_size
+
+          (root / "release-manifest.json").write_text(
+              json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          PY
+
+          cp dist/release-manifest.json dist/configs/release-manifest.json
+          cp -r dist/rules dist/configs/rules
+
+          (cd dist && sha256sum *.yaml *.conf *.json rule-*.yaml release-manifest.json > SHA256SUMS)
+          cp dist/SHA256SUMS dist/configs/SHA256SUMS
+
           cd dist
+          tar -czf "proxy-config-center-${RELEASE_TAG}-rules.tar.gz" rule-*.yaml release-manifest.json SHA256SUMS
           zip -r "proxy-config-center-${RELEASE_TAG}.zip" configs
-      - name: Verify release assets
+      - name: Verify complete release assets
         shell: bash
         run: |
           set -euo pipefail
@@ -96,6 +174,10 @@ jobs:
             "dist/loon.conf"
             "dist/shadowrocket.conf"
             "dist/sing-box.json"
+            "dist/release-manifest.json"
+            "dist/SHA256SUMS"
+            "dist/proxy-config-center-${GITHUB_REF_NAME}-rules.tar.gz"
+            "dist/proxy-config-center-${GITHUB_REF_NAME}.zip"
           )
           for file in "${required[@]}"; do
             if [[ ! -s "$file" ]]; then
@@ -103,13 +185,12 @@ jobs:
               exit 1
             fi
           done
-          zip_file="dist/proxy-config-center-${GITHUB_REF_NAME}.zip"
-          if [[ ! -s "$zip_file" ]]; then
-            echo "Missing or empty release archive: $zip_file"
+          rule_count=$(find dist -maxdepth 1 -type f -name 'rule-*.yaml' | wc -l)
+          if [[ "$rule_count" -lt 1 ]]; then
+            echo "No remote rule assets generated"
             exit 1
           fi
-          echo "Verified release assets:"
-          printf ' - %s\n' "${required[@]}" "$zip_file"
+          echo "Verified $rule_count remote rule assets and all client assets."
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -122,6 +203,10 @@ jobs:
             dist/loon.conf
             dist/shadowrocket.conf
             dist/sing-box.json
+            dist/rule-*.yaml
+            dist/release-manifest.json
+            dist/SHA256SUMS
+            dist/proxy-config-center-${{ github.ref_name }}-rules.tar.gz
             dist/proxy-config-center-${{ github.ref_name }}.zip
             dist/configs/**
           if-no-files-found: error
@@ -136,6 +221,10 @@ jobs:
             dist/loon.conf
             dist/shadowrocket.conf
             dist/sing-box.json
+            dist/rule-*.yaml
+            dist/release-manifest.json
+            dist/SHA256SUMS
+            dist/proxy-config-center-${{ github.ref_name }}-rules.tar.gz
             dist/proxy-config-center-${{ github.ref_name }}.zip
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -150,6 +239,10 @@ jobs:
             dist/loon.conf
             dist/shadowrocket.conf
             dist/sing-box.json
+            dist/rule-*.yaml
+            dist/release-manifest.json
+            dist/SHA256SUMS
+            dist/proxy-config-center-${{ github.ref_name }}-rules.tar.gz
             dist/proxy-config-center-${{ github.ref_name }}.zip
           generate_release_notes: true
           make_latest: true
