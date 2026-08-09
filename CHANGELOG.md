@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.1.0] - 2026-08-09
+
+平台契约与 sing-box 扩展 / Platform contract and sing-box expansion。
+
+### Added
+- 显式 Platform Registry，Required Platforms 不再散落硬编码。
+- Resolved IR 正式增加 Node、ProxyGroup、IconRef 等平台无关模型。
+- `engines/utils.py` 集中基础 YAML 加载。
+- `engines/fallbacks.py` 集中显式降级策略，避免异常吞噬。
+- sing-box 原生 JSON Adapter 与 Capability Profile。
+- sing-box selector / urltest 出站组、route rules、显式节点转换。
+- Stash、Loon、sing-box Golden/Structural invariants。
+- Release 增加 `sing-box.json` 独立资产。
+
+### Changed
+- `build.py` 支持 sing-box JSON 输出，并缓存 renderer 加载。
+- `check_config.py` 显式接收平台参数并增加 sing-box JSON 校验。
+- Semantic Tests 从完整服务硬编码集合改为 Core catalog + critical contract 双层验证。
+- `build/` 继续作为正式产物，`final/` 仅作为 legacy compatibility tree。
+- 外部规则资源继续统一 7 天刷新；sing-box 对非原生 rule-set 源安全使用域名规则降级，不伪造格式兼容性。
+- Release 仍严格 tag-only。
+
+### Compatibility
+- 原六端 Core/IR 语义保持不变。
+- sing-box 不支持当前 Clash YAML/LIST 规则源的直接复用，因此不会错误声明为原生 sing-box rule-set。
+
 ## [1.0.2] - 2026-08-09
 
 客户端规则能力补全与发布流程加固 / Client rule capability completion and release workflow hardening。
@@ -33,50 +59,7 @@
 - 增加 `latest/download/<file>` 稳定下载入口，适合客户端长期订阅。
 - 固定版本继续使用 `releases/download/vX.Y.Z/<file>`，便于审计、回滚和版本锁定。
 - Release workflow 对六端独立文件、完整 ZIP 统一构建、校验、Artifact 发布和 Attestation。
-- Release tag 在 bootstrap 发布分支场景下指向实际发布分支提交，避免 Release 指向旧的 `main` 提交。
-
-### Release Assets
-- `clash-meta.yaml`
-- `clash.yaml`
-- `stash.yaml`
-- `egern.yaml`
-- `loon.conf`
-- `shadowrocket.conf`
-- `proxy-config-center-v1.0.1.zip`
-
-### Platforms
-- Clash Meta
-- Clash
-- Stash
-- Egern
-- Loon
-- Shadowrocket
 
 ## [1.0.0] - 2026-08-09
 
 首个正式稳定版本 / First Stable Release。
-
-### Added
-- Core V1：DNS 三层模型、统一策略组、规则优先级
-- Strict capability schema 与完整 capability matrix
-- Cross-file reference graph validation
-- `rule_set` / `rule_provider` / `domain_fallback` 独立能力模型
-- 六平台完整 Golden Snapshot
-- Rule-source health check、缓存与可选 SHA-256 integrity pin
-- Rule priority constraints 与 CI large-diff safety gate
-- 六端构建 Artifact、版本校验与 Release Artifact Attestation
-- GitHub Release 自动生成六端配置压缩包
-
-### Changed
-- capability engine 改为 fail-fast，不再静默降级
-- Core → IR → Adapter 架构保持平台无关
-- 生成的 `build/` / `final/` 不再由 CI 自动提交到 `main`
-- 发布产物统一由 CI 从源码重新构建
-
-### Platforms
-- Clash Meta
-- Clash
-- Stash
-- Egern
-- Loon
-- Shadowrocket

@@ -1,0 +1,16 @@
+version: 1
+platforms:
+  - id: clash-meta
+    required: true
+  - id: clash
+    required: true
+  - id: stash
+    required: true
+  - id: egern
+    required: true
+  - id: loon
+    required: true
+  - id: shadowrocket
+    required: true
+  - id: sing-box
+    required: true
