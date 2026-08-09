@@ -1,0 +1,38 @@
+name: v1.6 Engineering Gate
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+env:
+  PYTHONPATH: ${{ github.workspace }}/scripts
+  SOURCE_DATE_EPOCH: 0
+jobs:
+  engineering:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12', cache: pip}
+      - run: pip install -r requirements.lock
+      - name: Core validation
+        run: |
+          python scripts/validate.py
+          python tests/test_capabilities.py
+          python tests/test_semantic.py
+          python tests/test_platform_semantics.py
+      - name: Build
+        run: python scripts/build.py --include-final
+      - name: Golden and structural validation
+        run: |
+          python tests/test_golden.py
+          python tests/test_project_audit.py
+          python scripts/check_config.py --root build
+          python scripts/check_config.py --root final
+      - name: Generate engineering reports
+        run: python scripts/project_audit.py
+      - name: Verify report set
+        run: |
+          for f in build/reports/rule-index.json build/reports/rule-graph.json build/reports/rule-conflicts.json build/reports/rule-unreachable.json build/reports/ai-coverage.json build/reports/build-report.json build/reports/rule-source-snapshot.json build/reports/sbom.json build/reports/schema-version.json; do test -s "$f" || exit 1; done
