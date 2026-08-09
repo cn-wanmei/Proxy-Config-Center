@@ -44,7 +44,7 @@ def main() -> int:
     try:
         errors.extend(validate_references())
     except Exception as exc:
-        raise RuntimeError("reference validation failed") from exc
+        raise RuntimeError("reference validation failed") from exp
 
     try:
         index, duplicates, conflicts, unreachable, invalid_targets = audit()
@@ -78,11 +78,27 @@ def main() -> int:
             f"Sources: {len(sources)} | Priority: {len(priority)}"
         )
     except Exception as exc:
-        errors.append(f"core load failed: {exc}")
+        errors.append(
+            f"core load failed: {exc}\n"
+            "  Suggestion: Check that all required Core YAML files exist and contain valid YAML."
+        )
+
+    # Explicit proxies availability check (avoids silent soft-dependency drift)
+    try:
+        from engines.proxies_optional import proxies_available
+        if proxies_available():
+            print("  engines.proxies: available")
+        else:
+            print("  engines.proxies: using safe no-op fallbacks (optional)")
+    except Exception as exp:
+        errors.append(
+            f"proxies facade failed: {exp}\n"
+            "  Suggestion: Ensure scripts/engines/proxies.py and proxies_optional.py are present."
+        )
 
     if errors:
-        print("\n❌ Errors:")
-        for error in sorted(set(errors)):
+        print("\n❌ Errors (with suggestions):")
+        for error in sorted(set(str(e) for e in errors)):
             print(" ", error)
         return 1
     print("\n✅ All checks passed")
