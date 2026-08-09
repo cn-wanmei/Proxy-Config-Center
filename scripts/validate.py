@@ -27,10 +27,10 @@ def main() -> int:
     print("=== Core Validation ===")
 
     try:
-        from engines.capability import validate_capabilities, REQUIRED_PLATFORMS
+        from engines.capability import validate_capabilities, required_platforms
         cap_errs = validate_capabilities()
         errors.extend(cap_errs)
-        for name in REQUIRED_PLATFORMS:
+        for name in required_platforms():
             from engines.capability import supports_domain_fallback, supports_rule_provider, supports_rule_set
             print(
                 f"  {name}: rule_set={supports_rule_set(name)} "
@@ -45,6 +45,32 @@ def main() -> int:
         errors.extend(validate_references())
     except Exception as exc:
         raise RuntimeError("reference validation failed") from exc
+
+    try:
+        from rule_audit import audit
+        index, duplicates, conflicts, unreachable, invalid_targets = audit()
+        errors.extend(
+            f"rule audit invalid target: {item}" for item in invalid_targets
+        )
+        errors.extend(
+            f"rule audit unreachable rule: {item}" for item in unreachable
+        )
+        semantic_conflicts = [
+            item for item in conflicts
+            if item["kind"] == "duplicate"
+            and item["rule"]["group"] != item["previous"]["group"]
+        ]
+        errors.extend(
+            f"rule audit semantic conflict: {item}" for item in semantic_conflicts
+        )
+        print(
+            "Rule audit: "
+            f"{index['summary']['service_groups']} groups | "
+            f"{index['summary']['rules']} rules | "
+            f"{len(duplicates)} duplicates"
+        )
+    except Exception as exc:
+        errors.append(f"rule audit failed: {exc}")
 
     try:
         resolvers = load_yaml(CORE / "dns" / "resolvers.yaml").get("resolvers") or {}
