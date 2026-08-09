@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 from pathlib import Path
-from urllib.parse import urlparse
 
 import yaml
 
@@ -22,10 +20,6 @@ CLIENTS = {
     "sing-box": ("sing-box.json", "json"),
 }
 RAW_RULE_PREFIX = "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/"
-
-
-def _raw_urls(text: str) -> list[str]:
-    return re.findall(r"https://raw\.githubusercontent\.com/cn-wanmei/Proxy-Config-Center/[^\s'\"`]+", text)
 
 
 def _check_yaml(path: Path, platform: str) -> list[str]:
@@ -54,11 +48,18 @@ def _check_yaml(path: Path, platform: str) -> list[str]:
         for name, provider in providers.items():
             if not isinstance(provider, dict) or not provider.get("url"):
                 errors.append(f"provider {name} missing url")
+            elif not str(provider["url"]).startswith(RAW_RULE_PREFIX):
+                errors.append(f"provider {name} does not use latest-rules: {provider['url']}")
     elif platform == "egern":
         if not data.get("policy_groups"):
             errors.append("missing policy_groups")
         if not data.get("rules"):
             errors.append("missing rules")
+        for rule in data.get("rules") or []:
+            if isinstance(rule, dict) and isinstance(rule.get("rule_set"), dict):
+                url = str(rule["rule_set"].get("url", ""))
+                if url and not url.startswith(RAW_RULE_PREFIX):
+                    errors.append(f"Egern rule_set does not use latest-rules: {url}")
     return errors
 
 
@@ -92,6 +93,12 @@ def _check_json(path: Path) -> list[str]:
         errors.append("missing route.final")
     if route.get("final") and route["final"] not in tags:
         errors.append("route.final does not reference an outbound")
+    for rule in route.get("rules") or []:
+        if isinstance(rule, dict) and "rule_set" in rule:
+            values = rule.get("rule_set") if isinstance(rule.get("rule_set"), list) else [rule.get("rule_set")]
+            for item in values:
+                if isinstance(item, str) and not item.startswith(RAW_RULE_PREFIX):
+                    errors.append(f"sing-box rule_set does not use latest-rules: {item}")
     return errors
 
 
@@ -110,10 +117,6 @@ def validate(root: Path) -> dict:
                     errors.extend(_check_json(path))
                 else:
                     errors.extend(_check_text(path, platform))
-                urls = _raw_urls(path.read_text(encoding="utf-8"))
-                bad = [u for u in urls if not u.startswith(RAW_RULE_PREFIX)]
-                if bad:
-                    errors.append(f"non-latest-rules URL: {bad[0]}")
             except Exception as exc:
                 errors.append(f"parse error: {type(exc).__name__}: {exc}")
         result["clients"][platform] = {"file": filename, "ok": not errors, "errors": errors}
