@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_ROOT = ROOT / "build"
 MIN_EGERN_RULE_SET = 10
 MIN_CLASH_RULE_SET = 10
+MAX_EGERN_DOMAIN_FALLBACK = 5
 
 
 def check_yaml_clash(path: Path) -> list:
@@ -67,8 +68,8 @@ def check_yaml_egern(path: Path) -> list:
             errs.append("rule_set missing url")
         elif url.endswith(".yaml") and "/Clash/" in url:
             errs.append(f"rule_set still Clash yaml: {url[:80]}")
-    if len(ds) > 40:
-        errs.append(f"too many domain_suffix ({len(ds)}); expected rule_set-primary")
+    if len(ds) > MAX_EGERN_DOMAIN_FALLBACK:
+        errs.append(f"too many domain_suffix ({len(ds)}); expected rule_set-primary with <= {MAX_EGERN_DOMAIN_FALLBACK} fallback rules")
     return errs
 
 
