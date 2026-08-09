@@ -2,7 +2,7 @@ PYTHONPATH := $(CURDIR)/scripts
 export PYTHONPATH
 PYTHON ?= python3
 
-.PHONY: install validate audit build check test golden ci format
+.PHONY: install validate audit build check test golden ci
 
 install:
 	$(PYTHON) -m pip install -r requirements.txt
@@ -10,7 +10,7 @@ install:
 validate:
 	$(PYTHON) scripts/validate.py
 
- audit:
+audit:
 	$(PYTHON) scripts/rule_audit.py --write
 
 build:
