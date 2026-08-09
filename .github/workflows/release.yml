@@ -87,7 +87,6 @@ jobs:
           set -euo pipefail
           rm -rf dist
           mkdir -p dist/configs dist/rules
-
           cp build/clash-meta/config.yaml dist/clash-meta.yaml
           cp build/clash/config.yaml dist/clash.yaml
           cp build/stash/config.yaml dist/stash.yaml
@@ -96,7 +95,6 @@ jobs:
           cp build/shadowrocket/config.conf dist/shadowrocket.conf
           cp build/sing-box/config.json dist/sing-box.json
           cp -r build/. dist/configs/
-
           python scripts/pack_remote_rules.py --output dist/rules
           cp core/rules/priority.yaml dist/rules/priority.yaml
           cp core/rules/sources.yaml dist/rules/sources.yaml
@@ -104,40 +102,26 @@ jobs:
           cp dist/rules/priority.yaml dist/priority.yaml
           cp dist/rules/sources.yaml dist/sources.yaml
           python scripts/rewrite_release_urls.py --root dist
-
           python - <<'PY'
-          import hashlib
-          import json
+          import hashlib, json
           from pathlib import Path
-
           root = Path("dist")
           rules = sorted(list(root.glob("rule-*.yaml")) + list(root.glob("rule-*.list")))
           clients = ["clash.yaml", "clash-meta.yaml", "stash.yaml", "egern.yaml", "loon.conf", "shadowrocket.conf", "sing-box.json"]
-
           def sha256(path):
               h = hashlib.sha256()
               with path.open("rb") as f:
                   for chunk in iter(lambda: f.read(1024 * 1024), b""):
                       h.update(chunk)
               return h.hexdigest()
-
-          manifest = {
-              "release": "${{ steps.release_meta.outputs.tag }}",
-              "version": "${{ steps.release_meta.outputs.tag }}"[1:],
-              "remote_policy": "latest",
-              "remote_base": "https://github.com/cn-wanmei/Proxy-Config-Center/releases/latest/download/",
-              "clients": [],
-              "rules": [],
-          }
+          manifest = {"release": "${{ steps.release_meta.outputs.tag }}", "version": "${{ steps.release_meta.outputs.tag }}"[1:], "remote_policy": "latest", "remote_base": "https://github.com/cn-wanmei/Proxy-Config-Center/releases/latest/download/", "clients": [], "rules": []}
           for name in clients:
               p = root / name
               manifest["clients"].append({"name": name, "asset": name, "latest_url": manifest["remote_base"] + name, "sha256": sha256(p), "size": p.stat().st_size})
           for p in rules:
               manifest["rules"].append({"name": p.stem, "asset": p.name, "source": p.name, "latest_url": manifest["remote_base"] + p.name, "sha256": sha256(p), "size": p.stat().st_size})
-
           (root / "release-manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
           PY
-
           cp dist/release-manifest.json dist/configs/release-manifest.json
           cp -r dist/rules dist/configs/rules
           (cd dist && sha256sum *.yaml *.conf *.json rule-*.yaml rule-*.list > SHA256SUMS)
@@ -147,15 +131,16 @@ jobs:
           zip -r "proxy-config-center-${RELEASE_TAG}.zip" configs
       - name: Verify complete release assets
         shell: bash
+        env:
+          RELEASE_TAG: ${{ steps.release_meta.outputs.tag }}
         run: |
           set -euo pipefail
-          required=("dist/clash.yaml" "dist/clash-meta.yaml" "dist/stash.yaml" "dist/egern.yaml" "dist/loon.conf" "dist/shadowrocket.conf" "dist/sing-box.json" "dist/release-manifest.json" "dist/SHA256SUMS" "dist/proxy-config-center-${GITHUB_REF_NAME}-rules.tar.gz" "dist/proxy-config-center-${GITHUB_REF_NAME}.zip")
+          required=("dist/clash.yaml" "dist/clash-meta.yaml" "dist/stash.yaml" "dist/egern.yaml" "dist/loon.conf" "dist/shadowrocket.conf" "dist/sing-box.json" "dist/release-manifest.json" "dist/SHA256SUMS" "dist/proxy-config-center-${RELEASE_TAG}-rules.tar.gz" "dist/proxy-config-center-${RELEASE_TAG}.zip")
           for file in "${required[@]}"; do
             [[ -s "$file" ]] || { echo "Missing or empty release asset: $file"; exit 1; }
           done
           rule_count=$(find dist -maxdepth 1 -type f \( -name 'rule-*.yaml' -o -name 'rule-*.list' \) | wc -l)
           [[ "$rule_count" -ge 1 ]] || { echo "No remote rule assets generated"; exit 1; }
-          echo "Verified $rule_count remote rule assets and all client assets."
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
