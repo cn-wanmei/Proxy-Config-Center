@@ -1,7 +1,6 @@
 # Rule Priority / 规则优先级
 # Platform-agnostic formal definition
 # 数字越小 = 优先级越高（越先匹配）
-# Lower number = higher priority (matched first)
 
 version: 1
 
@@ -14,7 +13,7 @@ priority:
 
   - id: lan
     value: 5
-    group: direct          # LAN always direct
+    group: direct
     description: { zh: 局域网, en: LAN }
 
   - id: china
@@ -32,6 +31,12 @@ priority:
     group: code-repo
     description: { zh: 代码仓库, en: Code Repository }
 
+  # AI must precede Microsoft so Copilot is not swallowed by microsoft.com.
+  - id: ai
+    value: 25
+    group: ai
+    description: { zh: 人工智能, en: AI }
+
   - id: microsoft
     value: 30
     group: microsoft
@@ -41,11 +46,6 @@ priority:
     value: 40
     group: game
     description: { zh: 游戏平台, en: Gaming }
-
-  - id: ai
-    value: 50
-    group: ai
-    description: { zh: 人工智能, en: AI }
 
   - id: google
     value: 60
