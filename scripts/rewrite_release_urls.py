@@ -11,6 +11,15 @@ from ir import build_ir
 BASE = "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/"
 BLACKMATRIX = "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/"
 FLAVORS = ("Clash", "Surge", "Loon", "Shadowrocket", "Stash", "Egern")
+CLIENT_ASSETS = {
+    "clash.yaml",
+    "clash-meta.yaml",
+    "stash.yaml",
+    "egern.yaml",
+    "loon.conf",
+    "shadowrocket.conf",
+    "sing-box.json",
+}
 
 
 def rewrite_root(root: Path, ir=None) -> int:
@@ -32,19 +41,31 @@ def rewrite_root(root: Path, ir=None) -> int:
                 for flavor in FLAVORS:
                     replacements[f"{BLACKMATRIX}{flavor}/{list_path}"] = f"{BASE}rule-{bm.key}.list"
 
-    files = [p for p in root.rglob("*") if p.is_file() and p.suffix in {".yaml", ".yml", ".conf", ".json"}]
+    # Only rewrite generated client entrypoints.  Rule source metadata such as
+    # dist/sources.yaml intentionally retains the authoritative upstream source
+    # URL; rewriting that metadata would destroy provenance and can trigger a
+    # false-positive leftover check when the upstream base URL is not a client
+    # rule reference.
+    files = [
+        root / name
+        for name in sorted(CLIENT_ASSETS)
+        if (root / name).is_file()
+    ]
     changed = 0
     for path in files:
-        if path.name == "release-manifest.json":
-            continue
         text = path.read_text(encoding="utf-8")
         updated = text
         for old, new in replacements.items():
             updated = updated.replace(old, new)
-        # Fail closed if a client still contains a BlackMatrix rule URL after rewrite.
+        # Fail closed if a generated client still contains a BlackMatrix rule URL.
         if BLACKMATRIX in updated:
-            leftovers = re.findall(r"https://raw\.githubusercontent\.com/blackmatrix7/ios_rule_script/[^\s,\"']+", updated)
-            raise RuntimeError(f"unrewritten BlackMatrix rule URL in {path}: {leftovers[:1]}")
+            leftovers = re.findall(
+                r"https://raw\.githubusercontent\.com/blackmatrix7/ios_rule_script/[^\s,\"']+",
+                updated,
+            )
+            raise RuntimeError(
+                f"unrewritten BlackMatrix rule URL in client {path}: {leftovers[:1]}"
+            )
         if updated != text:
             path.write_text(updated, encoding="utf-8")
             changed += 1
