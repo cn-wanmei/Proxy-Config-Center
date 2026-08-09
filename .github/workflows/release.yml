@@ -182,25 +182,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ steps.release_meta.outputs.tag }}
-          TARGET_SHA: ${{ steps.release_meta.outputs.sha }}
         shell: bash
         run: |
           set -euo pipefail
           gh release create "$RELEASE_TAG" \
-            --target "$TARGET_SHA" \
             --title "$RELEASE_TAG" \
             --generate-notes \
             --latest \
-            dist/clash.yaml \
-            dist/clash-meta.yaml \
-            dist/stash.yaml \
-            dist/egern.yaml \
-            dist/loon.conf \
-            dist/shadowrocket.conf \
-            dist/sing-box.json \
-            dist/rule-*.yaml \
-            dist/rule-*.list \
-            dist/release-manifest.json \
-            dist/SHA256SUMS \
+            dist/clash.yaml dist/clash-meta.yaml dist/stash.yaml dist/egern.yaml \
+            dist/loon.conf dist/shadowrocket.conf dist/sing-box.json \
+            dist/rule-*.yaml dist/rule-*.list dist/release-manifest.json dist/SHA256SUMS \
             "dist/proxy-config-center-${RELEASE_TAG}-rules.tar.gz" \
             "dist/proxy-config-center-${RELEASE_TAG}.zip"
