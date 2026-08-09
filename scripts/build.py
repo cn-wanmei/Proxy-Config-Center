@@ -117,18 +117,18 @@ def write_intelligence_reports(ir) -> None:
     if graph["conflicts"] or graph["unreachable"] or graph["invalid_targets"]:
         raise RuntimeError("rule conflict/reachability audit failed")
     if not remote["ok"]:
+        for error in remote["errors"]:
+            print(f"❌ remote-config: {error}")
         raise RuntimeError("remote client semantic validation failed")
     if not matrix["ok"]:
+        for error in matrix["errors"]:
+            print(f"❌ semantic-matrix: {error}")
         raise RuntimeError("seven-platform semantic matrix failed")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--include-final",
-        action="store_true",
-        help="also write the legacy final/ tree for local compatibility; CI/release use build/",
-    )
+    parser.add_argument("--include-final", action="store_true")
     args = parser.parse_args()
 
     print("=== Proxy-Config-Center Build ===")
@@ -148,8 +148,7 @@ def main() -> int:
         if args.include_final:
             build_root("final", ir)
             (ROOT / "final" / "README.md").write_text(
-                "# 最终配置 / Final Configs\n\n"
-                "> 由 `python scripts/build.py --include-final` 生成，请勿手改。\n",
+                "# 最终配置 / Final Configs\n\n> 由 `python scripts/build.py --include-final` 生成，请勿手改。\n",
                 encoding="utf-8",
             )
             print(f"✅ Wrote {ROOT / 'final' / 'README.md'}")
