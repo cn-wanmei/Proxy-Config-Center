@@ -83,6 +83,164 @@
 
 Manifest 同时记录我发布的 7 个客户端 Raw URL、全部分流规则 Raw URL、SHA-256、文件大小及发布版本。
 
+## 新增：规则智能审计
+
+我现在把规则系统当成可审计的数据图，而不是单纯的文本生成器。
+
+### Rule → Strategy Group Index
+
+我在构建时生成：
+
+```text
+build/audit/rule-strategy-index.json
+build/audit/rule-strategy-index.md
+```
+
+它可以回答：
+
+- 哪条规则来自哪个源文件；
+- 哪条规则实际进入哪个策略组；
+- 策略组优先级是多少；
+- 每个策略组当前有多少规则。
+
+### Rule Graph
+
+我同时生成：
+
+```text
+build/audit/rule-graph.json
+```
+
+它记录 Rule → Strategy、duplicate、conflict、unreachable、invalid target 等关系。
+
+出现策略冲突、不可达规则或非法策略目标时，我会直接阻止 Build，而不是把问题带进 Release。
+
+### Rule Explain
+
+我提供：
+
+```bash
+python scripts/explain_rule.py openai.com
+```
+
+我会直接告诉你命中的规则、源文件、优先级和最终策略组。
+
+### 七端 Domain Semantic Matrix
+
+我会对 Core 中的代表性服务域名建立七端语义矩阵：
+
+```text
+Clash
+Clash Meta
+Stash
+Egern
+Loon
+Shadowrocket
+sing-box
+```
+
+并要求同一个 Core 服务在七端仍然落到同一个语义策略组。
+
+生成结果：
+
+```text
+build/audit/domain-semantic-matrix.json
+```
+
+## 新增：Remote Config Semantic Validation
+
+我不再把“Raw HTTP 200”当成客户端配置有效的充分条件。
+
+我现在同时检查：
+
+1. 配置格式能够解析；
+2. 策略组存在；
+3. 规则存在；
+4. 规则目标策略组存在；
+5. FINAL / MATCH 兜底存在；
+6. rule-provider / rule-set URL 指向 `latest-rules/rules/`；
+7. sing-box `route.final` 必须指向真实 outbound；
+8. 七端全部通过语义校验。
+
+生成结果：
+
+```text
+build/audit/remote-config-semantic.json
+```
+
+## 新增：Build Report / Config Diff
+
+每次构建我都会生成：
+
+```text
+build/audit/build-report.json
+build/audit/config-diff.json
+```
+
+Build Report 记录：
+
+- 构建时间；
+- Commit；
+- 7 个客户端；
+- 每个生成文件 SHA256；
+- 文件大小；
+- Rule Audit；
+- Semantic Matrix；
+- Remote Config Semantic Validation。
+
+Config Diff 用于阻止 Core / Platform 源文件出现异常大范围变化，同时保留机器可读的变更报告。
+
+## 新增：Rule Source Cache / Integrity
+
+我对外部规则源增加了：
+
+```text
+Retry
+ ↓
+24h 本地 Cache
+ ↓
+SHA256
+ ↓
+Integrity Report
+```
+
+构建时生成：
+
+```text
+build/audit/rule-source-lock.json
+```
+
+它记录实际抓取的 URL、SHA256、大小、HTTP 状态和是否命中 Cache。
+
+这样我可以追溯某次构建到底使用了哪一份远程规则内容。
+
+## 新增：Supply Chain / 多版本 Schema
+
+我正式维护：
+
+```text
+common/schemas/release-manifest.schema.json
+common/schemas/remote-config.schema.json
+```
+
+并生成：
+
+```text
+build/audit/supply-chain.json
+```
+
+Supply Chain Report 记录：
+
+```text
+VERSION
+Commit SHA
+Release Tag
+Artifact SHA256
+Manifest
+```
+
+目标是让任意一个正式发布的 Raw 配置都可以追溯到具体 Release 和 Git Commit。
+
 ## 客户端能力
 
 - **节点组**：我在 Core 统一定义，再根据客户端 capability 做映射。
@@ -100,13 +258,17 @@ Manifest 同时记录我发布的 7 个客户端 Raw URL、全部分流规则 Ra
 2. 我构建全部已定义分流规则
 3. 我检查 `direct / proxy / ehentai` 用户维护规则
 4. 我执行 Rule Audit / Capability / Semantic / Golden / Structural
-5. 我检查 Release Asset 完整性
-6. 我更新 `latest-rules/clients/`
-7. 我更新 `latest-rules/rules/`
-8. 我更新 `release-manifest.json`
-9. 我逐个验证客户端 Raw HTTP 200，并校验 SHA256
-10. 我逐个验证全部规则 Raw HTTP 200，并校验 SHA256
-11. 我验证 Raw Manifest 与本次构建 Manifest 完全一致
+5. 我执行 Remote Config Semantic Validation
+6. 我执行 Rule Conflict / Unreachable Graph
+7. 我执行七端 Domain Semantic Matrix
+8. 我生成 Build Report / Source Integrity / Supply Chain Report
+9. 我检查 Release Asset 完整性
+10. 我更新 `latest-rules/clients/`
+11. 我更新 `latest-rules/rules/`
+12. 我更新 `release-manifest.json`
+13. 我逐个验证客户端 Raw HTTP 200，并校验 SHA256
+14. 我逐个验证全部规则 Raw HTTP 200，并校验 SHA256
+15. 我验证 Raw Manifest 与本次构建 Manifest 完全一致
 
 **任何 Release 失败、普通 push 或 PR，都不能污染我的 `latest-rules`。**
 
@@ -116,13 +278,23 @@ Manifest 同时记录我发布的 7 个客户端 Raw URL、全部分流规则 Ra
 
 ```bash
 python scripts/validate.py
+python scripts/rule_audit.py --write
+python scripts/rule_graph.py --write
+python tests/test_rule_intelligence.py
 python tests/test_capabilities.py
 python tests/test_semantic.py
-python tests/test_golden.py
+python tests/test_platform_semantics.py
 python scripts/build.py --include-final
+python scripts/validate_remote_configs.py --root build --write
+python scripts/semantic_matrix.py --root build --write
 python scripts/check_config.py --root build
 python scripts/check_config.py --root final
-python scripts/check_rule_sources.py
+python scripts/check_rule_sources.py --write
+python scripts/build_report.py
+python scripts/supply_chain.py --root build --write
+python scripts/config_diff.py --write
+python tests/test_remote_configs.py
+python tests/test_golden.py
 ```
 
 我将生成结果放在 `build/`；`final/` 只用于 legacy compatibility，我不允许手工修改生成文件。
@@ -137,6 +309,10 @@ python scripts/check_rule_sources.py
 6. **Artifact First** — 我把配置作为 CI Artifact / Release 交付
 7. **Adapter First** — 我新增客户端时优先只增加 adapter + capability
 8. **Raw Distribution** — 我同时提供完整客户端配置和全部分流规则的 `latest-rules` Raw URL
-9. **Tag-only Release** — 我只允许 `v*` tag 创建正式 Release
-10. **Weekly External Refresh** — 我将外部规则与节点资源默认刷新周期设为 7 天
-11. **Release Gate** — 我只有在正式 Release 全部验证成功后才更新 `latest-rules`
+9. **Semantic Distribution** — 我要求远程配置不仅可下载，还必须语义有效
+10. **Rule Intelligence** — 我让规则具备索引、解释、冲突和可达性分析能力
+11. **Seven-platform Equivalence** — 我要求七端保持 Core 语义一致
+12. **Supply Chain Traceability** — 我让 Release、Manifest、Artifact、SHA256 和 Commit 可以相互追溯
+13. **Tag-only Release** — 我只允许 `v*` tag 创建正式 Release
+14. **Weekly External Refresh** — 我将外部规则与节点资源默认刷新周期设为 7 天
+15. **Release Gate** — 我只有在正式 Release 全部验证成功后才更新 `latest-rules`
