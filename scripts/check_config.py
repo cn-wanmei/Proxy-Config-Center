@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Structural check for generated build artifacts.
+Structural check for generated configuration trees.
 
-The repository no longer tracks final/ as source-controlled generated output.
-Build artifacts are validated from build/ and published by CI as artifacts or
-GitHub Releases.
+The checker validates an explicit output directory. By default it checks
+build/, while CI may also validate the legacy final/ compatibility tree.
 """
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -17,7 +17,7 @@ except ImportError:
     sys.exit(1)
 
 ROOT = Path(__file__).resolve().parent.parent
-BUILD = ROOT / "build"
+DEFAULT_ROOT = ROOT / "build"
 
 MIN_EGERN_RULE_SET = 10
 MIN_CLASH_RULE_SET = 10
@@ -113,15 +113,27 @@ def _suite(root: Path) -> list:
     ]
 
 
-def main():
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Check generated platform configurations")
+    parser.add_argument(
+        "--root",
+        type=Path,
+        default=DEFAULT_ROOT,
+        help="generated configuration root to validate (default: build/)",
+    )
+    args = parser.parse_args()
+
+    root = args.root if args.root.is_absolute() else ROOT / args.root
+    root = root.resolve()
+
     failed = 0
-    print("=== Config structural check (build artifacts) ===")
-    if not BUILD.exists():
-        print("❌ missing build/")
+    print(f"=== Config structural check: {root.relative_to(ROOT) if root.is_relative_to(ROOT) else root} ===")
+    if not root.exists():
+        print(f"❌ missing {root}")
         return 1
 
-    for path, fn in _suite(BUILD):
-        rel = path.relative_to(ROOT)
+    for path, fn in _suite(root):
+        rel = path.relative_to(ROOT) if path.is_relative_to(ROOT) else path
         if not path.exists():
             print(f"❌ missing {rel}")
             failed += 1

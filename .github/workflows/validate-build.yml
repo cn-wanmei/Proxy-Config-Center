@@ -72,10 +72,12 @@ jobs:
           python-version: '3.12'
       - name: Install dependencies
         run: pip install -r requirements.txt
-      - name: Build all platforms
-        run: python scripts/build.py
-      - name: Structural check
-        run: python scripts/check_config.py
+      - name: Build all platforms (including legacy final/ compatibility tree)
+        run: python scripts/build.py --include-final
+      - name: Structural check - build
+        run: python scripts/check_config.py --root build
+      - name: Structural check - final compatibility
+        run: python scripts/check_config.py --root final
       - name: Large source diff safety
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
@@ -85,5 +87,12 @@ jobs:
         with:
           name: proxy-configs-${{ github.sha }}
           path: build/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload final compatibility artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: proxy-configs-final-${{ github.sha }}
+          path: final/
           if-no-files-found: error
           retention-days: 14
