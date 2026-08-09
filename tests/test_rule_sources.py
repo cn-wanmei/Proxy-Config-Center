@@ -27,6 +27,9 @@ def test_sources_bm_only():
             continue
         has = bool(rs.bm_sets) or bool(rs.domain_suffix)
         assert has, f"{rs.id} empty source"
+        for bm in rs.bm_sets:
+            assert bm.url, f"{rs.id}/{bm.key} has empty BlackMatrix7 URL"
+            assert bm.url.startswith(ir.blackmatrix7_base.rstrip("/")), f"unexpected source URL: {bm.url}"
         assert not getattr(rs, "geosite", None)
         assert not getattr(rs, "geoip", None)
     print(f"✅ sources BM-only: {len(ir.rule_sources)}")
@@ -54,6 +57,7 @@ def test_clash_no_geosite_geoip():
 
 
 def test_egern_rule_set_list_url():
+    ir = build_ir()
     cfg = _render("egern")
     rules = cfg.get("rules") or []
     rs = [r for r in rules if isinstance(r, dict) and "rule_set" in r]
@@ -67,6 +71,14 @@ def test_egern_rule_set_list_url():
         assert url.endswith(".list"), f"expect .list got {url}"
         assert "/Clash/" not in url, f"must not use Clash yaml path: {url}"
         assert "/Surge/" in url or "/Loon/" in url, f"unexpected list host path: {url}"
+
+    # Cross-check the IR so an empty generated URL can never be caused by a
+    # partially resolved source object hidden by a renderer fallback.
+    bm_urls = [bm.url for source in ir.rule_sources for bm in source.bm_sets]
+    assert bm_urls, "no BlackMatrix7 sources resolved in IR"
+    assert all(bm_urls), "IR contains an empty BlackMatrix7 URL"
+    assert len(rs) == len(bm_urls), f"Egern rule_set count {len(rs)} != resolved BM source count {len(bm_urls)}"
+
     ds = [r for r in rules if isinstance(r, dict) and "domain_suffix" in r]
     assert len(ds) < 30, f"domain flood {len(ds)}"
     print(f"✅ egern rule_set={len(rs)} .list match URLs OK, domain={len(ds)}")
