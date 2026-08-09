@@ -78,13 +78,13 @@ def emit_egern_style(ir: Any, id_to_display: Dict[str, str], use_rule_set: bool)
         target = _target(rs, id_to_display)
         if use_rule_set and _has_bm(rs):
             for bm in rs.bm_sets:
-                rules.append({"rule_set": {"url": _clash_yaml_to_list(bm.url, "Surge"), "policy": target}})
+                rules.append({"rule_set": {"match": _clash_yaml_to_list(bm.url, "Surge"), "policy": target}})
             continue
         for d in rs.domain_suffix:
             rules.append({"domain_suffix": {"match": d, "policy": target}})
         for d in rs.domain_keyword:
             rules.append({"domain_keyword": {"match": d, "policy": target}})
-    rules.append({"default": {"policy": id_to_display.get("final", "其它连接")}})
+    rules.append({"default": {"policy": id_to_display.get('final', '其它连接')}})
     return rules
 
 
