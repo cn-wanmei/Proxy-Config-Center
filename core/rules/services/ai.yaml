@@ -1,23 +1,117 @@
-version: 1
+version: 2
 id: service-ai
 group: ai
 rules:
-  - type: geosite
-    values: [openai, anthropic]
-    action: group
-    target: ai
+  # OpenAI / ChatGPT
   - type: domain-suffix
     values:
       - openai.com
       - chatgpt.com
+      - oaistatic.com
+      - oaiusercontent.com
+      - openaiapi-site.azureedge.net
+      - openaicom.imgix.net
+    action: group
+    target: ai
+
+  # Anthropic / Claude
+  - type: domain-suffix
+    values:
       - anthropic.com
       - claude.ai
-      - x.ai
-      - grok.x.ai
-      - generativelanguage.googleapis.com
-      - aistudio.google.com
+      - api.anthropic.com
+    action: group
+    target: ai
+
+  # Google Gemini / AI Studio / NotebookLM
+  - type: domain-suffix
+    values:
       - gemini.google.com
-      - cursor.sh
+      - ai.google.dev
+      - aistudio.google.com
+      - makersuite.google.com
+      - notebooklm.google.com
+      - notebooklm.google
+      - generativeai.google
+      - generativelanguage.googleapis.com
+      - proactivebackend-pa.googleapis.com
+      - alkalimakersuite-pa.clients6.google.com
+      - bard.google.com
+    action: group
+    target: ai
+
+  # xAI / Grok
+  - type: domain-suffix
+    values:
+      - x.ai
+      - grok.com
+      - grok.x.ai
+    action: group
+    target: ai
+
+  # Microsoft Copilot
+  - type: domain-suffix
+    values:
+      - copilot.microsoft.com
+      - sydney.bing.com
+      - edgeservices.bing.com
+      - services.bingapis.com
+    action: group
+    target: ai
+
+  # DeepSeek
+  - type: domain-suffix
+    values:
+      - deepseek.com
+      - api.deepseek.com
+    action: group
+    target: ai
+
+  # Perplexity
+  - type: domain-suffix
+    values:
+      - perplexity.ai
+      - pplx.ai
+    action: group
+    target: ai
+
+  # Mistral AI
+  - type: domain-suffix
+    values:
+      - mistral.ai
+      - chat.mistral.ai
+      - console.mistral.ai
+    action: group
+    target: ai
+
+  # Meta AI
+  - type: domain-suffix
+    values:
+      - meta.ai
+    action: group
+    target: ai
+
+  # Poe / OpenRouter
+  - type: domain-suffix
+    values:
+      - poe.com
+      - openrouter.ai
+    action: group
+    target: ai
+
+  # AI coding / developer services
+  - type: domain-suffix
+    values:
       - cursor.com
+      - cursor.sh
+      - codeium.com
+      - windsurf.com
+      - huggingface.co
+    action: group
+    target: ai
+
+  # Existing geosite coverage retained as a supplemental layer.
+  - type: geosite
+    values: [openai, anthropic]
     action: group
     target: ai
