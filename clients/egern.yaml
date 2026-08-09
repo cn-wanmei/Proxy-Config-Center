@@ -1,0 +1,279 @@
+# AUTO-GENERATED from Core — DO NOT EDIT MANUALLY
+# Source: core/ | Build: scripts/build.py
+# 订阅/节点: 编辑 core/proxies/providers.yaml 后重新 build
+
+ipv6: true
+dns:
+  upstreams:
+    alidns:
+    - https://dns.alidns.com/dns-query
+    - h3://dns.alidns.com/dns-query
+    tencent:
+    - https://doh.pub/dns-query
+    - h3://doh.pub/dns-query
+    google:
+    - https://dns.google/dns-query
+    cloudflare:
+    - https://cloudflare-dns.com/dns-query
+    - https://1.1.1.1/dns-query
+policy_groups:
+- select:
+    name: 代理模式
+    policies:
+    - 手动选择
+    - 定向免流
+    - 自动选择
+    - DIRECT
+    - REJECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/SS.png
+- select:
+    name: 手动选择
+    policies:
+    - DIRECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/El.png
+- select:
+    name: 定向免流
+    policies:
+    - DIRECT
+    flatten: true
+    filter: (?i)免流
+    icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/free_mianliu.png
+- select:
+    name: 自动选择
+    policies:
+    - DIRECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Auto_Speed.png
+- select:
+    name: 直连模式
+    policies:
+    - DIRECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/China.png
+- select:
+    name: 阻断连接
+    policies:
+    - REJECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Reject.png
+- select:
+    name: 广告拦截
+    policies:
+    - REJECT
+    - 代理模式
+    - 手动选择
+    - DIRECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Reject.png
+- select:
+    name: 中国连接
+    policies:
+    - DIRECT
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - REJECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/China.png
+- select:
+    name: 代码仓库
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/github.png
+- select:
+    name: 微软服务
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Microsoft.png
+- select:
+    name: 游戏平台
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/ico/steam.ico
+- select:
+    name: 人工智能
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/OpenAI.png
+- select:
+    name: 谷歌服务
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/ico/google.ico
+- select:
+    name: 油管视频
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/YouTube.png
+- select:
+    name: 声破天乐
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Spotify.png
+- select:
+    name: 电报通讯
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Telegram.png
+- select:
+    name: 推特社交
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/x.png
+- select:
+    name: 奈飞影视
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/netflix.png
+- select:
+    name: 抖音国际
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/ico/tiktok.ico
+- select:
+    name: 绅士漫画
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Eh.png
+- select:
+    name: 苹果服务
+    policies:
+    - DIRECT
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - REJECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Apple.png
+- select:
+    name: 其它连接
+    policies:
+    - 代理模式
+    - 手动选择
+    - 自动选择
+    - DIRECT
+    - REJECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Vpn.png
+rules:
+- rule_set:
+    url: https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-ad-block.list
+    policy: 广告拦截
+- rule_set:
+    url: https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-china.list
+    policy: 中国连接
+- rule_set:
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaIPs/ChinaIPs.list
+    policy: 中国连接
+- rule_set:
+    url: https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-apple.list
+    policy: 苹果服务
+- rule_set:
+    url: https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-ai.list
+    policy: 人工智能
+- rule_set:
+    url: https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-microsoft.list
+    policy: 微软服务
+- rule_set:
+    url: https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-code-repo.list
+    policy: 代码仓库
+- rule_set:
+    url: https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-game.list
+    policy: 游戏平台
+- rule_set:
+    url: https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-google.list
+    policy: 谷歌服务
+- rule_set:
+    url: https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-youtube.list
+    policy: 油管视频
+- rule_set:
+    url: https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-spotify.list
+    policy: 声破天乐
+- rule_set:
+    url: https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-telegram.list
+    policy: 电报通讯
+- rule_set:
+    url: https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-twitter.list
+    policy: 推特社交
+- rule_set:
+    url: https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-netflix.list
+    policy: 奈飞影视
+- rule_set:
+    url: https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-tiktok.list
+    policy: 抖音国际
+- domain_suffix:
+    match: e-hentai.org
+    policy: 绅士漫画
+- domain_suffix:
+    match: exhentai.org
+    policy: 绅士漫画
+- domain_suffix:
+    match: ehgt.org
+    policy: 绅士漫画
+- domain_suffix:
+    match: hath.network
+    policy: 绅士漫画
+- default:
+    policy: 其它连接
