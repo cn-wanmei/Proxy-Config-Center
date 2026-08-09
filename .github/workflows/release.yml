@@ -72,7 +72,6 @@ jobs:
           rm -rf dist
           mkdir -p dist/configs dist/rules
 
-          # Complete client configurations.
           cp build/clash-meta/config.yaml dist/clash-meta.yaml
           cp build/clash/config.yaml dist/clash.yaml
           cp build/stash/config.yaml dist/stash.yaml
@@ -82,10 +81,13 @@ jobs:
           cp build/sing-box/config.json dist/sing-box.json
           cp -r build/. dist/configs/
 
-          # Download the declared upstream rule sources as native release assets.
+          # Download upstream sources into native remote-rule assets.
           python scripts/pack_remote_rules.py --output dist/rules
           cp core/rules/priority.yaml dist/rules/priority.yaml
           cp core/rules/sources.yaml dist/rules/sources.yaml
+          cp dist/rules/rule-* dist/
+          cp dist/rules/priority.yaml dist/priority.yaml
+          cp dist/rules/sources.yaml dist/sources.yaml
 
           python - <<'PY'
           import hashlib
@@ -93,14 +95,8 @@ jobs:
           from pathlib import Path
 
           root = Path("dist")
-          rules = sorted(
-              list((root / "rules").glob("rule-*.yaml"))
-              + list((root / "rules").glob("rule-*.list"))
-          )
-          clients = [
-              "clash.yaml", "clash-meta.yaml", "stash.yaml", "egern.yaml",
-              "loon.conf", "shadowrocket.conf", "sing-box.json",
-          ]
+          rules = sorted(list(root.glob("rule-*.yaml")) + list(root.glob("rule-*.list")))
+          clients = ["clash.yaml", "clash-meta.yaml", "stash.yaml", "egern.yaml", "loon.conf", "shadowrocket.conf", "sing-box.json"]
 
           def sha256(path):
               h = hashlib.sha256()
@@ -119,37 +115,17 @@ jobs:
           }
           for name in clients:
               p = root / name
-              manifest["clients"].append({
-                  "name": name,
-                  "asset": name,
-                  "latest_url": manifest["remote_base"] + name,
-                  "sha256": sha256(p),
-                  "size": p.stat().st_size,
-              })
+              manifest["clients"].append({"name": name, "asset": name, "latest_url": manifest["remote_base"] + name, "sha256": sha256(p), "size": p.stat().st_size})
           for p in rules:
-              asset = p.name
-              manifest["rules"].append({
-                  "name": p.stem,
-                  "asset": asset,
-                  "source": str(p.relative_to(root)),
-                  "latest_url": manifest["remote_base"] + asset,
-                  "sha256": sha256(p),
-                  "size": p.stat().st_size,
-              })
+              manifest["rules"].append({"name": p.stem, "asset": p.name, "source": p.name, "latest_url": manifest["remote_base"] + p.name, "sha256": sha256(p), "size": p.stat().st_size})
 
-          (root / "release-manifest.json").write_text(
-              json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
-              encoding="utf-8",
-          )
+          (root / "release-manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
           PY
 
           cp dist/release-manifest.json dist/configs/release-manifest.json
           cp -r dist/rules dist/configs/rules
-          cp dist/SHA256SUMS dist/configs/SHA256SUMS 2>/dev/null || true
-
           (cd dist && sha256sum *.yaml *.conf *.json rule-*.yaml rule-*.list > SHA256SUMS)
           cp dist/SHA256SUMS dist/configs/SHA256SUMS
-
           cd dist
           tar -czf "proxy-config-center-${RELEASE_TAG}-rules.tar.gz" rule-*.yaml rule-*.list release-manifest.json SHA256SUMS
           zip -r "proxy-config-center-${RELEASE_TAG}.zip" configs
@@ -157,19 +133,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          required=(
-            "dist/clash.yaml"
-            "dist/clash-meta.yaml"
-            "dist/stash.yaml"
-            "dist/egern.yaml"
-            "dist/loon.conf"
-            "dist/shadowrocket.conf"
-            "dist/sing-box.json"
-            "dist/release-manifest.json"
-            "dist/SHA256SUMS"
-            "dist/proxy-config-center-${GITHUB_REF_NAME}-rules.tar.gz"
-            "dist/proxy-config-center-${GITHUB_REF_NAME}.zip"
-          )
+          required=("dist/clash.yaml" "dist/clash-meta.yaml" "dist/stash.yaml" "dist/egern.yaml" "dist/loon.conf" "dist/shadowrocket.conf" "dist/sing-box.json" "dist/release-manifest.json" "dist/SHA256SUMS" "dist/proxy-config-center-${GITHUB_REF_NAME}-rules.tar.gz" "dist/proxy-config-center-${GITHUB_REF_NAME}.zip")
           for file in "${required[@]}"; do
             [[ -s "$file" ]] || { echo "Missing or empty release asset: $file"; exit 1; }
           done
