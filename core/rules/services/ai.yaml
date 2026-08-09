@@ -139,7 +139,6 @@ rules:
       - runwayml.com
       - runway.ai
       - character.ai
-      - character.ai
       - leonardo.ai
       - krea.ai
     action: group
