@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.2.1] - 2026-08-09
+
+发布资产完整性修复 / Release asset integrity fix。
+
+### Fixed
+- Release workflow 增加正式资产预检，七端独立配置文件与 ZIP 任一缺失都会直接失败。
+- Release assets 改为显式文件清单上传，避免仅上传 ZIP 或目录导致客户端独立文件缺失。
+- Release Artifact 同时保留七端独立配置、完整配置目录与 ZIP 归档。
+- 增加发布资产名称与非空文件校验，防止构建成功但 Release 资产不完整。
+- 版本号统一切换至 `1.2.1`，并继续要求 Git tag 与 `VERSION` 严格一致。
+
+### Validation
+- Core / Reference Validator                         ✅
+- Rule Coverage Audit                                ✅
+- Capability Tests                                   ✅
+- Semantic Tests                                     ✅
+- Seven-platform Semantic Equivalence                ✅
+- Golden Snapshot                                    ✅
+- Build / Structural / Final Artifact                ✅
+- Release Asset Completeness                         ✅
+
 ## [1.2.0] - 2026-08-09
 
 分流质量体系与 AI Provider Registry / Routing quality and AI provider registry。
