@@ -1,11 +1,3 @@
-# ============================================================
-# DNS Layer 3: Policies (what services bind to)
-# ============================================================
-# Service.dns MUST reference a policy id from this file.
-# options = list of resolver ids (must exist in resolvers.yaml)
-# group   = default group (must exist in groups.yaml)
-# default = must be one of options
-
 version: 1
 
 policies:
@@ -27,7 +19,7 @@ policies:
     name: { zh: 国外DNS, en: Foreign DNS }
     group: foreign
     selectable: true
-    options: [cloudflare, google, alidns, tencent, system]
+    options: [cloudflare, google, alidns, tencent]
     default: cloudflare
 
   - id: dns-secure
@@ -41,19 +33,19 @@ policies:
     name: { zh: 谷歌DNS, en: Google DNS }
     group: google
     selectable: true
-    options: [google, cloudflare, alidns, tencent, system]
+    options: [google, cloudflare, alidns, tencent]
     default: google
 
   - id: dns-cloudflare
     name: { zh: Cloudflare DNS, en: Cloudflare DNS }
     group: cloudflare
     selectable: true
-    options: [cloudflare, google, alidns, tencent, system]
+    options: [cloudflare, google, alidns, tencent]
     default: cloudflare
 
   - id: dns-selectable
     name: { zh: 可选DNS, en: Selectable DNS }
     group: foreign
     selectable: true
-    options: [cloudflare, google, alidns, tencent, system]
+    options: [cloudflare, google, alidns, tencent]
     default: cloudflare
