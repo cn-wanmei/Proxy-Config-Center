@@ -10,6 +10,9 @@ permissions:
   id-token: write
   attestations: write
 
+env:
+  PYTHONPATH: ${{ github.workspace }}/scripts
+
 jobs:
   release:
     # Formal release is tag-only. PRs/release branches must use normal CI.
@@ -47,16 +50,22 @@ jobs:
           fi
       - name: Validate
         run: python scripts/validate.py
+      - name: Rule coverage audit
+        run: python scripts/rule_audit.py --write
       - name: Capability tests
         run: python tests/test_capabilities.py
       - name: Semantic tests
         run: python tests/test_semantic.py
+      - name: Seven-platform semantic equivalence
+        run: python tests/test_platform_semantics.py
+      - name: Build
+        run: python scripts/build.py --include-final
       - name: Golden tests
         run: python tests/test_golden.py
-      - name: Build
-        run: python scripts/build.py
-      - name: Structural check
+      - name: Structural check - build
         run: python scripts/check_config.py --root build
+      - name: Structural check - final compatibility
+        run: python scripts/check_config.py --root final
       - name: Rule source health
         run: python scripts/check_rule_sources.py
       - name: Pack configs
