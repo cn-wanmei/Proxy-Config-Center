@@ -230,11 +230,10 @@ jobs:
           rm -rf /tmp/pcc-latest-rules
           if git ls-remote --exit-code origin refs/heads/latest-rules >/dev/null 2>&1; then
             git fetch origin latest-rules
-            git worktree add /tmp/pcc-latest-rules origin/latest-rules
+            git worktree add --track -b latest-rules /tmp/pcc-latest-rules origin/latest-rules
           else
             git worktree add --detach /tmp/pcc-latest-rules HEAD
-            cd /tmp/pcc-latest-rules
-            git checkout --orphan latest-rules
+            git -C /tmp/pcc-latest-rules checkout --orphan latest-rules
           fi
           cd /tmp/pcc-latest-rules
           git rm -rf . >/dev/null 2>&1 || true
@@ -246,7 +245,11 @@ jobs:
           cp "$GITHUB_WORKSPACE"/dist/release-manifest.json release-manifest.json
           cp "$GITHUB_WORKSPACE"/dist/SHA256SUMS SHA256SUMS
           git add -A
-          git commit -m "release: publish ${RELEASE_TAG} clients and rules"
+          if git diff --cached --quiet; then
+            echo "latest-rules already contains the exact release payload; nothing to commit."
+          else
+            git commit -m "release: publish ${RELEASE_TAG} clients and rules"
+          fi
           git push --force origin HEAD:latest-rules
 
       - name: Verify Raw clients and rules
