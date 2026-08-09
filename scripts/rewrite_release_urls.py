@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Rewrite supported client rule URLs to this release's stable latest assets."""
+"""Rewrite supported client rule URLs to the stable raw latest-rules branch."""
 from __future__ import annotations
 
 import argparse
@@ -7,7 +7,7 @@ from pathlib import Path
 
 from ir import build_ir
 
-BASE = "https://github.com/cn-wanmei/Proxy-Config-Center/releases/latest/download/"
+BASE = "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/"
 
 
 def list_url(url: str, flavor: str) -> str:
@@ -44,7 +44,7 @@ def main() -> int:
         if updated != text:
             path.write_text(updated, encoding="utf-8")
             changed += 1
-    print(f"Rewrote latest remote-rule URLs in {changed} client assets.")
+    print(f"Rewrote raw latest-rules URLs in {changed} client assets.")
     return 0
 
 
