@@ -16,14 +16,10 @@ def list_url(url: str, flavor: str) -> str:
     return url
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--root", default="dist")
-    args = parser.parse_args()
-
-    root = Path(args.root)
+def rewrite_root(root: Path, ir=None) -> int:
+    root = Path(root)
     replacements: dict[str, str] = {}
-    ir = build_ir()
+    ir = ir or build_ir()
     for source in ir.rule_sources:
         for bm in source.bm_sets:
             if bm.url.endswith(".yaml"):
@@ -44,6 +40,14 @@ def main() -> int:
         if updated != text:
             path.write_text(updated, encoding="utf-8")
             changed += 1
+    return changed
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--root", default="dist")
+    args = parser.parse_args()
+    changed = rewrite_root(Path(args.root))
     print(f"Rewrote raw latest-rules URLs in {changed} client assets.")
     return 0
 
