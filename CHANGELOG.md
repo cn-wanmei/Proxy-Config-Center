@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.6.2] - 2026-08-09
+
+### Fix incomplete push & stabilize engineering polish
+
+- Re-pushed optimized `scripts/ir.py`, `scripts/rule_audit.py`, `scripts/validate.py` that were missing from earlier partial commits.
+- Confirmed remote `main` now uses `DEFAULT_PRIORITY` / `FALLBACK_PRIORITY` / `get_priority_map` and cached `load_yaml`.
+- Confirmed `engines.proxies_optional` facade and structured error suggestions are live.
+- Documentation remains neutral technical language (zero first-person narrative).
+
 ## [1.6.1] - 2026-08-09
 
 ### Engineering polish (post-audit)

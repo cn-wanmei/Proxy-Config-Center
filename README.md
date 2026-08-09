@@ -1,7 +1,7 @@
 # Proxy-Config-Center
 
 **通用代理配置中心 / Universal Proxy Configuration Center**  
-**Version: 1.6.1**
+**Version: 1.6.2**
 
 统一生成并发布 Clash Meta、Clash、Stash、Egern、Loon、Shadowrocket、sing-box 七端代理配置。
 
