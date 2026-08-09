@@ -67,13 +67,13 @@ def load_yaml(path: Path, *, required: bool = True) -> Any:
             path,
             reason=f"invalid YAML syntax: {exc}",
             suggestion="Run a YAML linter to locate the syntax error.",
-        ) from exp
+        ) from exc
     except OSError as exc:
         raise CoreLoadError(
             path,
             reason=f"I/O error: {exc}",
             suggestion="Check file permissions and that the path is readable.",
-        ) from exp
+        ) from exc
 
 
 def clear_yaml_cache() -> None:
