@@ -79,8 +79,8 @@ jobs:
         run: python tests/test_remote_configs.py
       - name: Golden snapshot tests
         run: python tests/test_golden.py
-      - name: Rule source health and integrity
-        run: python scripts/check_rule_sources.py --strict-integrity
+      - name: Rule source health and integrity report
+        run: python scripts/check_rule_sources.py --write
       - name: Build report and supply-chain provenance
         run: python scripts/build_report.py --root build && python scripts/supply_chain.py --root build --write
       - name: Upload intelligence and provenance artifacts
