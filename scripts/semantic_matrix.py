@@ -62,7 +62,15 @@ def platform_targets(path: Path, platform: str) -> set[str]:
         data = yaml.safe_load(text) or {}
         for rule in data.get("rules") or []:
             if isinstance(rule, dict) and isinstance(rule.get("rule_set"), dict):
-                policy = rule.get("policy")
+                policy = rule["rule_set"].get("policy")
+                if policy:
+                    result.add(str(policy))
+            if isinstance(rule, dict) and isinstance(rule.get("domain_suffix"), dict):
+                policy = rule["domain_suffix"].get("policy")
+                if policy:
+                    result.add(str(policy))
+            if isinstance(rule, dict) and isinstance(rule.get("domain_keyword"), dict):
+                policy = rule["domain_keyword"].get("policy")
                 if policy:
                     result.add(str(policy))
     elif platform == "sing-box":
@@ -73,7 +81,7 @@ def platform_targets(path: Path, platform: str) -> set[str]:
                 if isinstance(target, str):
                     result.add(target)
     else:
-        result.update(re.findall(r"(?:RULE-SET|DOMAIN-SUFFIX),[^,\n]+,([^,\n]+)", text))
+        result.update(re.findall(r"(?:RULE-SET|DOMAIN-SET|DOMAIN-SUFFIX),[^,\n]+,([^,\n]+)", text))
     return {x for x in result if x}
 
 
