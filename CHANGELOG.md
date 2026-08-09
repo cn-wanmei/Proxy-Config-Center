@@ -1,5 +1,42 @@
 # Changelog
 
+## [1.2.0] - 2026-08-09
+
+分流质量体系与 AI Provider Registry / Routing quality and AI provider registry。
+
+### Added
+- Rule → Strategy Group 机器索引与 Markdown 可视化审计报告。
+- Duplicate、Conflict、Unreachable Rule 自动检测并纳入 CI 门禁。
+- AI Provider Registry，按 LLM、Coding、Image、Video、Music、Audio、Search、Gateway、Inference 等语义分类维护主流 AI 服务。
+- AI 服务覆盖扩展至 Groq、Together AI、Replicate、Fireworks AI、Cohere、AI21、Stability AI、Midjourney、Suno、ElevenLabs、Runway、Character AI、Leonardo AI、Krea 等主流服务。
+- AI / Google / Microsoft / GitHub 分流边界重新整理，GitHub Copilot 按 AI 语义优先处理。
+- Rule Trace 命中解释能力，支持查看首个命中规则、priority、strategy group、source 与 shadowed candidates。
+- 七端深度 Semantic Equivalence Test，覆盖 Clash、Clash Meta、Stash、Egern、Loon、Shadowrocket、sing-box。
+- 历史 `sys.path` 运行时注入清理，并增加 CI 防回归检查。
+
+### Changed
+- 分流审计从静态检查升级为 Rule Coverage Quality Gate。
+- AI Provider Registry 作为语义目录与覆盖约束，不直接成为第二套规则执行源，避免与 `ai.yaml` 漂移。
+- 七端验证从文件结构一致性升级为跨平台路由语义一致性验证。
+- 分流规则继续遵循显式 priority，AI、Google、Microsoft、GitHub 等边界通过优先级和覆盖关系明确表达。
+- Makefile / PYTHONPATH 统一开发与 CI 入口，减少测试环境路径副作用。
+
+### Validation
+- Core / Reference Validator                         ✅
+- Rule Coverage Audit                                ✅
+- Duplicate / Conflict / Unreachable Detection       ✅
+- AI Provider Registry Regression                    ✅
+- Rule Trace Regression                              ✅
+- Seven-platform Semantic Equivalence                ✅
+- Golden Snapshot                                    ✅
+- Rule Source Health                                 ✅
+- Build / Structural / Final Artifact                ✅
+
+### Compatibility
+- 保持 v1.1.x Core / IR 语义兼容。
+- 七端继续输出独立正式配置文件。
+- sing-box 继续遵循真实 capability，不伪造当前 Clash YAML/LIST 源的原生 rule-set 兼容性。
+
 ## [1.1.0] - 2026-08-09
 
 平台契约与 sing-box 扩展 / Platform contract and sing-box expansion。
