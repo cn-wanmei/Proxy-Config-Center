@@ -1,0 +1,36 @@
+name: Guard latest-rules
+
+on:
+  push:
+    branches:
+      - latest-rules
+  pull_request:
+    branches:
+      - latest-rules
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reject non-release updates
+        env:
+          ACTOR: ${{ github.actor }}
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          set -euo pipefail
+          if [[ "$ACTOR" != "github-actions[bot]" ]]; then
+            echo "latest-rules is release-managed and may only be updated by GitHub Actions."
+            echo "actor=$ACTOR event=$EVENT_NAME base=$BASE_REF"
+            exit 1
+          fi
+          echo "Authorized release automation update: $ACTOR"
+
+      - name: Reject pull requests into latest-rules
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          echo "Direct pull requests into latest-rules are forbidden."
+          exit 1
