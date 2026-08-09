@@ -21,6 +21,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: {ref: main, fetch-depth: 0}
+      - name: Workflow self-check
+        run: python scripts/verify_release_workflow.py
       - name: Resolve immutable source
         id: meta
         shell: bash
@@ -32,9 +34,14 @@ jobs:
           sha=$(git rev-parse origin/main)
           version=$(python scripts/version.py)
           [[ "${tag#v}" == "$version" ]] || { echo "VERSION=$version != $tag"; exit 1; }
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"; echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "source_commit=$sha"
+          echo "release_tag=$tag"
+          echo "version=$version"
       - name: Checkout resolved source
         run: |
+          set -euo pipefail
           git checkout --detach "${{ steps.meta.outputs.sha }}"
           test "$(git rev-parse HEAD)" = "${{ steps.meta.outputs.sha }}"
       - uses: actions/setup-python@v5
@@ -58,17 +65,26 @@ jobs:
       - name: Generate engineering and supply-chain reports
         run: python scripts/project_audit.py
       - name: Pack release
-        env: {RELEASE_TAG: ${{ steps.meta.outputs.tag }} }
+        env:
+          RELEASE_TAG: ${{ steps.meta.outputs.tag }}
+          SOURCE_COMMIT: ${{ steps.meta.outputs.sha }}
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf dist; mkdir -p dist/configs dist/rules
-          cp build/clash-meta/config.yaml dist/clash-meta.yaml; cp build/clash/config.yaml dist/clash.yaml
-          cp build/stash/config.yaml dist/stash.yaml; cp build/egern/config.yaml dist/egern.yaml
-          cp build/loon/config.conf dist/loon.conf; cp build/shadowrocket/config.conf dist/shadowrocket.conf
-          cp build/sing-box/config.json dist/sing-box.json; cp -r build/. dist/configs/
+          rm -rf dist
+          mkdir -p dist/configs dist/rules
+          clients=(clash.yaml clash-meta.yaml stash.yaml egern.yaml loon.conf shadowrocket.conf sing-box.json)
+          cp build/clash-meta/config.yaml dist/clash-meta.yaml
+          cp build/clash/config.yaml dist/clash.yaml
+          cp build/stash/config.yaml dist/stash.yaml
+          cp build/egern/config.yaml dist/egern.yaml
+          cp build/loon/config.conf dist/loon.conf
+          cp build/shadowrocket/config.conf dist/shadowrocket.conf
+          cp build/sing-box/config.json dist/sing-box.json
+          for c in "${clients[@]}"; do test -s "dist/$c"; done
           python scripts/pack_remote_rules.py --output dist/rules
-          cp core/rules/priority.yaml dist/rules/priority.yaml; cp core/rules/sources.yaml dist/rules/sources.yaml
+          cp core/rules/priority.yaml dist/rules/priority.yaml
+          cp core/rules/sources.yaml dist/rules/sources.yaml
           for f in rules/manual/direct.list rules/manual/proxy.list rules/manual/ehentai.list; do test -s "$f"; cp "$f" "dist/rules/rule-$(basename "$f")"; done
           cp dist/rules/rule-* dist/
           python scripts/rewrite_release_urls.py --root dist
@@ -78,30 +94,27 @@ jobs:
           root=Path('dist'); clients=['clash.yaml','clash-meta.yaml','stash.yaml','egern.yaml','loon.conf','shadowrocket.conf','sing-box.json']
           rules=sorted(list(root.glob('rule-*.yaml'))+list(root.glob('rule-*.list')))
           def h(p): return hashlib.sha256(p.read_bytes()).hexdigest()
-          tag=os.environ['RELEASE_TAG']; sha=os.environ.get('GITHUB_SHA','')
+          tag=os.environ['RELEASE_TAG']; sha=os.environ['SOURCE_COMMIT']
           rb='https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/'; cb='https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/clients/'
-          m={'release':tag,'version':tag[1:],'source_commit':'${{ steps.meta.outputs.sha }}','generator_commit':'${{ steps.meta.outputs.sha }}','schema_version':'1.0','remote_policy':'latest-rules','clients':[],'rules':[]}
+          m={'release':tag,'version':tag[1:],'source_commit':sha,'generator_commit':sha,'schema_version':'1.0','remote_policy':'latest-rules','remote_base':rb,'client_base':cb,'clients':[],'rules':[]}
           for n in clients:
             p=root/n; m['clients'].append({'name':n,'asset':n,'latest_url':cb+n,'sha256':h(p),'size':p.stat().st_size})
           for p in rules: m['rules'].append({'name':p.stem,'asset':p.name,'latest_url':rb+p.name,'sha256':h(p),'size':p.stat().st_size})
           (root/'release-manifest.json').write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n')
-          (root/'build-report.json').write_text((Path('build/reports/build-report.json')).read_text())
           for p in Path('build/reports').glob('*.json'): (root/p.name).write_text(p.read_text())
-          (root/'source-snapshot.json').write_text((Path('build/reports/rule-source-snapshot.json')).read_text())
-          (root/'sbom.json').write_text((Path('build/reports/sbom.json')).read_text())
-          (root/'schema-version.json').write_text((Path('build/reports/schema-version.json')).read_text())
           (root/'SHA256SUMS').write_text('\n'.join(f'{h(p)}  {p.name}' for p in sorted(root.glob('*')) if p.is_file())+'\n')
           PY
           cp dist/release-manifest.json dist/configs/release-manifest.json
           cp -r dist/rules dist/configs/rules
-          cd dist; tar -czf "proxy-config-center-${RELEASE_TAG}-rules.tar.gz" rule-* release-manifest.json SHA256SUMS; zip -qr "proxy-config-center-${RELEASE_TAG}.zip" configs
+          cd dist
+          tar -czf "proxy-config-center-${RELEASE_TAG}-rules.tar.gz" rule-* release-manifest.json SHA256SUMS
+          zip -qr "proxy-config-center-${RELEASE_TAG}.zip" configs
       - name: Validate release distribution and remote config semantics
         run: python scripts/validate_release_dist.py --root dist
       - name: Validate engineering reports
         run: |
-          test -s dist/build-report.json; test -s dist/rule-index.json; test -s dist/rule-graph.json
-          test -s dist/rule-conflicts.json; test -s dist/rule-unreachable.json; test -s dist/ai-coverage.json
-          test -s dist/source-snapshot.json; test -s dist/sbom.json; test -s dist/schema-version.json
+          set -euo pipefail
+          for f in build-report.json rule-index.json rule-graph.json rule-conflicts.json rule-unreachable.json ai-coverage.json source-snapshot.json sbom.json schema-version.json; do test -s "dist/$f"; done
       - name: Generate attestation
         uses: actions/attest@v4
         with:
@@ -114,7 +127,9 @@ jobs:
             dist/*.tar.gz
             dist/*.zip
       - name: Immutable GitHub Release
-        env: {GH_TOKEN: ${{ github.token }}, RELEASE_TAG: ${{ steps.meta.outputs.tag }} }
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.meta.outputs.tag }}
         shell: bash
         run: |
           set -euo pipefail
@@ -122,18 +137,26 @@ jobs:
           assets=(dist/*.yaml dist/*.conf dist/*.json dist/*.list dist/SHA256SUMS dist/*.tar.gz dist/*.zip)
           gh release create "$RELEASE_TAG" --title "$RELEASE_TAG" --generate-notes --latest "${assets[@]}"
       - name: Publish latest-rules atomically
-        env: {RELEASE_TAG: ${{ steps.meta.outputs.tag }} }
+        env:
+          RELEASE_TAG: ${{ steps.meta.outputs.tag }}
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name github-actions[bot]; git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           rm -rf /tmp/latest-rules
           git fetch origin latest-rules || true
           if git show-ref --verify --quiet refs/remotes/origin/latest-rules; then git worktree add /tmp/latest-rules origin/latest-rules; else git worktree add --detach /tmp/latest-rules HEAD; git -C /tmp/latest-rules checkout --orphan latest-rules; fi
-          cd /tmp/latest-rules; git rm -rf . >/dev/null 2>&1 || true; mkdir -p clients rules
+          cd /tmp/latest-rules
+          git rm -rf . >/dev/null 2>&1 || true
+          mkdir -p clients rules
           for c in clash.yaml clash-meta.yaml stash.yaml egern.yaml loon.conf shadowrocket.conf sing-box.json; do cp "$GITHUB_WORKSPACE/dist/$c" "clients/$c"; done
-          cp "$GITHUB_WORKSPACE"/dist/rules/* rules/; cp "$GITHUB_WORKSPACE"/dist/release-manifest.json .; cp "$GITHUB_WORKSPACE"/dist/SHA256SUMS .
-          git add -A; git commit -m "release: publish ${RELEASE_TAG}"; git push --force origin HEAD:latest-rules
+          cp "$GITHUB_WORKSPACE"/dist/rules/* rules/
+          cp "$GITHUB_WORKSPACE"/dist/release-manifest.json .
+          cp "$GITHUB_WORKSPACE"/dist/SHA256SUMS .
+          git add -A
+          git commit -m "release: publish ${RELEASE_TAG}"
+          git push --force origin HEAD:latest-rules
       - name: E2E Raw HTTP 200 and SHA256
         run: |
           python - <<'PY'
@@ -141,11 +164,13 @@ jobs:
           from pathlib import Path
           m=json.loads(Path('dist/release-manifest.json').read_text())
           assert len(m['clients'])==7
-          for x in m['clients']+m['rules']:
-            p=Path('/tmp')/x['asset']; ok=False
+          for i,x in enumerate(m['clients']+m['rules']):
+            p=Path('/tmp')/f'raw-{i}'
+            ok=False
             for _ in range(10):
-              r=subprocess.run(['curl','-fsSL','--retry','2','-o',str(p),x['latest_url']]);
-              if r.returncode==0 and hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256']: ok=True; break
+              r=subprocess.run(['curl','-fsSL','--retry','2','-o',str(p),x['latest_url']])
+              if r.returncode==0 and hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256']:
+                ok=True; break
               time.sleep(3)
             if not ok: raise SystemExit('Raw integrity failure: '+x['latest_url'])
           print('Raw E2E integrity OK')
