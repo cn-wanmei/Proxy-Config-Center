@@ -85,12 +85,12 @@ def run(root: Path) -> dict:
     for row in rows:
         expected_id = row["group"]
         expected_name = names_by_id.get(expected_id, expected_id)
+        accepted = sorted({expected_id, expected_name})
         platforms = {}
         for platform, rel in PLATFORMS.items():
             path = root / rel
             targets = platform_targets(path, platform) if path.exists() else set()
-            accepted = {expected_id, expected_name}
-            matched = sorted(targets & accepted)
+            matched = sorted(targets & set(accepted))
             ok = bool(matched)
             platforms[platform] = {"expected": accepted, "matched": matched, "ok": ok}
             if not ok:
