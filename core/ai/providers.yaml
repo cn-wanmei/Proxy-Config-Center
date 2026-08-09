@@ -1,0 +1,119 @@
+version: 1
+schema: ai-provider-registry/v1
+providers:
+  - id: openai
+    category: llm
+    strategy: ai
+    domains: [openai.com, chatgpt.com, oaistatic.com, oaiusercontent.com]
+  - id: anthropic
+    category: llm
+    strategy: ai
+    domains: [anthropic.com, claude.ai]
+  - id: google-ai
+    category: llm
+    strategy: ai
+    domains: [gemini.google.com, ai.google.dev, aistudio.google.com, notebooklm.google.com]
+  - id: xai
+    category: llm
+    strategy: ai
+    domains: [x.ai, grok.com, grok.x.ai]
+  - id: microsoft-copilot
+    category: coding
+    strategy: ai
+    domains: [copilot.microsoft.com, copilot.com, githubcopilot.com, api.githubcopilot.com]
+  - id: deepseek
+    category: llm
+    strategy: ai
+    domains: [deepseek.com, api.deepseek.com]
+  - id: perplexity
+    category: search
+    strategy: ai
+    domains: [perplexity.ai, pplx.ai]
+  - id: mistral
+    category: llm
+    strategy: ai
+    domains: [mistral.ai, chat.mistral.ai]
+  - id: meta-ai
+    category: llm
+    strategy: ai
+    domains: [meta.ai]
+  - id: openrouter
+    category: gateway
+    strategy: ai
+    domains: [openrouter.ai]
+  - id: poe
+    category: gateway
+    strategy: ai
+    domains: [poe.com]
+  - id: cursor
+    category: coding
+    strategy: ai
+    domains: [cursor.com, cursor.sh]
+  - id: windsurf
+    category: coding
+    strategy: ai
+    domains: [windsurf.com]
+  - id: codeium
+    category: coding
+    strategy: ai
+    domains: [codeium.com]
+  - id: huggingface
+    category: model-platform
+    strategy: ai
+    domains: [huggingface.co]
+  - id: groq
+    category: inference
+    strategy: ai
+    domains: [groq.com]
+  - id: together
+    category: inference
+    strategy: ai
+    domains: [together.ai, together.xyz]
+  - id: replicate
+    category: inference
+    strategy: ai
+    domains: [replicate.com]
+  - id: fireworks
+    category: inference
+    strategy: ai
+    domains: [fireworks.ai]
+  - id: cohere
+    category: inference
+    strategy: ai
+    domains: [cohere.com]
+  - id: ai21
+    category: inference
+    strategy: ai
+    domains: [ai21.com]
+  - id: stability
+    category: image
+    strategy: ai
+    domains: [stability.ai]
+  - id: midjourney
+    category: image
+    strategy: ai
+    domains: [midjourney.com, midjourney.ai]
+  - id: suno
+    category: music
+    strategy: ai
+    domains: [suno.com]
+  - id: elevenlabs
+    category: audio
+    strategy: ai
+    domains: [elevenlabs.io]
+  - id: runway
+    category: video
+    strategy: ai
+    domains: [runwayml.com, runway.ai]
+  - id: character-ai
+    category: llm
+    strategy: ai
+    domains: [character.ai]
+  - id: leonardo
+    category: image
+    strategy: ai
+    domains: [leonardo.ai]
+  - id: krea
+    category: image
+    strategy: ai
+    domains: [krea.ai]
