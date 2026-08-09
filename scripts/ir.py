@@ -5,11 +5,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-ROOT = Path(__file__).resolve().parent.parent
-CORE = ROOT / "core"
-import sys
-sys.path.insert(0, str(ROOT / "scripts"))
-
 from engines.capability import (
     all_platforms,
     required_platforms,
@@ -18,6 +13,9 @@ from engines.capability import (
     supports_rule_set,
 )
 from engines.utils import load_yaml
+
+ROOT = Path(__file__).resolve().parent.parent
+CORE = ROOT / "core"
 
 
 @dataclass

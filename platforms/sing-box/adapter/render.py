@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 """sing-box renderer: Core/IR -> native JSON configuration."""
 
-from typing import Any, Dict, List
-
-import sys
 from pathlib import Path
-ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(ROOT / "scripts"))
+from typing import Any, Dict, List
+import warnings
 
 from engines.proxies import enabled_nodes, load_providers
 
 DIRECT = "direct"
 REJECT = "block"
+SUPPORTED_NODE_TYPES = {"shadowsocks", "vmess", "trojan", "vless", "hysteria", "hysteria2", "tuic", "wireguard", "http", "socks"}
 
 
 def _tag(ref: str) -> str:
@@ -31,9 +29,17 @@ def _selector(tag: str, members: List[str], default: str | None = None) -> dict:
     return {"type": "selector", "tag": tag, "outbounds": members, "default": default}
 
 
-def _node(node: dict) -> dict:
+def _node(node: dict) -> dict | None:
     kind = str(node.get("type") or "").lower()
     tag = str(node.get("name") or node.get("id") or "node")
+    if kind not in SUPPORTED_NODE_TYPES:
+        warnings.warn(
+            f"sing-box: skipping unsupported node {tag!r} of type {kind!r}",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+        return None
+
     out = {"type": kind, "tag": tag}
     mapping = {"port": "server_port", "password": "password", "uuid": "uuid"}
     for src, dst in mapping.items():
@@ -52,9 +58,18 @@ def _node(node: dict) -> dict:
     for key in ("transport", "multiplex", "obfs", "plugin", "plugin_opts"):
         if key in node:
             out[key] = node[key]
-    if kind not in {"shadowsocks", "vmess", "trojan", "vless", "hysteria", "hysteria2", "tuic", "wireguard", "http", "socks"}:
-        raise ValueError(f"unsupported sing-box node type: {kind}")
     return out
+
+
+def _final_target(ir: Any, groups: Dict[str, dict]) -> str:
+    for service in getattr(ir, "services", []) or []:
+        if service.id == "final":
+            candidate = _tag(service.proxy_default)
+            if candidate in groups or candidate in {DIRECT, REJECT}:
+                return candidate
+    if "proxy-mode" in groups:
+        return "proxy-mode"
+    return DIRECT
 
 
 def render(ir: Any, platform: str = "sing-box") -> dict:
@@ -62,7 +77,11 @@ def render(ir: Any, platform: str = "sing-box") -> dict:
         {"type": "direct", "tag": DIRECT},
         {"type": "block", "tag": REJECT},
     ]
-    nodes = [_node(node) for node in enabled_nodes(load_providers())]
+    nodes: List[dict] = []
+    for node in enabled_nodes(load_providers()):
+        rendered = _node(node)
+        if rendered is not None:
+            nodes.append(rendered)
     outbounds.extend(nodes)
     node_tags = [n["tag"] for n in nodes]
 
@@ -100,9 +119,9 @@ def render(ir: Any, platform: str = "sing-box") -> dict:
             _tag(service.proxy_default),
         )
     outbounds.extend(groups.values())
+    final_target = _final_target(ir, groups)
 
     route_rules: List[dict] = []
-    rule_sets = []
     for source in getattr(ir, "rule_sources", []) or []:
         target = source.target_service
         for domain in source.domain_suffix:
@@ -110,28 +129,13 @@ def render(ir: Any, platform: str = "sing-box") -> dict:
         for keyword in source.domain_keyword:
             route_rules.append({"domain_keyword": [keyword], "action": "route", "outbound": target})
 
-        native_tags = []
-        for bm in source.bm_sets:
-            url = str(bm.url).lower()
-            if url.endswith((".json", ".srs")):
-                fmt = "binary" if url.endswith(".srs") else "source"
-                tag = f"{source.id}-{bm.key}"
-                native_tags.append(tag)
-                rule_sets.append({
-                    "type": "remote", "tag": tag, "format": fmt,
-                    "url": bm.url, "update_interval": "168h",
-                })
-        if native_tags:
-            route_rules.insert(0, {"rule_set": native_tags, "action": "route", "outbound": target})
-
     return {
         "log": {"level": "info"},
         "outbounds": outbounds,
         "route": {
             "auto_detect_interface": True,
-            "rule_set": rule_sets,
             "rules": route_rules,
-            "final": "proxy-mode" if "proxy-mode" in groups else DIRECT,
+            "final": final_target,
         },
         "experimental": {"cache_file": {
             "enabled": True,

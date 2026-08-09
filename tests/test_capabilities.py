@@ -3,11 +3,9 @@
 
 import importlib.util
 import itertools
-import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "scripts"))
 
 from engines.capability import (
     REQUIRED_FEATURES,
@@ -53,7 +51,7 @@ def test_real_platform_matrix():
         "egern": (True, False, True),
         "loon": (True, True, True),
         "shadowrocket": (False, False, True),
-        "sing-box": (True, False, True),
+        "sing-box": (False, False, True),
     }
     assert set(required_platforms()) == set(expected)
     for name in required_platforms():
@@ -72,8 +70,9 @@ def test_ir_platform_flags():
     assert ir.platform_rule_set["shadowrocket"] is False
     assert ir.platform_rule_provider["shadowrocket"] is False
     assert ir.platform_domain_fallback["shadowrocket"] is True
-    assert ir.platform_rule_set["sing-box"] is True
+    assert ir.platform_rule_set["sing-box"] is False
     assert ir.platform_rule_provider["sing-box"] is False
+    assert ir.platform_domain_fallback["sing-box"] is True
     print("✅ IR capability flags OK")
 
 
@@ -122,13 +121,14 @@ def test_shadowrocket_domain_fallback():
     print("✅ shadowrocket domain fallback emission OK")
 
 
-def test_sing_box_native_contract():
+def test_sing_box_domain_fallback_contract():
     cfg = _render("sing-box")
     assert cfg.get("outbounds")
     assert cfg.get("route", {}).get("rules")
     assert cfg.get("route", {}).get("final")
+    assert "rule_set" not in cfg.get("route", {})
     assert cfg.get("experimental", {}).get("cache_file", {}).get("enabled") is True
-    print("✅ sing-box native JSON contract OK")
+    print("✅ sing-box domain-fallback JSON contract OK")
 
 
 if __name__ == "__main__":
@@ -140,5 +140,5 @@ if __name__ == "__main__":
     test_clash_meta_rule_set()
     test_egern_native_rule_set()
     test_shadowrocket_domain_fallback()
-    test_sing_box_native_contract()
+    test_sing_box_domain_fallback_contract()
     print("All capability tests passed")
