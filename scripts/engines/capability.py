@@ -5,15 +5,8 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List
 
-try:
-    import yaml
-except ImportError:
-    raise SystemExit("PyYAML required")
-
-try:
-    import jsonschema
-except ImportError:
-    raise SystemExit("jsonschema required")
+import yaml
+import jsonschema
 
 ROOT = Path(__file__).resolve().parents[2]
 PLATFORMS = ROOT / "platforms"
@@ -28,10 +21,17 @@ def required_platforms() -> List[str]:
     with PLATFORM_REGISTRY.open(encoding="utf-8") as f:
         data = yaml.safe_load(f) or {}
     platforms = data.get("platforms") or []
-    names = [str(p.get("id")) for p in platforms if isinstance(p, dict) and p.get("required", True)]
+    names = []
+    for item in platforms:
+        if isinstance(item, dict) and item.get("required", True):
+            names.append(str(item["id"]))
     if not names:
         raise ValueError("platform registry contains no required platforms")
     return names
+
+
+# Backward-compatible read-only alias for callers that still import the name.
+REQUIRED_PLATFORMS: List[str] = required_platforms()
 
 
 def load_capabilities(platform: str) -> Dict[str, Any]:
@@ -49,7 +49,6 @@ def load_capabilities(platform: str) -> Dict[str, Any]:
 
 
 def feature_supported(features: Dict[str, Any], limitations: Dict[str, Any], feature: str) -> bool:
-    """Resolve one feature: an explicit false limitation always wins."""
     if limitations.get(feature) is False:
         return False
     return features.get(feature) is True
@@ -88,9 +87,9 @@ def all_platforms() -> Dict[str, dict]:
     result: Dict[str, dict] = {}
     if not PLATFORMS.exists():
         return result
-    for d in sorted(PLATFORMS.iterdir()):
-        if d.is_dir() and (d / "capabilities.yaml").exists():
-            result[d.name] = load_capabilities(d.name)
+    for directory in sorted(PLATFORMS.iterdir()):
+        if directory.is_dir() and (directory / "capabilities.yaml").exists():
+            result[directory.name] = load_capabilities(directory.name)
     return result
 
 
@@ -102,14 +101,23 @@ def validate_capabilities() -> List[str]:
     with CAPABILITY_SCHEMA.open(encoding="utf-8") as f:
         schema = json.load(f)
     validator = jsonschema.Draft202012Validator(schema)
+    errors.extend(_validate_required_platforms(found, validator))
+    return sorted(set(errors))
+
+
+def _validate_required_platforms(found: Dict[str, dict], validator: Any) -> List[str]:
+    errors: List[str] = []
     for name in required_platforms():
         if name not in found:
             errors.append(f"missing platforms/{name}/capabilities.yaml")
             continue
         caps = found[name]
         for err in validator.iter_errors(caps):
-            location = "."join(str(x) for x in err.absolute_path)
-            errors.append(f"{name}: {location}: {err.message}" if location else f"{name}: {err.message}")
+            location = ".".join(str(item) for item in err.absolute_path)
+            if location:
+                errors.append(f"{name}: {location}: {err.message}")
+            else:
+                errors.append(f"{name}: {err.message}")
         if caps.get("platform") != name:
             errors.append(f"{name}: platform field != directory name")
         features = caps.get("features") or {}
@@ -118,20 +126,16 @@ def validate_capabilities() -> List[str]:
                 errors.append(f"{name}: features.{key} must be explicit true/false")
             elif not isinstance(features[key], bool):
                 errors.append(f"{name}: features.{key} must be boolean")
-    return sorted(set(errors))
+    return errors
 
 
 if __name__ == "__main__":
     errs = validate_capabilities()
     for name in required_platforms():
-        print(
-            f"{name}: rule_set={supports_rule_set(name)} "
-            f"rule_provider={supports_rule_provider(name)} "
-            f"domain_fallback={supports_domain_fallback(name)}"
-        )
+        print(f"{name}: rule_set={supports_rule_set(name)} rule_provider={supports_rule_provider(name)} domain_fallback={supports_domain_fallback(name)}")
     if errs:
         print("ERRORS:")
-        for e in errs:
-            print(" ", e)
+        for error in errs:
+            print(" ", error)
         raise SystemExit(1)
     print("OK")
