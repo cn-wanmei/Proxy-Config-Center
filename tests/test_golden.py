@@ -3,11 +3,9 @@
 
 import hashlib
 import json
-import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "scripts"))
 
 from engines.capability import supports_domain_fallback, supports_remote_rules
 
