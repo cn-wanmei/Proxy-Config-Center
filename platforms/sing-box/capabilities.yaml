@@ -8,7 +8,7 @@ features:
   script: false
   rewrite: false
   rule_provider: false
-  rule_set: true
+  rule_set: false
   domain_fallback: true
   proxy_provider: false
   process: true
@@ -22,3 +22,4 @@ features:
 limitations:
   icons: "limited"
   proxy_provider: "limited"
+  rule_set: "not emitted as a native capability; domain fallback is authoritative"
