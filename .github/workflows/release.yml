@@ -178,19 +178,32 @@ jobs:
             dist/SHA256SUMS
             dist/proxy-config-center-${{ steps.release_meta.outputs.tag }}-rules.tar.gz
             dist/proxy-config-center-${{ steps.release_meta.outputs.tag }}.zip
-      - name: Create GitHub Release
+      - name: Publish or refresh GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ steps.release_meta.outputs.tag }}
         shell: bash
         run: |
           set -euo pipefail
-          gh release create "$RELEASE_TAG" \
-            --title "$RELEASE_TAG" \
-            --generate-notes \
-            --latest \
-            dist/clash.yaml dist/clash-meta.yaml dist/stash.yaml dist/egern.yaml \
-            dist/loon.conf dist/shadowrocket.conf dist/sing-box.json \
-            dist/rule-*.yaml dist/rule-*.list dist/release-manifest.json dist/SHA256SUMS \
-            "dist/proxy-config-center-${RELEASE_TAG}-rules.tar.gz" \
+          assets=(
+            dist/clash.yaml dist/clash-meta.yaml dist/stash.yaml dist/egern.yaml
+            dist/loon.conf dist/shadowrocket.conf dist/sing-box.json
+            dist/rule-*.yaml dist/rule-*.list dist/release-manifest.json dist/SHA256SUMS
+            "dist/proxy-config-center-${RELEASE_TAG}-rules.tar.gz"
             "dist/proxy-config-center-${RELEASE_TAG}.zip"
+          )
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
+            gh release edit "$RELEASE_TAG" --latest
+          else
+            gh release create "$RELEASE_TAG" --title "$RELEASE_TAG" --generate-notes --latest "${assets[@]}"
+          fi
+      - name: Verify latest remote URLs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/pcc-latest
+          curl --fail --location --retry 3 --retry-delay 2 \
+            -o /tmp/pcc-latest/release-manifest.json \
+            https://github.com/cn-wanmei/Proxy-Config-Center/releases/latest/download/release-manifest.json
+          python scripts/check_remote_rules.py --manifest /tmp/pcc-latest/release-manifest.json
