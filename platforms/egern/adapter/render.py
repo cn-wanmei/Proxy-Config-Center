@@ -28,6 +28,25 @@ except Exception:
 
 PLATFORM = platform_from_adapter_file(__file__)
 
+# The platform-independent base definition is the source of truth for these
+# five user-facing proxy-mode entries. Egern must expose all five explicitly.
+PROXY_MODE_NAMES = {
+    "proxy-mode": "代理模式",
+    "manual-select": "手动选择",
+    "free-flow": "定向免流",
+    "auto-select": "自动选择",
+    "direct": "直连模式",
+    "reject": "阻断连接",
+}
+PROXY_MODE_ORDER = [
+    "proxy-mode",
+    "manual-select",
+    "free-flow",
+    "auto-select",
+    "direct",
+    "reject",
+]
+
 
 def _resolve(opt: str, id_to_display: Dict[str, str]) -> str:
     if opt in ("direct", "DIRECT"):
@@ -49,6 +68,62 @@ def _add_policy_group(policy_groups: List[dict], declared: set[str], name: str, 
         }
     })
     declared.add(name)
+
+
+def _normalize_proxy_mode_groups(policy_groups: List[dict], subscriptions: List[dict]) -> None:
+    """Guarantee the complete five-entry proxy-mode UX in Egern.
+
+    Egern does not infer nested groups from the platform-independent IR. The
+    five proxy-mode groups therefore need an explicit, deterministic native
+    representation. Existing generated entries are normalized in place so
+    stale/missing options cannot silently change the user-facing menu.
+    """
+    by_name = {}
+    for entry in policy_groups:
+        select = entry.get("select") if isinstance(entry, dict) else None
+        if isinstance(select, dict) and select.get("name"):
+            by_name[select["name"]] = select
+
+    def ensure(name: str) -> dict:
+        select = by_name.get(name)
+        if select is None:
+            entry = {"select": {"name": name, "policies": [], "flatten": True}}
+            policy_groups.append(entry)
+            select = entry["select"]
+            by_name[name] = select
+        return select
+
+    manual = ensure(PROXY_MODE_NAMES["manual-select"])
+    manual["policies"] = []
+
+    free_flow = ensure(PROXY_MODE_NAMES["free-flow"])
+    free_flow["policies"] = []
+    free_flow["filter"] = "(?i)免流"
+
+    auto = ensure(PROXY_MODE_NAMES["auto-select"])
+    auto["policies"] = []
+
+    direct = ensure(PROXY_MODE_NAMES["direct"])
+    direct["policies"] = ["DIRECT"]
+
+    reject = ensure(PROXY_MODE_NAMES["reject"])
+    reject["policies"] = ["REJECT"]
+
+    mode = ensure(PROXY_MODE_NAMES["proxy-mode"])
+    mode["policies"] = [
+        PROXY_MODE_NAMES["manual-select"],
+        PROXY_MODE_NAMES["free-flow"],
+        PROXY_MODE_NAMES["auto-select"],
+        PROXY_MODE_NAMES["direct"],
+        PROXY_MODE_NAMES["reject"],
+    ]
+
+    if subscriptions:
+        urls = [s["url"] for s in subscriptions if isinstance(s, dict) and s.get("url")]
+        if urls:
+            for select in (manual, free_flow, auto):
+                select["urls"] = urls
+                select["update_interval"] = EXTERNAL_RESOURCE_INTERVAL
 
 
 def render(ir: Any) -> dict:
@@ -102,6 +177,16 @@ def render(ir: Any) -> dict:
         policy_groups.append(entry)
         declared.add(select["name"])
 
+    # Normalize the canonical five proxy-mode entries after loading the base
+    # groups. This makes the Egern UX deterministic even when an older IR or a
+    # partially populated base definition is encountered.
+    _normalize_proxy_mode_groups(policy_groups, subscriptions)
+    declared = {
+        g["select"]["name"]
+        for g in policy_groups
+        if isinstance(g, dict) and isinstance(g.get("select"), dict) and g["select"].get("name")
+    }
+
     for s in getattr(ir, "services", []) or []:
         policies = [_resolve(str(o), id_to_display) for o in s.proxy_options]
         dname = _resolve(s.proxy_default, id_to_display)
@@ -118,9 +203,21 @@ def render(ir: Any) -> dict:
     use_rs = supports_rule_set(PLATFORM)
     rules = emit_egern_style(ir, id_to_display, use_rs)
 
-    # Hard invariant: every Egern rule_set.policy must reference an existing
-    # policy group. If a future rule source introduces a new target without a
-    # service declaration, fail loudly rather than emitting an unusable config.
+    # Hard invariants: every Egern rule_set.policy must reference an existing
+    # policy group, and the canonical proxy-mode menu must always be complete.
+    required_names = [PROXY_MODE_NAMES[k] for k in PROXY_MODE_ORDER]
+    missing = [name for name in required_names if name not in declared]
+    if missing:
+        raise ValueError(f"Egern proxy-mode groups missing: {', '.join(missing)}")
+
+    mode_group = next(
+        g["select"] for g in policy_groups
+        if g.get("select", {}).get("name") == PROXY_MODE_NAMES["proxy-mode"]
+    )
+    expected_mode_policies = [PROXY_MODE_NAMES[k] for k in PROXY_MODE_ORDER[1:]]
+    if mode_group.get("policies") != expected_mode_policies:
+        raise ValueError("Egern 代理模式 policies are not canonical")
+
     for rule in rules:
         rule_set = rule.get("rule_set") if isinstance(rule, dict) else None
         if not isinstance(rule_set, dict):
