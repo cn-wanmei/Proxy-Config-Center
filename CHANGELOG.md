@@ -1,25 +1,36 @@
 # Changelog
 
-## [1.3.5] - 2026-08-09
+## [1.6.0] - 2026-08-09
 
-这是我对 1.3.4 发布链路和七端客户端兼容性的全面收口。我这次重点解决两类问题：Release 不能因为旧 Tag/SHA 进入旧代码，以及 Egern 远程配置在客户端实际解析时出现 `rule_set.match` 缺失的问题。
+这是我对整个项目 v1.3–v1.6 路线的最终工程化收口。我这次不再继续堆叠客户端数量，而是把发布确定性、规则工程化、AI Provider 管理和供应链完整性统一到同一条可验证流水线上。
 
-### Fixed
-- 我移除了 Release Workflow 的 `target_sha` / SHA 手工输入，发布时只需要填写版本号。
-- 我取消 Tag Push 自动发布，避免历史 Tag 意外触发旧代码发布。
-- 我让手动 Release 始终从当前 `main` 解析发布 Commit，SHA 只作为 Workflow 内部实现细节。
-- 我严格校验 Release 版本号与仓库 `VERSION` 一致后才允许继续。
-- 我修复 Egern `rule_set` 使用错误 `url` 字段的问题，统一生成原生要求的 `match` 字段。
-- 我禁止 Release 客户端配置中残留 BlackMatrix 上游规则 URL。
-- 我保留 `sources.yaml` 等规则源元数据中的真实 upstream provenance，不再错误地将其当作客户端配置改写。
+### v1.3 稳定化
+- 我让 Release 从当前 `main` 自动解析唯一 source commit，发布入口只接受版本号。
+- 我取消 Tag Push 自动发布，避免历史 Tag/SHA 进入旧代码。
+- 我将正式 Release 设置为不可覆盖；已存在版本会直接触发 immutable gate。
+- 我将最终客户端配置重新执行 Remote Config Semantic Validation，并在发布后做 Raw HTTP 200 + SHA256 E2E 校验。
+- 我增加 Build Report、Source Snapshot、Release Manifest 和供应链报告。
 
-### Validation
-- 我将 Egern Golden Snapshot 提升为硬性语义门禁：`rule_set.match` 必须存在，`rule_set.url` 必须禁止，`policy` 必须属于已声明策略组。
-- 我将 Egern 原生语义检查纳入七端 Semantic Matrix。
-- 我要求最终 `dist/egern.yaml` 通过发布前语义验证后才能进入 Release。
-- 我继续要求七端完整配置、完整规则、Manifest、Raw HTTP 200 与 SHA256 全部通过后才能完成发布。
+### v1.4 规则工程化
+- 我建立 Rule Index 与 Rule Graph 的机器可读输出。
+- 我加入 Rule Explain 基础能力，可按精确 match 查询规则来源。
+- 我加入重复/冲突候选检测与 unreachable 候选报告。
+- 我保留七端 Semantic Matrix，并将平台原生语义作为发布门禁。
+- 我让 Domain → Rule → Match 的关系可以被机器索引和后续可视化工具直接消费。
 
-### Release Architecture
-- 我将发布入口收敛为“版本号驱动”，不再要求用户处理 Commit SHA。
-- 我让 `latest-rules` 只接收经过完整 Release Gate 验证的客户端与规则。
-- 我保持 7 个客户端 Raw URL、全部分流规则 Raw URL 与 Remote Rule Manifest 的稳定发布架构。
+### v1.5 AI Provider 平台化
+- 我建立 AI Provider Registry，将 Provider、Service、Domain、Strategy 解耦。
+- 我加入 AI Coverage Matrix 输出。
+- 我将 Google / Microsoft / GitHub 的服务边界作为独立 Provider 维度，避免按顶级域名粗暴归类。
+- 我为 Provider Diff 保留稳定的机器可读 Registry 数据基础。
+
+### v1.6 供应链
+- 我增加 Rule Source Snapshot，记录规则源内容 SHA256 和大小。
+- 我增加可复现构建基础：锁定依赖、固定 source commit、统一 `SOURCE_DATE_EPOCH`。
+- 我增加 CycloneDX 风格 SBOM。
+- 我增加 Schema Version Manifest，为后续 Schema v2 演进保留兼容边界。
+- 我让 Release Manifest 同时记录 source commit、generator commit、schema version 和远程资源完整性。
+
+### Release Gate
+- 我要求 Validate → Capability → Semantic → Seven-platform Semantic → Build → Golden → Structural → Source Health → Engineering Reports → Release Distribution Contract → Immutable Release → latest-rules → Raw E2E Integrity 全链路通过后才能发布。
+- 我坚持 7 个客户端、全部分流规则、Manifest、Raw URL 和 SHA256 必须保持一致。
