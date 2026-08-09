@@ -59,13 +59,17 @@ def test_egern_rule_set_list_url():
     rs = [r for r in rules if isinstance(r, dict) and "rule_set" in r]
     assert len(rs) >= 10, f"egern rule_set count {len(rs)}"
     for r in rs:
-        url = (r.get("rule_set") or {}).get("url") or ""
+        rule_set = r.get("rule_set") or {}
+        # Egern consumes match URLs; legacy url is intentionally forbidden.
+        url = rule_set.get("match") or ""
+        assert url, "egern rule_set.match is empty"
+        assert "url" not in rule_set, f"legacy Egern rule_set.url found: {rule_set}"
         assert url.endswith(".list"), f"expect .list got {url}"
         assert "/Clash/" not in url, f"must not use Clash yaml path: {url}"
         assert "/Surge/" in url or "/Loon/" in url, f"unexpected list host path: {url}"
     ds = [r for r in rules if isinstance(r, dict) and "domain_suffix" in r]
     assert len(ds) < 30, f"domain flood {len(ds)}"
-    print(f"✅ egern rule_set={len(rs)} .list OK, domain={len(ds)}")
+    print(f"✅ egern rule_set={len(rs)} .list match URLs OK, domain={len(ds)}")
 
 
 def test_shadowrocket_domain_fallback():
