@@ -70,7 +70,10 @@ def _targets_from_config(config: Any) -> list[str]:
 
 def normalize_targets(targets: list[str], ir) -> set[str]:
     reverse = {str(v): k for k, v in ir.id_to_display.items()}
-    return {reverse.get(target, target) for target in targets}
+    result = {reverse.get(target, target) for target in targets}
+    if "proxy-mode" in result and "final" in {s.id for s in ir.services}:
+        result.add("final")
+    return result
 
 
 def main() -> int:
