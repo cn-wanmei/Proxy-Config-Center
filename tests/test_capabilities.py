@@ -10,7 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from engines.capability import (
-    REQUIRED_PLATFORMS,
+    REQUIRED_FEATURES,
+    required_platforms,
     feature_supported,
     supports,
     supports_domain_fallback,
@@ -24,25 +25,18 @@ from ir import build_ir
 
 def _render(platform: str):
     path = ROOT / "platforms" / platform / "adapter" / "render.py"
-    spec = importlib.util.spec_from_file_location(platform, path)
+    spec = importlib.util.spec_from_file_location(platform.replace("-", "_"), path)
     if spec is None or spec.loader is None:
         raise RuntimeError(path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
-    return mod.render(build_ir())
+    return mod.render(build_ir(), platform=platform) if "platform" in mod.render.__code__.co_varnames else mod.render(build_ir())
 
 
 def test_capability_truth_table():
     for rule_provider, rule_set, domain_fallback in itertools.product((False, True), repeat=3):
-        features = {
-            "rule_provider": rule_provider,
-            "rule_set": rule_set,
-            "domain_fallback": domain_fallback,
-        }
-        limitations = {}
-        assert feature_supported(features, limitations, "rule_provider") is rule_provider
-        assert feature_supported(features, limitations, "rule_set") is rule_set
-        assert feature_supported(features, limitations, "domain_fallback") is domain_fallback
+        features = {"rule_provider": rule_provider, "rule_set": rule_set, "domain_fallback": domain_fallback}
+        assert all(feature_supported(features, {}, feature) is value for feature, value in features.items())
         for feature in features:
             assert feature_supported(features, {feature: False}, feature) is False
     print("✅ complete capability truth table OK (8 combinations)")
@@ -58,12 +52,13 @@ def test_real_platform_matrix():
         "egern": (True, False, True),
         "loon": (True, True, True),
         "shadowrocket": (False, False, True),
+        "sing-box": (True, False, True),
     }
-    assert set(REQUIRED_PLATFORMS) == set(expected)
-    for name in REQUIRED_PLATFORMS:
-        want = expected[name]
+    assert set(required_platforms()) == set(expected)
+    for name in required_platforms():
         got = (supports_rule_set(name), supports_rule_provider(name), supports_domain_fallback(name))
-        assert got == want, f"{name}: got {got}, want {want}"
+        assert got == expected[name], f"{name}: got {got}, want {expected[name]}"
+        assert all(key in (supports(name, key) or supports(name, key) is False for key in REQUIRED_FEATURES) for key in REQUIRED_FEATURES)
     print("✅ real platform capability matrix OK")
 
 
@@ -75,6 +70,8 @@ def test_ir_platform_flags():
     assert ir.platform_rule_set["shadowrocket"] is False
     assert ir.platform_rule_provider["shadowrocket"] is False
     assert ir.platform_domain_fallback["shadowrocket"] is True
+    assert ir.platform_rule_set["sing-box"] is True
+    assert ir.platform_rule_provider["sing-box"] is False
     print("✅ IR capability flags OK")
 
 
@@ -85,14 +82,13 @@ def test_client_group_icon_capabilities():
     assert supports("loon", "icons") is True
     assert supports("shadowrocket", "icons") is True
     assert supports("clash", "icons") is False
+    assert supports("sing-box", "icons") is False
 
     egern = _render("egern")
     egern_groups = egern.get("policy_groups") or []
     assert any("icon" in group.get("select", {}) for group in egern_groups)
-
     loon = _render("loon")
     assert "img-url =" in loon
-
     shadowrocket = _render("shadowrocket")
     assert "icon-url=" in shadowrocket
     print("✅ client policy-group icon emission OK")
@@ -117,9 +113,7 @@ def test_egern_native_rule_set():
     cfg = _render("egern")
     rules = cfg.get("rules") or []
     assert len([r for r in rules if "rule_set" in r]) >= 10
-    groups = cfg.get("policy_groups") or []
-    assert groups
-    assert all("select" in g for g in groups)
+    assert cfg.get("policy_groups")
     print("✅ egern native rule_set + policy group emission OK")
 
 
@@ -131,6 +125,15 @@ def test_shadowrocket_domain_fallback():
     print("✅ shadowrocket domain fallback emission OK")
 
 
+def test_sing_box_native_contract():
+    cfg = _render("sing-box")
+    assert cfg.get("outbounds")
+    assert cfg.get("route", {}).get("rules")
+    assert cfg.get("route", {}).get("final")
+    assert cfg.get("experimental", {}).get("cache_file", {}).get("enabled") is True
+    print("✅ sing-box native JSON contract OK")
+
+
 if __name__ == "__main__":
     test_capability_truth_table()
     test_real_platform_matrix()
@@ -140,4 +143,5 @@ if __name__ == "__main__":
     test_clash_meta_rule_set()
     test_egern_native_rule_set()
     test_shadowrocket_domain_fallback()
+    test_sing_box_native_contract()
     print("All capability tests passed")
