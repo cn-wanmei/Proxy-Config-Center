@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 """Emit rules from IR.rule_sources using platform capabilities."""
 
+import os
 from typing import Any, Dict, List, Tuple
 
 EXTERNAL_RESOURCE_INTERVAL = 7 * 24 * 60 * 60
+REMOTE_RULE_BASE = os.getenv(
+    "REMOTE_RULE_BASE",
+    "https://github.com/cn-wanmei/Proxy-Config-Center/releases/latest/download/",
+).rstrip("/") + "/"
 
 
 def _target(rs, id_to_display: Dict[str, str]) -> str:
@@ -12,6 +17,11 @@ def _target(rs, id_to_display: Dict[str, str]) -> str:
 
 def _has_bm(rs) -> bool:
     return bool(getattr(rs, "bm_sets", None))
+
+
+def _remote_rule_url(key: str) -> str:
+    """Return the stable latest Release asset URL for a generated rule."""
+    return f"{REMOTE_RULE_BASE}rule-{key}.yaml"
 
 
 def _clash_yaml_to_list(url: str, flavor: str) -> str:
@@ -38,7 +48,7 @@ def emit_clash_style(ir: Any, id_to_display: Dict[str, str], use_rule_set: bool)
                 rule_providers[bm.key] = {
                     "type": "http",
                     "behavior": bm.behavior or "classical",
-                    "url": bm.url,
+                    "url": _remote_rule_url(bm.key),
                     "path": f"./ruleset/{bm.key}.yaml",
                     "interval": EXTERNAL_RESOURCE_INTERVAL,
                 }
@@ -60,7 +70,7 @@ def emit_loon_style(ir: Any, id_to_display: Dict[str, str], use_rule_set: bool) 
         target = _target(rs, id_to_display)
         if use_rule_set and _has_bm(rs):
             for bm in rs.bm_sets:
-                lines.append(f"DOMAIN-SET,{_clash_yaml_to_list(bm.url, 'Loon')},{target}")
+                lines.append(f"DOMAIN-SET,{_remote_rule_url(bm.key)},{target}")
             continue
         for d in rs.domain_suffix:
             lines.append(f"DOMAIN-SUFFIX,{d},{target}")
@@ -78,7 +88,7 @@ def emit_egern_style(ir: Any, id_to_display: Dict[str, str], use_rule_set: bool)
         target = _target(rs, id_to_display)
         if use_rule_set and _has_bm(rs):
             for bm in rs.bm_sets:
-                rules.append({"rule_set": {"url": _clash_yaml_to_list(bm.url, "Surge"), "policy": target}})
+                rules.append({"rule_set": {"url": _remote_rule_url(bm.key), "policy": target}})
             continue
         for d in rs.domain_suffix:
             rules.append({"domain_suffix": {"match": d, "policy": target}})
