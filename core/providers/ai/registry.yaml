@@ -1,0 +1,67 @@
+schema_version: "1.0"
+providers:
+  - id: openai
+    name: OpenAI
+    services: [ChatGPT, OpenAI API]
+    strategy: AI
+    domains: [openai.com, chatgpt.com]
+  - id: anthropic
+    name: Anthropic
+    services: [Claude]
+    strategy: AI
+    domains: [anthropic.com, claude.ai]
+  - id: google-ai
+    name: Google AI
+    services: [Gemini]
+    strategy: AI
+    domains: [gemini.google.com, ai.google.dev]
+  - id: xai
+    name: xAI
+    services: [Grok]
+    strategy: AI
+    domains: [x.ai, grok.com]
+  - id: microsoft-copilot
+    name: Microsoft Copilot
+    services: [Copilot]
+    strategy: AI
+    domains: [copilot.microsoft.com]
+  - id: github-copilot
+    name: GitHub Copilot
+    services: [GitHub Copilot]
+    strategy: AI
+    domains: [github.com]
+  - id: perplexity
+    name: Perplexity
+    services: [Perplexity]
+    strategy: AI
+    domains: [perplexity.ai]
+  - id: mistral
+    name: Mistral AI
+    services: [Le Chat, Mistral API]
+    strategy: AI
+    domains: [mistral.ai, chat.mistral.ai]
+  - id: deepseek
+    name: DeepSeek
+    services: [DeepSeek]
+    strategy: AI
+    domains: [deepseek.com]
+  - id: cursor
+    name: Cursor
+    services: [Cursor]
+    strategy: AI
+    domains: [cursor.com]
+  - id: huggingface
+    name: Hugging Face
+    services: [Hugging Face]
+    strategy: AI
+    domains: [huggingface.co]
+  - id: openrouter
+    name: OpenRouter
+    services: [OpenRouter]
+    strategy: AI
+    domains: [openrouter.ai]
+  - id: groq
+    name: Groq
+    services: [Groq API]
+    strategy: AI
+    domains: [groq.com]
