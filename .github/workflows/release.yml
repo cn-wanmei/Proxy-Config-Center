@@ -12,8 +12,7 @@ permissions:
 
 jobs:
   release:
-    # Formal release is tag-only. PRs/release branches must use the normal CI
-    # validation workflow and can never create or mutate a GitHub Release.
+    # Formal release is tag-only. PRs/release branches must use normal CI.
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -57,7 +56,7 @@ jobs:
       - name: Build
         run: python scripts/build.py
       - name: Structural check
-        run: python scripts/check_config.py
+        run: python scripts/check_config.py --root build
       - name: Rule source health
         run: python scripts/check_rule_sources.py
       - name: Pack configs
@@ -72,6 +71,7 @@ jobs:
           cp build/egern/config.yaml dist/egern.yaml
           cp build/loon/config.conf dist/loon.conf
           cp build/shadowrocket/config.conf dist/shadowrocket.conf
+          cp build/sing-box/config.json dist/sing-box.json
           cp -r build/. dist/configs/
           cd dist
           zip -r "proxy-config-center-${RELEASE_TAG}.zip" configs
