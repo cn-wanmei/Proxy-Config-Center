@@ -23,27 +23,24 @@ policy_groups:
     - 手动选择
     - 定向免流
     - 自动选择
-    - DIRECT
-    - REJECT
+    - 直连模式
+    - 阻断连接
     flatten: true
     icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/SS.png
 - select:
     name: 手动选择
-    policies:
-    - DIRECT
+    policies: []
     flatten: true
     icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/El.png
 - select:
     name: 定向免流
-    policies:
-    - DIRECT
+    policies: []
     flatten: true
     filter: (?i)免流
     icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/free_mianliu.png
 - select:
     name: 自动选择
-    policies:
-    - DIRECT
+    policies: []
     flatten: true
     icon: https://raw.githubusercontent.com/cn-wanmei/ClashTools/main/images/png/Auto_Speed.png
 - select:
