@@ -1,27 +1,29 @@
 #!/usr/bin/env python3
 """Rule coverage audit and Rule -> Strategy Group index generator."""
 
+from __future__ import annotations
+
 import argparse
 import json
-from pathlib import Path
-from typing import Any
-
 import sys
-
-try:
-    import yaml
-except ImportError:
-    print("PyYAML required", file=sys.stderr)
-    raise
+from pathlib import Path
+from typing import Any, Dict, List, Tuple
 
 ROOT = Path(__file__).resolve().parent.parent
 CORE = ROOT / "core"
 SPECIAL_GROUPS = {"direct", "reject", "proxy-mode"}
 
+from engines.utils import (
+    DEFAULT_PRIORITY,
+    FALLBACK_PRIORITY,
+    get_priority_map,
+    load_yaml,
+)
+
 
 def load(path: Path) -> dict:
-    with path.open(encoding="utf-8") as f:
-        return yaml.safe_load(f) or {}
+    """Backward-compatible wrapper; prefer load_yaml for new code."""
+    return load_yaml(path)
 
 
 def suffix_covers(a: str, b: str) -> bool:
@@ -30,15 +32,15 @@ def suffix_covers(a: str, b: str) -> bool:
     return b == a or b.endswith("." + a)
 
 
-def audit() -> tuple[dict, list[dict], list[dict], list[dict], list[dict]]:
-    pri = load(CORE / "rules" / "priority.yaml").get("priority") or []
-    priority = {x["id"]: int(x.get("value", 999)) for x in pri}
-    services = load(CORE / "proxy-groups" / "service.yaml").get("groups") or []
+def audit() -> Tuple[dict, List[dict], List[dict], List[dict], List[dict]]:
+    pri = load_yaml(CORE / "rules" / "priority.yaml").get("priority") or []
+    priority = get_priority_map(pri)
+    services = load_yaml(CORE / "proxy-groups" / "service.yaml").get("groups") or []
     service_ids = {x["id"] for x in services}
-    rules: list[dict] = []
+    rules: List[dict] = []
 
     for path in sorted((CORE / "rules" / "services").glob("*.yaml")):
-        data = load(path)
+        data = load_yaml(path)
         group = data.get("group") or str(data.get("id", "")).removeprefix("service-")
         for rule_index, rule in enumerate(data.get("rules") or []):
             rule_type = rule.get("type")
@@ -48,18 +50,18 @@ def audit() -> tuple[dict, list[dict], list[dict], list[dict], list[dict]]:
                         "source": path.name,
                         "rule_index": rule_index,
                         "group": group,
-                        "priority": priority.get(group, 500),
+                        "priority": priority.get(group, DEFAULT_PRIORITY),
                         "type": rule_type,
                         "value": str(value),
                     }
                 )
 
     rules.sort(key=lambda x: (x["priority"], x["source"], x["rule_index"], x["value"]))
-    invalid_targets: list[dict] = []
-    duplicates: list[dict] = []
-    conflicts: list[dict] = []
-    unreachable: list[dict] = []
-    seen: dict[tuple[str, str], dict] = {}
+    invalid_targets: List[dict] = []
+    duplicates: List[dict] = []
+    conflicts: List[dict] = []
+    unreachable: List[dict] = []
+    seen: Dict[Tuple[str, str], dict] = {}
 
     for rule in rules:
         key = (str(rule["type"]), rule["value"].lower())
@@ -83,7 +85,7 @@ def audit() -> tuple[dict, list[dict], list[dict], list[dict], list[dict]]:
                 conflicts.append({"kind": "suffix-overlap", "rule": rule, "higher_priority": previous})
                 break
 
-    index = {
+    index: Dict[str, Any] = {
         "version": 1,
         "services": [],
         "rules": rules,
@@ -96,11 +98,36 @@ def audit() -> tuple[dict, list[dict], list[dict], list[dict], list[dict]]:
             {
                 "id": service_id,
                 "name": service.get("name", {}),
-                "priority": priority.get(service_id, 500),
+                "priority": priority.get(service_id, DEFAULT_PRIORITY),
                 "rule_count": len(service_rules),
                 "rules": service_rules,
             }
         )
+
+    # Surface dual-source domain_suffix overlaps as informational notes
+    source_suffixes: Dict[str, set] = {}
+    try:
+        src_data = load_yaml(CORE / "rules" / "sources.yaml")
+        for sid, meta in (src_data.get("sources") or {}).items():
+            source_suffixes[sid] = {s.lower() for s in (meta or {}).get("domain_suffix") or []}
+    except Exception:
+        source_suffixes = {}
+
+    dual_source_notes: List[dict] = []
+    for rule in rules:
+        if rule["type"] != "domain-suffix":
+            continue
+        group = rule["group"]
+        val = rule["value"].lower()
+        if group in source_suffixes and val in source_suffixes[group]:
+            dual_source_notes.append(
+                {
+                    "group": group,
+                    "value": rule["value"],
+                    "service_file": rule["source"],
+                    "note": "also present in sources.yaml (intentional dual listing)",
+                }
+            )
 
     index["summary"] = {
         "service_groups": len(services),
@@ -109,7 +136,9 @@ def audit() -> tuple[dict, list[dict], list[dict], list[dict], list[dict]]:
         "conflicts": len(conflicts),
         "unreachable": len(unreachable),
         "invalid_targets": len(invalid_targets),
+        "dual_source_domain_suffix": len(dual_source_notes),
     }
+    index["dual_source_notes"] = dual_source_notes
     return index, duplicates, conflicts, unreachable, invalid_targets
 
 
@@ -149,9 +178,19 @@ def main() -> int:
     print(json.dumps(index["summary"], ensure_ascii=False, sort_keys=True))
 
     for item in invalid_targets:
-        print("ERROR invalid target:", item)
+        print(
+            "ERROR invalid target:",
+            item,
+            "\n  Suggestion: Add the missing strategy group to core/proxy-groups/service.yaml "
+            "or change the rule target to an existing group (direct/reject/proxy-mode).",
+        )
     for item in unreachable:
-        print("ERROR unreachable:", item)
+        print(
+            "ERROR unreachable:",
+            item,
+            "\n  Suggestion: Remove the lower-priority overlapping domain-suffix "
+            "or raise its priority in core/rules/priority.yaml.",
+        )
 
     semantic_conflicts = [
         conflict
