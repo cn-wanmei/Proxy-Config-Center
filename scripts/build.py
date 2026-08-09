@@ -99,15 +99,12 @@ def write_intelligence_reports(ir) -> None:
     from semantic_matrix import run as run_matrix
     from validate_remote_configs import validate as validate_remote
     from build_report import build_report
-    from rewrite_release_urls import rewrite_root
 
     audit_dir = ROOT / "build" / "audit"
     audit_dir.mkdir(parents=True, exist_ok=True)
-    changed = rewrite_root(ROOT / "build", ir)
-    print(f"✅ Normalized {changed} generated client assets to latest-rules/raw rule URLs")
     graph = build_graph()
     (audit_dir / "rule-graph.json").write_text(json.dumps(graph, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    remote = validate_remote(ROOT / "build")
+    remote = validate_remote(ROOT / "build", require_latest=False)
     (audit_dir / "remote-config-semantic.json").write_text(json.dumps(remote, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     matrix = run_matrix(ROOT / "build")
     (audit_dir / "domain-semantic-matrix.json").write_text(json.dumps(matrix, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
