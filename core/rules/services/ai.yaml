@@ -1,4 +1,4 @@
-version: 2
+version: 3
 id: service-ai
 group: ai
 rules:
@@ -49,13 +49,18 @@ rules:
     action: group
     target: ai
 
-  # Microsoft Copilot
+  # Microsoft Copilot. AI priority 25 intentionally precedes Microsoft 30.
   - type: domain-suffix
     values:
       - copilot.microsoft.com
+      - copilot.com
       - sydney.bing.com
       - edgeservices.bing.com
       - services.bingapis.com
+      - copilot.github.com
+      - githubcopilot.com
+      - api.githubcopilot.com
+      - copilot-proxy.githubusercontent.com
     action: group
     target: ai
 
@@ -107,6 +112,36 @@ rules:
       - codeium.com
       - windsurf.com
       - huggingface.co
+    action: group
+    target: ai
+
+  # AI inference / model platforms
+  - type: domain-suffix
+    values:
+      - groq.com
+      - together.ai
+      - together.xyz
+      - replicate.com
+      - fireworks.ai
+      - cohere.com
+      - ai21.com
+      - stability.ai
+    action: group
+    target: ai
+
+  # Generative media / voice / creative AI
+  - type: domain-suffix
+    values:
+      - midjourney.com
+      - midjourney.ai
+      - suno.com
+      - elevenlabs.io
+      - runwayml.com
+      - runway.ai
+      - character.ai
+      - character.ai
+      - leonardo.ai
+      - krea.ai
     action: group
     target: ai
 
