@@ -12,14 +12,17 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parent.parent
 CORE = ROOT / "core"
-sys.path.insert(0, str(ROOT / "scripts"))
 
-
-def load_yaml(path: Path):
-    if not path.exists():
-        raise FileNotFoundError(path)
-    with path.open(encoding="utf-8") as f:
-        return yaml.safe_load(f) or {}
+from engines.capability import (
+    required_platforms,
+    supports_domain_fallback,
+    supports_rule_provider,
+    supports_rule_set,
+    validate_capabilities,
+)
+from engines.utils import load_yaml
+from reference_validator import validate as validate_references
+from rule_audit import audit
 
 
 def main() -> int:
@@ -27,11 +30,9 @@ def main() -> int:
     print("=== Core Validation ===")
 
     try:
-        from engines.capability import validate_capabilities, required_platforms
         cap_errs = validate_capabilities()
         errors.extend(cap_errs)
         for name in required_platforms():
-            from engines.capability import supports_domain_fallback, supports_rule_provider, supports_rule_set
             print(
                 f"  {name}: rule_set={supports_rule_set(name)} "
                 f"rule_provider={supports_rule_provider(name)} "
@@ -41,28 +42,20 @@ def main() -> int:
         errors.append(f"capability validation failed: {exc}")
 
     try:
-        from reference_validator import validate as validate_references
         errors.extend(validate_references())
     except Exception as exc:
         raise RuntimeError("reference validation failed") from exc
 
     try:
-        from rule_audit import audit
         index, duplicates, conflicts, unreachable, invalid_targets = audit()
-        errors.extend(
-            f"rule audit invalid target: {item}" for item in invalid_targets
-        )
-        errors.extend(
-            f"rule audit unreachable rule: {item}" for item in unreachable
-        )
+        errors.extend(f"rule audit invalid target: {item}" for item in invalid_targets)
+        errors.extend(f"rule audit unreachable rule: {item}" for item in unreachable)
         semantic_conflicts = [
             item for item in conflicts
             if item["kind"] == "duplicate"
             and item["rule"]["group"] != item["previous"]["group"]
         ]
-        errors.extend(
-            f"rule audit semantic conflict: {item}" for item in semantic_conflicts
-        )
+        errors.extend(f"rule audit semantic conflict: {item}" for item in semantic_conflicts)
         print(
             "Rule audit: "
             f"{index['summary']['service_groups']} groups | "
