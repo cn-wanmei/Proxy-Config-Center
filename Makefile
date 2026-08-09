@@ -26,6 +26,7 @@ check: build
 
 test:
 	$(PYTHON) tests/test_ai_registry.py
+	$(PYTHON) tests/test_no_path_mutation.py
 	$(PYTHON) tests/test_capabilities.py
 	$(PYTHON) tests/test_rule_audit.py
 	$(PYTHON) tests/test_rule_sources.py
