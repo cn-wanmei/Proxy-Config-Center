@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.3.1] - 2026-08-09
+
+远程规则分发修复 / Latest remote-rule distribution fix。
+
+### Added
+- Release Workflow 将完整生成规则逐个作为 GitHub Release Asset 发布。
+- `release-manifest.json` 为每个客户端与规则资产生成 `latest/download/<asset>` 稳定地址、SHA256 与文件大小。
+- 新增远程规则 HTTP 200 验证器，正式 Release 创建后逐一检查所有 latest 资产。
+- 新增远程规则发布规范文档，明确 latest 只跟随正式 Release。
+
+### Changed
+- 支持远程规则集的平台改为引用 `https://github.com/cn-wanmei/Proxy-Config-Center/releases/latest/download/rule-*.yaml`，不再绑定固定版本号。
+- 远程规则缓存周期继续保持 7 天。
+- 完整发行包仍保留 7 端客户端、完整规则、Manifest、SHA256 与 ZIP。
+- 历史 `vX.Y.Z` Release 继续用于版本归档；客户端远程规则只追踪最新正式 Release。
+
+### Fixed
+- 修复 1.3.0 发布后规则虽然进入 ZIP / Release，却没有形成可直接订阅的独立 latest 远程规则资产的问题。
+- Release 成功后若任一 latest 客户端或规则 URL 非 HTTP 200，发布 Job 明确失败，避免产生不可用的远程订阅。
+
+### Compatibility
+- 不具备原生远程 rule-set 能力的平台继续输出等价的本地规则语义，不伪造平台能力。
+- Clash、Clash Meta、Stash、Loon、Egern 等具备相应远程规则能力的平台使用 latest 规则资产。
+- Shadowrocket 与 sing-box 保持各自真实 capability，不因发布层强行注入不兼容的 rule-set。
+
 ## [1.3.0] - 2026-08-09
 
 完整客户端与远程规则发布体系 / Complete client and remote-rule release distribution。
@@ -50,40 +75,3 @@
 - Golden Snapshot                                    ✅
 - Build / Structural / Final Artifact                ✅
 - Release Asset Completeness                         ✅
-
-## [1.2.0] - 2026-08-09
-
-分流质量体系与 AI Provider Registry / Routing quality and AI provider registry。
-
-### Added
-- Rule → Strategy Group 机器索引与 Markdown 可视化审计报告。
-- Duplicate、Conflict、Unreachable Rule 自动检测并纳入 CI 门禁。
-- AI Provider Registry，按 LLM、Coding、Image、Video、Music、Audio、Search、Gateway、Inference 等语义分类维护主流 AI 服务。
-- AI 服务覆盖扩展至 Groq、Together AI、Replicate、Fireworks AI、Cohere、AI21、Stability AI、Midjourney、Suno、ElevenLabs、Runway、Character AI、Leonardo AI、Krea 等主流服务。
-- AI / Google / Microsoft / GitHub 分流边界重新整理，GitHub Copilot 按 AI 语义优先处理。
-- Rule Trace 命中解释能力，支持查看首个命中规则、priority、strategy group、source 与 shadowed candidates。
-- 七端深度 Semantic Equivalence Test，覆盖 Clash、Clash Meta、Stash、Egern、Loon、Shadowrocket、sing-box。
-- 历史 `sys.path` 运行时注入清理，并增加 CI 防回归检查。
-
-### Changed
-- 分流审计从静态检查升级为 Rule Coverage Quality Gate。
-- AI Provider Registry 作为语义目录与覆盖约束，不直接成为第二套规则执行源，避免与 `ai.yaml` 漂移。
-- 七端验证从文件结构一致性升级为跨平台路由语义一致性验证。
-- 分流规则继续遵循显式 priority，AI、Google、Microsoft、GitHub 等边界通过优先级和覆盖关系明确表达。
-- Makefile / PYTHONPATH 统一开发与 CI 入口，减少测试环境路径副作用。
-
-### Validation
-- Core / Reference Validator                                ✅
-- Rule Coverage Audit                                       ✅
-- Duplicate / Conflict / Unreachable Detection              ✅
-- AI Provider Registry Regression                            ✅
-- Rule Trace Regression                                     ✅
-- Seven-platform Semantic Equivalence                       ✅
-- Golden Snapshot                                           ✅
-- Rule Source Health                                        ✅
-- Build / Structural / Final Artifact                       ✅
-
-### Compatibility
-- 保持 v1.1.x Core / IR 语义兼容。
-- 七端继续输出独立正式配置文件。
-- sing-box 继续遵循真实 capability，不伪造当前 Clash YAML/LIST 源的原生 rule-set 兼容性。
