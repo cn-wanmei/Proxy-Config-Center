@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
 """sing-box renderer: Core/IR -> native JSON configuration."""
 
+from pathlib import Path
 from typing import Any, Dict, List
 import warnings
-
-import sys
-from pathlib import Path
-ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(ROOT / "scripts"))
 
 from engines.proxies import enabled_nodes, load_providers
 
