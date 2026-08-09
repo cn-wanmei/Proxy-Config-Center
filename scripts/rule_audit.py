@@ -83,9 +83,12 @@ def audit() -> tuple[dict, list[dict], list[dict], list[dict], list[dict]]:
                 conflicts.append({"kind": "suffix-overlap", "rule": rule, "higher_priority": previous})
                 break
 
+    providers_path = CORE / "ai" / "providers.yaml"
+    providers = load(providers_path).get("providers") if providers_path.exists() else []
     index = {
-        "version": 1,
+        "version": 2,
         "services": [],
+        "ai_providers": providers or [],
         "rules": rules,
         "summary": {},
     }
@@ -109,6 +112,7 @@ def audit() -> tuple[dict, list[dict], list[dict], list[dict], list[dict]]:
         "conflicts": len(conflicts),
         "unreachable": len(unreachable),
         "invalid_targets": len(invalid_targets),
+        "ai_providers": len(providers or []),
     }
     return index, duplicates, conflicts, unreachable, invalid_targets
 
@@ -117,7 +121,7 @@ def markdown(index: dict) -> str:
     lines = [
         "# Rule → Strategy Group Index",
         "",
-        "Generated from `core/rules/` and `core/proxy-groups/service.yaml`.",
+        "Generated from `core/rules/`, `core/proxy-groups/service.yaml`, and the AI provider registry.",
         "",
         "| Strategy Group | Priority | Rules |",
         "|---|---:|---:|",
@@ -125,6 +129,18 @@ def markdown(index: dict) -> str:
     for service in sorted(index["services"], key=lambda x: x["priority"]):
         name = service["name"].get("zh") if isinstance(service["name"], dict) else service["name"]
         lines.append(f"| `{service['id']}` {name} | {service['priority']} | {service['rule_count']} |")
+    lines += [
+        "",
+        "## AI providers",
+        "",
+        "| Provider | Category | Domains |",
+        "|---|---|---|",
+    ]
+    for provider in index.get("ai_providers", []):
+        lines.append(
+            f"| `{provider['id']}` | {provider.get('category', '')} | "
+            f"{', '.join(f'`{d}`' for d in provider.get('domains', []))} |"
+        )
     lines += [
         "",
         "## Rule coverage",
