@@ -146,6 +146,9 @@ jobs:
           tar -czf "proxy-config-center-${RELEASE_TAG}-rules.tar.gz" rule-*.yaml rule-*.list release-manifest.json SHA256SUMS
           zip -r "proxy-config-center-${RELEASE_TAG}.zip" configs
 
+      - name: Validate release distribution contract
+        run: python scripts/validate_release_dist.py --root dist
+
       - name: Verify complete release assets
         shell: bash
         env:
