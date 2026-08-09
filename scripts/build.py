@@ -3,6 +3,7 @@
 
 import argparse
 import importlib.util
+import inspect
 import json
 import sys
 from functools import lru_cache
@@ -43,6 +44,13 @@ def load_renderer(platform: str):
     return mod.render
 
 
+def render_platform(platform: str, ir):
+    render = load_renderer(platform)
+    if "platform" in inspect.signature(render).parameters:
+        return render(ir, platform=platform)
+    return render(ir)
+
+
 def write_config(out_path: Path, config, kind: str):
     out_path.parent.mkdir(parents=True, exist_ok=True)
     header = (
@@ -67,8 +75,7 @@ def build_root(root_name: str, ir) -> None:
     out_root = ROOT / root_name
     out_root.mkdir(exist_ok=True)
     for platform, (rel, kind) in PLATFORMS.items():
-        render = load_renderer(platform)
-        config = render(ir, platform=platform)
+        config = render_platform(platform, ir)
         out_path = out_root / rel
         write_config(out_path, config, kind)
         print(f"✅ Wrote {out_path}")
