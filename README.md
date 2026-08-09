@@ -1,21 +1,21 @@
 # Proxy-Config-Center
 
 **通用代理配置中心 / Universal Proxy Configuration Center**  
-**Version: 1.3.2 · Stable Release**
+**Version: 1.3.4 · Stable Release**
 
-支持平台：Clash Meta · Clash · Stash · Egern · Loon · Shadowrocket · sing-box
+我正在维护这个项目，用它统一生成和发布 Clash Meta、Clash、Stash、Egern、Loon、Shadowrocket、sing-box 七端代理配置。
 
-> **规则、节点组与策略组由 Core 统一维护；客户端只消费生成结果。**
+> **我负责维护 Core、规则、节点组、策略组与发布体系；各客户端只消费我生成并验证过的最终配置。**
 
 ## 发布与远程配置
 
-正式 Release 只由 `v*` tag 触发。发布成功并完成全部验证后，Release Workflow 才会更新 `latest-rules`。该分支只保存最近一次正式发布的完整客户端配置、远程规则和 Manifest。
+我规定正式 Release 只能由 `v*` tag 触发。只有完整构建、验证和远程发布全部成功后，我才会更新 `latest-rules`。这个分支只保存我最近一次正式发布的完整客户端配置、远程规则和 Manifest。
 
 ### 7 个客户端完整配置 Raw URL
 
-以下地址可以直接作为客户端的远程配置/订阅配置地址，内容为完整生成配置，不是 GitHub 下载页：
+下面这些地址是我长期提供给用户的完整客户端远程配置地址。它们直接指向 `raw.githubusercontent.com`，不是 GitHub Release 下载页。
 
-| 平台 | Raw 远程配置 |
+| 平台 | 我提供的 Raw 远程配置 |
 |---|---|
 | Clash | `https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/clients/clash.yaml` |
 | Clash Meta | `https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/clients/clash-meta.yaml` |
@@ -25,20 +25,20 @@
 | Shadowrocket | `https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/clients/shadowrocket.conf` |
 | sing-box | `https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/clients/sing-box.json` |
 
-**长期使用这 7 个 Raw URL 即可。** 新正式版本发布后，`latest-rules` 自动更新，客户端无需修改地址。
+**我建议直接保存这 7 个 Raw URL，不需要随着版本号变化而修改地址。** 我发布新的正式版本后，`latest-rules` 会自动更新，用户继续使用原地址即可。
 
 ### Release 归档
 
 - 最新 Release：`https://github.com/cn-wanmei/Proxy-Config-Center/releases/latest`
-- 当前版本：`v1.3.2`
-- 当前版本 Release：`https://github.com/cn-wanmei/Proxy-Config-Center/releases/tag/v1.3.2`
-- 完整 ZIP：`https://github.com/cn-wanmei/Proxy-Config-Center/releases/latest/download/proxy-config-center-v1.3.2.zip`
+- 当前版本：`v1.3.4`
+- 当前版本 Release：`https://github.com/cn-wanmei/Proxy-Config-Center/releases/tag/v1.3.4`
+- 完整 ZIP：`https://github.com/cn-wanmei/Proxy-Config-Center/releases/latest/download/proxy-config-center-v1.3.4.zip`
 
-Release Asset 用于版本归档、审计、复现和回滚；客户端长期订阅使用上面的 Raw URL。
+我保留 Release Asset 用于版本归档、审计、复现和回滚；日常远程使用优先使用上面的 Raw URL。
 
 ## Raw 远程分流规则
 
-统一基地址：
+我统一使用下面的 Raw 基地址发布分流规则：
 
 `https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/`
 
@@ -60,56 +60,59 @@ Release Asset 用于版本归档、审计、复现和回滚；客户端长期订
 | Twitter / X | `.../rule-twitter.yaml` | `.../rule-twitter.list` |
 | Ad Block | `.../rule-ad-block.yaml` | `.../rule-ad-block.list` |
 
-将上表中的 `...` 替换为统一基地址即可。
+我会继续维护完整规则集合；上表只列出常用入口。
 
-### 用户维护的 3 个分流文件
+### 我自己维护的 3 个分流文件
 
-这三个文件由用户自己维护内容，Release 时原样同步到 `latest-rules`：
+下面三个文件由我手工维护内容，发布时原样同步到 `latest-rules`：
 
-| 文件 | 固定策略语义 | Raw URL |
+| 文件 | 我的策略定义 | Raw URL |
 |---|---|---|
-| `direct.list` | **DIRECT：写死直连** | `https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-direct.list` |
-| `proxy.list` | **PROXY：写死代理** | `https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-proxy.list` |
-| `ehentai.list` | **跟随其它策略组：不写死 DIRECT/PROXY** | `https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-ehentai.list` |
+| `direct.list` | **DIRECT：我明确写死直连** | `https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-direct.list` |
+| `proxy.list` | **PROXY：我明确写死代理** | `https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-proxy.list` |
+| `ehentai.list` | **跟随其它策略组：我不在规则文件里写死 DIRECT/PROXY** | `https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-ehentai.list` |
 
 源文件位置：`rules/manual/direct.list`、`rules/manual/proxy.list`、`rules/manual/ehentai.list`。
 
-其中 `direct` 与 `proxy` 的目标语义固定；`ehentai` 只提供匹配集合，命中后沿用 Core 的策略组选择逻辑。三个文件的具体域名/IP 内容不由生成器擅自补充。
+我不会让生成器擅自修改这三个文件的具体域名、IP 或 CIDR 内容。`direct` 和 `proxy` 的目标语义由我固定；`ehentai` 只提供匹配集合，命中后继续沿用 Core 的策略组逻辑。
 
 ### Manifest / 校验
 
-- Remote Rule Manifest：`https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/release-manifest.json`
-- SHA256：`https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/SHA256SUMS`
+- 我提供的 Remote Rule Manifest：`https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/release-manifest.json`
+- 我提供的 SHA256：`https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/SHA256SUMS`
 
-Manifest 同时记录 7 个客户端 Raw URL、全部规则 Raw URL、SHA-256、大小及发布版本。
+Manifest 同时记录我发布的 7 个客户端 Raw URL、全部分流规则 Raw URL、SHA-256、文件大小及发布版本。
 
 ## 客户端能力
 
-- **节点组**：Core 统一定义，按客户端 capability 映射。
-- **策略组**：服务分流组使用稳定 ID，规则不直接耦合平台语法。
-- **图标**：由 capability 显式控制，不支持的平台不伪造字段。
-- **Egern**：远程资源默认 7 天更新。
-- **sing-box**：输出原生 JSON；不把 Clash YAML/LIST 源伪装成原生 rule-set。
-- **外部规则与节点资源**：默认 7 天（168h / 604800 秒）刷新。
+- **节点组**：我在 Core 统一定义，再根据客户端 capability 做映射。
+- **策略组**：我使用稳定服务 ID 管理分流，避免客户端规则直接耦合平台语法。
+- **图标**：我通过 capability 显式控制，不支持的平台不伪造字段。
+- **Egern**：我将远程资源默认刷新周期设为 7 天。
+- **sing-box**：我输出原生 JSON，不把 Clash YAML/LIST 源伪装成原生 rule-set。
+- **外部规则与节点资源**：我默认使用 7 天（168h / 604800 秒）刷新周期。
 
 ## 发布完整性
 
-Release Workflow 必须完成：
+每次正式发布时，我要求 Release Workflow 完成：
 
-1. 7 端完整配置构建
-2. 全部分流规则构建
-3. `direct / proxy / ehentai` 用户规则存在性检查
-4. Rule Audit / Capability / Semantic / Golden / Structural
-5. Release Asset 完整性检查
-6. 更新 `latest-rules/clients/`
-7. 更新 `latest-rules/rules/`
-8. 更新 `release-manifest.json`
-9. Raw 客户端配置 HTTP 200 + SHA256 校验
-10. Raw 全部规则 HTTP 200 + SHA256 校验
+1. 我构建 7 端完整客户端配置
+2. 我构建全部已定义分流规则
+3. 我检查 `direct / proxy / ehentai` 用户维护规则
+4. 我执行 Rule Audit / Capability / Semantic / Golden / Structural
+5. 我检查 Release Asset 完整性
+6. 我更新 `latest-rules/clients/`
+7. 我更新 `latest-rules/rules/`
+8. 我更新 `release-manifest.json`
+9. 我逐个验证客户端 Raw HTTP 200，并校验 SHA256
+10. 我逐个验证全部规则 Raw HTTP 200，并校验 SHA256
+11. 我验证 Raw Manifest 与本次构建 Manifest 完全一致
 
-**Release 失败、普通 push、PR 均不得更新 `latest-rules`。**
+**任何 Release 失败、普通 push 或 PR，都不能污染我的 `latest-rules`。**
 
 ## 本地构建与校验
+
+我在本地使用下面的命令完成核心验证：
 
 ```bash
 python scripts/validate.py
@@ -122,18 +125,18 @@ python scripts/check_config.py --root final
 python scripts/check_rule_sources.py
 ```
 
-生成结果位于 `build/`；`final/` 仅用于 legacy compatibility，禁止手工修改生成文件。
+我将生成结果放在 `build/`；`final/` 只用于 legacy compatibility，我不允许手工修改生成文件。
 
-## 架构原则
+## 我的架构原则
 
-1. **Core First** — 业务逻辑只在 `core/`
-2. **Capability Driven** — 平台差异由 capability 描述
-3. **Reference Safe** — 构建前检查跨文件引用
-4. **Golden Protected** — 生成结果受回归保护
-5. **Fail Fast** — 错误立即失败，不静默降级
-6. **Artifact First** — 配置作为 CI Artifact / Release 交付
-7. **Adapter First** — 新客户端原则上只增加 adapter + capability
-8. **Raw Distribution** — 客户端完整配置与全部分流规则均提供 `latest-rules` Raw URL
-9. **Tag-only Release** — 只有 `v*` tag 可以创建正式 Release
-10. **Weekly External Refresh** — 外部规则与节点资源默认 7 天刷新
-11. **Release Gate** — 只有正式 Release 全部验证成功后才能更新 `latest-rules`
+1. **Core First** — 我把业务逻辑集中在 `core/`
+2. **Capability Driven** — 我用 capability 描述平台差异
+3. **Reference Safe** — 我在构建前检查跨文件引用
+4. **Golden Protected** — 我用 Golden 保护生成结果
+5. **Fail Fast** — 我要求错误立即失败，不接受静默降级
+6. **Artifact First** — 我把配置作为 CI Artifact / Release 交付
+7. **Adapter First** — 我新增客户端时优先只增加 adapter + capability
+8. **Raw Distribution** — 我同时提供完整客户端配置和全部分流规则的 `latest-rules` Raw URL
+9. **Tag-only Release** — 我只允许 `v*` tag 创建正式 Release
+10. **Weekly External Refresh** — 我将外部规则与节点资源默认刷新周期设为 7 天
+11. **Release Gate** — 我只有在正式 Release 全部验证成功后才更新 `latest-rules`
