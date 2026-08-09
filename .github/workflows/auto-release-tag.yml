@@ -46,29 +46,51 @@ jobs:
           VERSION=$(tr -d '\r\n' < VERSION)
           [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Invalid VERSION: $VERSION"; exit 1; }
           echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
-      - name: Create release tag
+      - name: Ensure release tag and target
+        id: tag
         uses: actions/github-script@v7
         env:
           RELEASE_TAG: ${{ steps.version.outputs.tag }}
-          TARGET_SHA: ${{ github.sha }}
+          CURRENT_SHA: ${{ github.sha }}
         with:
           script: |
             const tag = process.env.RELEASE_TAG;
-            const sha = process.env.TARGET_SHA;
+            const currentSha = process.env.CURRENT_SHA;
+            let targetSha = currentSha;
             try {
-              await github.rest.git.getRef({
+              const ref = await github.rest.git.getRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 ref: `tags/${tag.slice(1)}`,
               });
-              core.info(`${tag} already exists; nothing to do.`);
+              targetSha = ref.data.object.sha;
+              core.info(`${tag} already exists at ${targetSha}; keeping the immutable release target.`);
             } catch (error) {
               if (error.status !== 404) throw error;
               await github.rest.git.createRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 ref: `refs/tags/${tag}`,
-                sha,
+                sha: currentSha,
               });
-              core.info(`Created ${tag} at ${sha}`);
+              core.info(`Created ${tag} at ${currentSha}`);
             }
+            core.setOutput('target_sha', targetSha);
+      - name: Dispatch release workflow
+        uses: actions/github-script@v7
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          TARGET_SHA: ${{ steps.tag.outputs.target_sha }}
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'release.yml',
+              ref: 'main',
+              inputs: {
+                release_tag: process.env.RELEASE_TAG,
+                target_sha: process.env.TARGET_SHA,
+              },
+            });
+            core.info(`Dispatched Release for ${process.env.RELEASE_TAG} at ${process.env.TARGET_SHA}`);
