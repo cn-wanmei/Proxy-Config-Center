@@ -94,6 +94,31 @@ def write_rule_audit_index() -> None:
     print(f"✅ Wrote {audit_dir / 'rule-strategy-index.md'}")
 
 
+def write_intelligence_reports() -> None:
+    from rule_graph import build_graph
+    from semantic_matrix import run as run_matrix
+    from validate_remote_configs import validate as validate_remote
+    from build_report import build_report
+
+    audit_dir = ROOT / "build" / "audit"
+    audit_dir.mkdir(parents=True, exist_ok=True)
+    graph = build_graph()
+    (audit_dir / "rule-graph.json").write_text(json.dumps(graph, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    remote = validate_remote(ROOT / "build")
+    (audit_dir / "remote-config-semantic.json").write_text(json.dumps(remote, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    matrix = run_matrix(ROOT / "build")
+    (audit_dir / "domain-semantic-matrix.json").write_text(json.dumps(matrix, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    report = build_report(ROOT / "build")
+    (audit_dir / "build-report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(f"✅ Wrote intelligence reports to {audit_dir}")
+    if graph["conflicts"] or graph["unreachable"] or graph["invalid_targets"]:
+        raise RuntimeError("rule conflict/reachability audit failed")
+    if not remote["ok"]:
+        raise RuntimeError("remote client semantic validation failed")
+    if not matrix["ok"]:
+        raise RuntimeError("seven-platform semantic matrix failed")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -116,6 +141,7 @@ def main() -> int:
     try:
         build_root("build", ir)
         write_rule_audit_index()
+        write_intelligence_reports()
         if args.include_final:
             build_root("final", ir)
             (ROOT / "final" / "README.md").write_text(
