@@ -81,6 +81,20 @@ def build_root(root_name: str, ir) -> None:
         print(f"✅ Wrote {out_path}")
 
 
+def write_rule_audit_index() -> None:
+    from rule_audit import audit, markdown
+
+    index, _, _, _, _ = audit()
+    audit_dir = ROOT / "build" / "audit"
+    audit_dir.mkdir(parents=True, exist_ok=True)
+    (audit_dir / "rule-strategy-index.json").write_text(
+        json.dumps(index, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    (audit_dir / "rule-strategy-index.md").write_text(markdown(index), encoding="utf-8")
+    print(f"✅ Wrote {audit_dir / 'rule-strategy-index.json'}")
+    print(f"✅ Wrote {audit_dir / 'rule-strategy-index.md'}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -102,19 +116,7 @@ def main() -> int:
 
     try:
         build_root("build", ir)
-        from rule_audit import main as audit_main
-        audit_main_result = audit_main.__wrapped__ if hasattr(audit_main, "__wrapped__") else None
-        # Generate the machine-readable and human-readable index after successful IR resolution.
-        from rule_audit import audit, markdown
-        index, _, _, _, _ = audit()
-        audit_dir = ROOT / "build" / "audit"
-        audit_dir.mkdir(parents=True, exist_ok=True)
-        (audit_dir / "rule-strategy-index.json").write_text(
-            json.dumps(index, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
-        )
-        (audit_dir / "rule-strategy-index.md").write_text(markdown(index), encoding="utf-8")
-        print(f"✅ Wrote {audit_dir / 'rule-strategy-index.json'}")
-        print(f"✅ Wrote {audit_dir / 'rule-strategy-index.md'}")
+        write_rule_audit_index()
         if args.include_final:
             build_root("final", ir)
             (ROOT / "final" / "README.md").write_text(
