@@ -94,14 +94,17 @@ def write_rule_audit_index() -> None:
     print(f"✅ Wrote {audit_dir / 'rule-strategy-index.md'}")
 
 
-def write_intelligence_reports() -> None:
+def write_intelligence_reports(ir) -> None:
     from rule_graph import build_graph
     from semantic_matrix import run as run_matrix
     from validate_remote_configs import validate as validate_remote
     from build_report import build_report
+    from rewrite_release_urls import rewrite_root
 
     audit_dir = ROOT / "build" / "audit"
     audit_dir.mkdir(parents=True, exist_ok=True)
+    changed = rewrite_root(ROOT / "build", ir)
+    print(f"✅ Normalized {changed} generated client assets to latest-rules/raw rule URLs")
     graph = build_graph()
     (audit_dir / "rule-graph.json").write_text(json.dumps(graph, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     remote = validate_remote(ROOT / "build")
@@ -141,7 +144,7 @@ def main() -> int:
     try:
         build_root("build", ir)
         write_rule_audit_index()
-        write_intelligence_reports()
+        write_intelligence_reports(ir)
         if args.include_final:
             build_root("final", ir)
             (ROOT / "final" / "README.md").write_text(
