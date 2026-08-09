@@ -99,7 +99,8 @@ jobs:
           m={'release':tag,'version':tag[1:],'source_commit':sha,'generator_commit':sha,'schema_version':'1.0','remote_policy':'latest-rules','remote_base':rb,'client_base':cb,'clients':[],'rules':[]}
           for n in clients:
             p=root/n; m['clients'].append({'name':n,'asset':n,'latest_url':cb+n,'sha256':h(p),'size':p.stat().st_size})
-          for p in rules: m['rules'].append({'name':p.stem,'asset':p.name,'latest_url':rb+p.name,'sha256':h(p),'size':p.stat().st_size})
+          for p in rules:
+            m['rules'].append({'name':p.stem,'asset':p.name,'latest_url':rb+p.name,'sha256':h(p),'size':p.stat().st_size})
           (root/'release-manifest.json').write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n')
           for p in Path('build/reports').glob('*.json'): (root/p.name).write_text(p.read_text())
           (root/'SHA256SUMS').write_text('\n'.join(f'{h(p)}  {p.name}' for p in sorted(root.glob('*')) if p.is_file())+'\n')
@@ -114,7 +115,7 @@ jobs:
       - name: Validate engineering reports
         run: |
           set -euo pipefail
-          for f in build-report.json rule-index.json rule-graph.json rule-conflicts.json rule-unreachable.json ai-coverage.json source-snapshot.json sbom.json schema-version.json; do test -s "dist/$f"; done
+          for f in build-report.json rule-index.json rule-graph.json rule-conflicts.json rule-unreachable.json ai-coverage.json rule-source-snapshot.json sbom.json schema-version.json; do test -s "dist/$f"; done
       - name: Generate attestation
         uses: actions/attest@v4
         with:
@@ -146,7 +147,12 @@ jobs:
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           rm -rf /tmp/latest-rules
           git fetch origin latest-rules || true
-          if git show-ref --verify --quiet refs/remotes/origin/latest-rules; then git worktree add /tmp/latest-rules origin/latest-rules; else git worktree add --detach /tmp/latest-rules HEAD; git -C /tmp/latest-rules checkout --orphan latest-rules; fi
+          if git show-ref --verify --quiet refs/remotes/origin/latest-rules; then
+            git worktree add /tmp/latest-rules origin/latest-rules
+          else
+            git worktree add --detach /tmp/latest-rules HEAD
+            git -C /tmp/latest-rules checkout --orphan latest-rules
+          fi
           cd /tmp/latest-rules
           git rm -rf . >/dev/null 2>&1 || true
           mkdir -p clients rules
