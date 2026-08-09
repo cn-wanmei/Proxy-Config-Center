@@ -22,4 +22,4 @@ features:
 limitations:
   icons: "limited"
   proxy_provider: "limited"
-  rule_set: "not emitted as a native capability; domain fallback is authoritative"
+  rule_set: "limited"
