@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Full generated-config golden regression plus semantic invariants."""
+"""Generated-config golden regression plus platform invariants."""
 
 import hashlib
 import json
@@ -48,12 +48,39 @@ def test_clash_meta_invariants():
     print("✅ clash-meta semantic invariants OK")
 
 
+def test_stash_invariants():
+    import yaml
+    cfg = yaml.safe_load((ROOT / "build/stash/config.yaml").read_text(encoding="utf-8"))
+    assert cfg.get("proxy-groups"), "stash proxy groups missing"
+    rules = [str(r) for r in cfg.get("rules") or []]
+    assert rules and rules[-1].startswith("MATCH,"), "stash final MATCH missing"
+    assert any(r.startswith("RULE-SET,") for r in rules), "stash rule-set coverage missing"
+    print("✅ stash semantic invariants OK")
+
+
 def test_egern_invariants():
     import yaml
     cfg = yaml.safe_load((ROOT / "build/egern/config.yaml").read_text(encoding="utf-8"))
     assert cfg.get("policy_groups")
     assert any("rule_set" in r for r in cfg.get("rules") or [])
     print("✅ egern semantic invariants OK")
+
+
+def test_loon_invariants():
+    text = (ROOT / "build/loon/config.conf").read_text(encoding="utf-8")
+    assert "[Proxy Group]" in text
+    assert "[Rule]" in text
+    assert "DOMAIN-SET," in text or "DOMAIN-SUFFIX," in text
+    assert "FINAL," in text or "MATCH," in text
+    print("✅ loon semantic invariants OK")
+
+
+def test_sing_box_invariants():
+    cfg = json.loads((ROOT / "build/sing-box/config.json").read_text(encoding="utf-8"))
+    assert cfg.get("outbounds")
+    assert cfg.get("route", {}).get("rules")
+    assert cfg.get("route", {}).get("final")
+    print("✅ sing-box semantic invariants OK")
 
 
 def test_non_clash_fallback_invariants():
@@ -68,6 +95,9 @@ def test_non_clash_fallback_invariants():
 if __name__ == "__main__":
     test_full_snapshot()
     test_clash_meta_invariants()
+    test_stash_invariants()
     test_egern_invariants()
+    test_loon_invariants()
+    test_sing_box_invariants()
     test_non_clash_fallback_invariants()
     print("All golden tests passed")
