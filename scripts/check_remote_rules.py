@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate declared latest remote-rule URLs and their published assets."""
+"""Validate latest remote assets published by the release workflow."""
 from __future__ import annotations
 
 import argparse
@@ -12,13 +12,13 @@ from pathlib import Path
 DEFAULT_BASE = "https://github.com/cn-wanmei/Proxy-Config-Center/releases/latest/download/"
 
 
-def fetch(url: str, timeout: float) -> tuple[int, str]:
+def fetch(url: str, timeout: float) -> int:
     request = urllib.request.Request(url, method="GET", headers={"User-Agent": "Proxy-Config-Center/remote-rule-check"})
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
-            return response.status, response.geturl()
+            return response.status
     except urllib.error.HTTPError as exc:
-        return exc.code, exc.geturl()
+        return exc.code
     except urllib.error.URLError as exc:
         raise RuntimeError(f"request failed: {url}: {exc.reason}") from exc
 
@@ -42,12 +42,12 @@ def main() -> int:
     for asset in assets:
         url = args.base_url.rstrip("/") + "/" + asset
         try:
-            status, final_url = fetch(url, args.timeout)
+            status = fetch(url, args.timeout)
         except RuntimeError as exc:
             failures.append(str(exc))
             continue
         if status != 200:
-            failures.append(f"HTTP {status}: {url} -> {final_url}")
+            failures.append(f"HTTP {status}: {url}")
         else:
             print(f"OK HTTP 200: {url}")
 
