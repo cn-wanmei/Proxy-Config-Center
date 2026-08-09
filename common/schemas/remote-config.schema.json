@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cn-wanmei.github.io/Proxy-Config-Center/schemas/remote-config.schema.json",
+  "title": "Proxy-Config-Center Remote Client Contract",
+  "type": "object",
+  "required": ["client", "schema_version"],
+  "properties": {
+    "client": {"type": "string"},
+    "schema_version": {"type": "integer", "minimum": 1},
+    "generator_version": {"type": "string"},
+    "release": {"type": "string"}
+  },
+  "additionalProperties": true
+}
