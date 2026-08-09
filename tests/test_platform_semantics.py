@@ -6,14 +6,13 @@ may express the same rule using a different native representation.
 """
 
 import importlib.util
-import sys
+import inspect
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "scripts"))
 
-from ir import build_ir  # noqa: E402
+from ir import build_ir
 
 PLATFORMS = ["clash-meta", "clash", "stash", "egern", "loon", "shadowrocket", "sing-box"]
 
@@ -30,7 +29,6 @@ def load_renderer(platform: str):
 
 def _targets_from_config(config: Any) -> list[str]:
     if isinstance(config, dict):
-        # Clash / Stash / Egern style.
         rules = config.get("rules")
         if isinstance(rules, list):
             targets = []
@@ -47,7 +45,6 @@ def _targets_from_config(config: Any) -> list[str]:
                             if policy:
                                 targets.append(str(policy))
             return targets
-        # sing-box native route rules.
         route = config.get("route") or {}
         if isinstance(route, dict):
             targets = []
@@ -57,7 +54,6 @@ def _targets_from_config(config: Any) -> list[str]:
             if route.get("final"):
                 targets.append(str(route["final"]))
             return targets
-    # Loon / Shadowrocket text rules.
     if isinstance(config, str):
         targets = []
         for line in config.splitlines():
@@ -74,10 +70,7 @@ def _targets_from_config(config: Any) -> list[str]:
 
 def normalize_targets(targets: list[str], ir) -> set[str]:
     reverse = {str(v): k for k, v in ir.id_to_display.items()}
-    result = set()
-    for target in targets:
-        result.add(reverse.get(target, target))
-    return result
+    return {reverse.get(target, target) for target in targets}
 
 
 def main() -> int:
@@ -86,7 +79,8 @@ def main() -> int:
     expected.add("final")
     results = {}
     for platform in PLATFORMS:
-        config = load_renderer(platform)(ir, platform=platform) if platform != "clash" else load_renderer(platform)(ir)
+        renderer = load_renderer(platform)
+        config = renderer(ir, platform=platform) if "platform" in inspect.signature(renderer).parameters else renderer(ir)
         actual = normalize_targets(_targets_from_config(config), ir)
         missing = sorted(expected - actual)
         if missing:
