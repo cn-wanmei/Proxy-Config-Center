@@ -10,24 +10,18 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from engines.capability import supports, supports_remote_rules, platform_from_adapter_file
 from engines.rules_emit import emit_clash_style
+from engines.proxies_optional import (
+    clash_inline_proxies,
+    clash_proxy_providers,
+    load_providers,
+    provider_names,
+)
 
 try:
     from engines.icons import icon_url
 except Exception:
     def icon_url(name):
         return name if name and str(name).startswith("http") else None
-
-try:
-    from engines.proxies import load_providers, clash_proxy_providers, clash_inline_proxies, provider_names
-except Exception:
-    def load_providers():
-        return {}
-    def clash_proxy_providers(data=None):
-        return {}
-    def clash_inline_proxies(data=None):
-        return []
-    def provider_names(data=None):
-        return []
 
 DEFAULT_PLATFORM = platform_from_adapter_file(__file__)
 
@@ -102,17 +96,36 @@ def render(ir: Any, platform: Optional[str] = None) -> dict:
                 entry["icon"] = iu
         proxy_groups.append(entry)
 
-    resolvers = getattr(ir, "resolvers", {}) or {}
-    nameserver = []
-    for rid in ("alidns", "tencent", "google", "cloudflare"):
-        for srv in (resolvers.get(rid) or {}).get("servers") or []:
-            if srv not in nameserver:
-                nameserver.append(srv)
-    if not nameserver:
-        nameserver = ["https://dns.alidns.com/dns-query", "https://cloudflare-dns.com/dns-query"]
-
     use_rs = supports_remote_rules(plat)
     rule_providers, rules = emit_clash_style(ir, id_to_display, use_rs)
+
+    # DNS leak mitigations (v1.7): DoH-first, minimal bootstrap,
+    # proxy-server-nameserver, fallback, nameserver-policy.
+    try:
+        from engines.dns_engine import build_clash_dns_config
+        dns_block = build_clash_dns_config(ipv6=True)
+    except Exception:
+        dns_block = {
+            "enable": True,
+            "ipv6": True,
+            "enhanced-mode": "fake-ip",
+            "fake-ip-range": "198.18.0.1/16",
+            "default-nameserver": ["223.5.5.5", "1.1.1.1"],
+            "nameserver": [
+                "https://cloudflare-dns.com/dns-query",
+                "https://dns.google/dns-query",
+                "https://dns.alidns.com/dns-query",
+            ],
+            "proxy-server-nameserver": [
+                "https://cloudflare-dns.com/dns-query",
+                "https://dns.google/dns-query",
+            ],
+            "fallback": [
+                "https://cloudflare-dns.com/dns-query",
+                "https://dns.google/dns-query",
+            ],
+            "fallback-filter": {"geoip": True, "geoip-code": "CN", "ipcidr": ["240.0.0.0/4"]},
+        }
 
     config = {
         "mixed-port": 7890,
@@ -120,14 +133,7 @@ def render(ir: Any, platform: Optional[str] = None) -> dict:
         "mode": "rule",
         "log-level": "info",
         "ipv6": True,
-        "dns": {
-            "enable": True,
-            "ipv6": True,
-            "enhanced-mode": "fake-ip",
-            "fake-ip-range": "198.18.0.1/16",
-            "nameserver": nameserver,
-            "default-nameserver": ["223.5.5.5", "119.29.29.29", "1.1.1.1"],
-        },
+        "dns": dns_block,
         "proxy-groups": proxy_groups,
         "rules": rules,
     }
