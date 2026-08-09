@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 """Multi-platform semantic tests driven by Core contracts."""
 
-import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "scripts"))
 
 from engines.capability import required_platforms
 from engines.utils import load_yaml
