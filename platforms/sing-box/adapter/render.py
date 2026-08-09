@@ -65,6 +65,17 @@ def _node(node: dict) -> dict | None:
     return out
 
 
+def _final_target(ir: Any, groups: Dict[str, dict]) -> str:
+    for service in getattr(ir, "services", []) or []:
+        if service.id == "final":
+            candidate = _tag(service.proxy_default)
+            if candidate in groups or candidate in {DIRECT, REJECT}:
+                return candidate
+    if "proxy-mode" in groups:
+        return "proxy-mode"
+    return DIRECT
+
+
 def render(ir: Any, platform: str = "sing-box") -> dict:
     outbounds: List[dict] = [
         {"type": "direct", "tag": DIRECT},
@@ -112,6 +123,7 @@ def render(ir: Any, platform: str = "sing-box") -> dict:
             _tag(service.proxy_default),
         )
     outbounds.extend(groups.values())
+    final_target = _final_target(ir, groups)
 
     route_rules: List[dict] = []
     for source in getattr(ir, "rule_sources", []) or []:
@@ -127,7 +139,7 @@ def render(ir: Any, platform: str = "sing-box") -> dict:
         "route": {
             "auto_detect_interface": True,
             "rules": route_rules,
-            "final": "proxy-mode" if "proxy-mode" in groups else DIRECT,
+            "final": final_target,
         },
         "experimental": {"cache_file": {
             "enabled": True,
