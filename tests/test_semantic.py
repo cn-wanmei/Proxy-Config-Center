@@ -8,17 +8,21 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from engines.capability import required_platforms
+from engines.utils import load_yaml
 from ir import build_ir
 
-# These are stable semantic anchors, not a copy of the service catalog.
-CRITICAL_SERVICE_IDS = {"ad-block", "china", "apple", "final"}
+
+def critical_service_ids() -> set[str]:
+    groups = load_yaml(ROOT / "core" / "proxy-groups" / "service.yaml").get("groups") or []
+    return {str(group["id"]) for group in groups if group.get("id")}
 
 
 def test_ir_services():
     ir = build_ir()
+    expected_ids = critical_service_ids()
     ids = {s.id for s in ir.services}
-    missing = CRITICAL_SERVICE_IDS - ids
-    assert not missing, f"Missing critical services: {missing}"
+    missing = expected_ids - ids
+    assert not missing, f"Service catalog entries missing from IR: {missing}"
     assert ids, "service catalog must not be empty"
     assert set(required_platforms()) <= set(ir.platform_capabilities), "platform registry not resolved"
     for s in ir.services:
