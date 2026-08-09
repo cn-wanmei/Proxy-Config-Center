@@ -80,12 +80,23 @@ def test_egern_invariants():
     cfg = yaml.safe_load((BUILD / "egern/config.yaml").read_text(encoding="utf-8"))
     groups = cfg.get("policy_groups") or []
     assert groups, "egern policy_groups missing"
-    # Egern groups are wrapped in a select object; policy references use select.name.
     group_names = {
         g["select"].get("name")
         for g in groups
         if isinstance(g, dict) and isinstance(g.get("select"), dict) and g["select"].get("name")
     }
+    expected_proxy_mode = ["代理模式", "手动选择", "定向免流", "自动选择", "直连模式", "阻断连接"]
+    assert all(name in group_names for name in expected_proxy_mode), (
+        "egern proxy-mode groups incomplete: "
+        + ", ".join(name for name in expected_proxy_mode if name not in group_names)
+    )
+    mode = next(
+        g["select"] for g in groups
+        if isinstance(g, dict) and isinstance(g.get("select"), dict)
+        and g["select"].get("name") == "代理模式"
+    )
+    assert mode.get("policies") == expected_proxy_mode[1:], "egern 代理模式 policies are not canonical"
+
     rules = cfg.get("rules") or []
     assert rules, "egern rules missing"
     rule_sets = [r.get("rule_set") for r in rules if isinstance(r, dict) and "rule_set" in r]
