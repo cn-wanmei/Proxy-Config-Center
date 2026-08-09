@@ -84,20 +84,72 @@ jobs:
           cp -r build/. dist/configs/
           cd dist
           zip -r "proxy-config-center-${RELEASE_TAG}.zip" configs
+      - name: Verify release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          required=(
+            "dist/clash.yaml"
+            "dist/clash-meta.yaml"
+            "dist/stash.yaml"
+            "dist/egern.yaml"
+            "dist/loon.conf"
+            "dist/shadowrocket.conf"
+            "dist/sing-box.json"
+          )
+          for file in "${required[@]}"; do
+            if [[ ! -s "$file" ]]; then
+              echo "Missing or empty release asset: $file"
+              exit 1
+            fi
+          done
+          zip_file="dist/proxy-config-center-${GITHUB_REF_NAME}.zip"
+          if [[ ! -s "$zip_file" ]]; then
+            echo "Missing or empty release archive: $zip_file"
+            exit 1
+          fi
+          echo "Verified release assets:"
+          printf ' - %s\n' "${required[@]}" "$zip_file"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: release-configs
-          path: dist/*
+          path: |
+            dist/clash.yaml
+            dist/clash-meta.yaml
+            dist/stash.yaml
+            dist/egern.yaml
+            dist/loon.conf
+            dist/shadowrocket.conf
+            dist/sing-box.json
+            dist/proxy-config-center-${{ github.ref_name }}.zip
+            dist/configs/**
+          if-no-files-found: error
       - name: Generate artifact attestation
         uses: actions/attest@v4
         with:
-          subject-path: 'dist/*'
+          subject-path: |
+            dist/clash.yaml
+            dist/clash-meta.yaml
+            dist/stash.yaml
+            dist/egern.yaml
+            dist/loon.conf
+            dist/shadowrocket.conf
+            dist/sing-box.json
+            dist/proxy-config-center-${{ github.ref_name }}.zip
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.release_meta.outputs.tag }}
           target_commitish: ${{ github.sha }}
-          files: dist/*
+          files: |
+            dist/clash.yaml
+            dist/clash-meta.yaml
+            dist/stash.yaml
+            dist/egern.yaml
+            dist/loon.conf
+            dist/shadowrocket.conf
+            dist/sing-box.json
+            dist/proxy-config-center-${{ github.ref_name }}.zip
           generate_release_notes: true
           make_latest: true
