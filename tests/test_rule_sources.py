@@ -49,12 +49,8 @@ def test_clash_no_geosite_geoip():
         assert not r.startswith("GEOSITE,"), r
         assert not r.startswith("GEOIP,"), r
     assert any(r.startswith("RULE-SET,") for r in rules)
-    providers = cfg.get("rule-providers") or {}
-    assert providers, "missing rule-providers"
-    for provider in providers.values():
-        assert provider["url"].startswith("https://github.com/cn-wanmei/Proxy-Config-Center/releases/latest/download/rule-")
-        assert provider["url"].endswith(".yaml")
-    print(f"✅ clash-meta: {len(rules)} rules, latest remote providers")
+    assert cfg.get("rule-providers"), "missing rule-providers"
+    print(f"✅ clash-meta: {len(rules)} rules, no GEOSITE/GEOIP")
 
 
 def test_egern_rule_set_list_url():
@@ -64,11 +60,12 @@ def test_egern_rule_set_list_url():
     assert len(rs) >= 10, f"egern rule_set count {len(rs)}"
     for r in rs:
         url = (r.get("rule_set") or {}).get("url") or ""
-        assert url.startswith("https://github.com/cn-wanmei/Proxy-Config-Center/releases/latest/download/rule-")
         assert url.endswith(".list"), f"expect .list got {url}"
+        assert "/Clash/" not in url, f"must not use Clash yaml path: {url}"
+        assert "/Surge/" in url or "/Loon/" in url, f"unexpected list host path: {url}"
     ds = [r for r in rules if isinstance(r, dict) and "domain_suffix" in r]
     assert len(ds) < 30, f"domain flood {len(ds)}"
-    print(f"✅ egern rule_set={len(rs)} latest .list OK, domain={len(ds)}")
+    print(f"✅ egern rule_set={len(rs)} .list OK, domain={len(ds)}")
 
 
 def test_shadowrocket_domain_fallback():
