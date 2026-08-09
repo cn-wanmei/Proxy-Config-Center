@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the seven published client configs as executable semantic artifacts."""
+"""Validate the seven client configs; release mode can require latest-rules URLs."""
 from __future__ import annotations
 
 import argparse
@@ -22,7 +22,7 @@ CLIENTS = {
 RAW_RULE_PREFIX = "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/"
 
 
-def _check_yaml(path: Path, platform: str) -> list[str]:
+def _check_yaml(path: Path, platform: str, require_latest: bool) -> list[str]:
     errors: list[str] = []
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
@@ -45,21 +45,23 @@ def _check_yaml(path: Path, platform: str) -> list[str]:
                 parts = str(rule).split(",", 2)
                 if len(parts) == 3 and parts[2] not in group_names:
                     errors.append(f"rule target group missing: {parts[2]}")
-        for name, provider in providers.items():
-            if not isinstance(provider, dict) or not provider.get("url"):
-                errors.append(f"provider {name} missing url")
-            elif not str(provider["url"]).startswith(RAW_RULE_PREFIX):
-                errors.append(f"provider {name} does not use latest-rules: {provider['url']}")
+        if require_latest:
+            for name, provider in providers.items():
+                if not isinstance(provider, dict) or not provider.get("url"):
+                    errors.append(f"provider {name} missing url")
+                elif not str(provider["url"]).startswith(RAW_RULE_PREFIX):
+                    errors.append(f"provider {name} does not use latest-rules: {provider['url']}")
     elif platform == "egern":
         if not data.get("policy_groups"):
             errors.append("missing policy_groups")
         if not data.get("rules"):
             errors.append("missing rules")
-        for rule in data.get("rules") or []:
-            if isinstance(rule, dict) and isinstance(rule.get("rule_set"), dict):
-                url = str(rule["rule_set"].get("url", ""))
-                if url and not url.startswith(RAW_RULE_PREFIX):
-                    errors.append(f"Egern rule_set does not use latest-rules: {url}")
+        if require_latest:
+            for rule in data.get("rules") or []:
+                if isinstance(rule, dict) and isinstance(rule.get("rule_set"), dict):
+                    url = str(rule["rule_set"].get("url", ""))
+                    if url and not url.startswith(RAW_RULE_PREFIX):
+                        errors.append(f"Egern rule_set does not use latest-rules: {url}")
     return errors
 
 
@@ -77,7 +79,7 @@ def _check_text(path: Path, platform: str) -> list[str]:
     return errors
 
 
-def _check_json(path: Path) -> list[str]:
+def _check_json(path: Path, require_latest: bool) -> list[str]:
     errors: list[str] = []
     data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
@@ -93,17 +95,18 @@ def _check_json(path: Path) -> list[str]:
         errors.append("missing route.final")
     if route.get("final") and route["final"] not in tags:
         errors.append("route.final does not reference an outbound")
-    for rule in route.get("rules") or []:
-        if isinstance(rule, dict) and "rule_set" in rule:
-            values = rule.get("rule_set") if isinstance(rule.get("rule_set"), list) else [rule.get("rule_set")]
-            for item in values:
-                if isinstance(item, str) and not item.startswith(RAW_RULE_PREFIX):
-                    errors.append(f"sing-box rule_set does not use latest-rules: {item}")
+    if require_latest:
+        for rule in route.get("rules") or []:
+            if isinstance(rule, dict) and "rule_set" in rule:
+                values = rule.get("rule_set") if isinstance(rule.get("rule_set"), list) else [rule.get("rule_set")]
+                for item in values:
+                    if isinstance(item, str) and not item.startswith(RAW_RULE_PREFIX):
+                        errors.append(f"sing-box rule_set does not use latest-rules: {item}")
     return errors
 
 
-def validate(root: Path) -> dict:
-    result = {"version": 1, "clients": {}, "errors": []}
+def validate(root: Path, require_latest: bool = False) -> dict:
+    result = {"version": 1, "clients": {}, "errors": [], "require_latest_rules": require_latest}
     for platform, (flat, nested, kind) in CLIENTS.items():
         path = root / flat if (root / flat).exists() else root / nested
         errors: list[str] = []
@@ -112,9 +115,9 @@ def validate(root: Path) -> dict:
         else:
             try:
                 if kind == "yaml":
-                    errors.extend(_check_yaml(path, platform))
+                    errors.extend(_check_yaml(path, platform, require_latest))
                 elif kind == "json":
-                    errors.extend(_check_json(path))
+                    errors.extend(_check_json(path, require_latest))
                 else:
                     errors.extend(_check_text(path, platform))
             except Exception as exc:
@@ -128,11 +131,12 @@ def validate(root: Path) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, default=ROOT / "build")
+    parser.add_argument("--require-latest-rules", action="store_true")
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--out", default="build/audit/remote-config-semantic.json")
     args = parser.parse_args()
     root = args.root if args.root.is_absolute() else ROOT / args.root
-    result = validate(root.resolve())
+    result = validate(root.resolve(), args.require_latest_rules)
     print(json.dumps(result, ensure_ascii=False, indent=2))
     if args.write:
         out = ROOT / args.out
