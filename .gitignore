@@ -1,9 +1,0 @@
-# Local rule-source cache
-.cache/
-
-# Local generated delivery output
-final/
-build/*.yaml
-build/*.conf
-build/*/*.yaml
-build/*/*.conf

@@ -1,7 +1,0 @@
-# Runtime settings / 运行时设置
-# Process matching, fingerprint, sniffer, etc.
-# 进程匹配、指纹、嗅探等
-
-version: 1
-
-# Placeholder - detailed runtime settings will be filled later
