@@ -18,11 +18,20 @@ except ImportError:
 ROOT = Path(__file__).resolve().parents[2]
 PLATFORMS = ROOT / "platforms"
 CAPABILITY_SCHEMA = ROOT / "common" / "schemas" / "capabilities.schema.json"
-
-REQUIRED_PLATFORMS: List[str] = [
-    "clash-meta", "clash", "stash", "egern", "loon", "shadowrocket",
-]
+PLATFORM_REGISTRY = ROOT / "common" / "platforms.yaml"
 REQUIRED_FEATURES = ("rule_provider", "rule_set", "domain_fallback")
+
+
+def required_platforms() -> List[str]:
+    if not PLATFORM_REGISTRY.exists():
+        raise FileNotFoundError(f"missing platform registry: {PLATFORM_REGISTRY}")
+    with PLATFORM_REGISTRY.open(encoding="utf-8") as f:
+        data = yaml.safe_load(f) or {}
+    platforms = data.get("platforms") or []
+    names = [str(p.get("id")) for p in platforms if isinstance(p, dict) and p.get("required", True)]
+    if not names:
+        raise ValueError("platform registry contains no required platforms")
+    return names
 
 
 def load_capabilities(platform: str) -> Dict[str, Any]:
@@ -93,13 +102,13 @@ def validate_capabilities() -> List[str]:
     with CAPABILITY_SCHEMA.open(encoding="utf-8") as f:
         schema = json.load(f)
     validator = jsonschema.Draft202012Validator(schema)
-    for name in REQUIRED_PLATFORMS:
+    for name in required_platforms():
         if name not in found:
             errors.append(f"missing platforms/{name}/capabilities.yaml")
             continue
         caps = found[name]
         for err in validator.iter_errors(caps):
-            location = ".".join(str(x) for x in err.absolute_path)
+            location = "."join(str(x) for x in err.absolute_path)
             errors.append(f"{name}: {location}: {err.message}" if location else f"{name}: {err.message}")
         if caps.get("platform") != name:
             errors.append(f"{name}: platform field != directory name")
@@ -114,7 +123,7 @@ def validate_capabilities() -> List[str]:
 
 if __name__ == "__main__":
     errs = validate_capabilities()
-    for name in REQUIRED_PLATFORMS:
+    for name in required_platforms():
         print(
             f"{name}: rule_set={supports_rule_set(name)} "
             f"rule_provider={supports_rule_provider(name)} "
