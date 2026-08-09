@@ -52,8 +52,6 @@ jobs:
       - name: Seven-platform semantic equivalence
         run: python tests/test_platform_semantics.py
       - name: Build
-        env:
-          REMOTE_RULE_BASE: https://github.com/cn-wanmei/Proxy-Config-Center/releases/latest/download/
         run: python scripts/build.py --include-final
       - name: Golden tests
         run: python tests/test_golden.py
@@ -81,13 +79,16 @@ jobs:
           cp build/sing-box/config.json dist/sing-box.json
           cp -r build/. dist/configs/
 
-          # Download upstream sources into native remote-rule assets.
           python scripts/pack_remote_rules.py --output dist/rules
           cp core/rules/priority.yaml dist/rules/priority.yaml
           cp core/rules/sources.yaml dist/rules/sources.yaml
           cp dist/rules/rule-* dist/
           cp dist/rules/priority.yaml dist/priority.yaml
           cp dist/rules/sources.yaml dist/sources.yaml
+
+          # Release-only rewrite: core rendering remains platform-native, while
+          # published clients consume stable latest Release assets.
+          python scripts/rewrite_release_urls.py --root dist
 
           python - <<'PY'
           import hashlib
