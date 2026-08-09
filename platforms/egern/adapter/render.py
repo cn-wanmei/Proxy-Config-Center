@@ -37,6 +37,20 @@ def _resolve(opt: str, id_to_display: Dict[str, str]) -> str:
     return id_to_display.get(opt, opt)
 
 
+def _add_policy_group(policy_groups: List[dict], declared: set[str], name: str, policies: List[str] | None = None) -> None:
+    """Add one native Egern policy group exactly once."""
+    if not name or name in declared:
+        return
+    policy_groups.append({
+        "select": {
+            "name": name,
+            "policies": policies or ["DIRECT"],
+            "flatten": True,
+        }
+    })
+    declared.add(name)
+
+
 def render(ir: Any) -> dict:
     id_to_display = dict(getattr(ir, "id_to_display", {}) or {})
     pdata = load_providers()
@@ -47,7 +61,15 @@ def render(ir: Any) -> dict:
         display = name.get("zh") if isinstance(name, dict) else str(name)
         id_to_display[g["id"]] = display or g["id"]
 
+    # Build the native policy namespace before emitting rules. Egern rule_set.policy
+    # is a reference to policy_groups[].select.name, so the namespace must be
+    # complete before any rule is rendered.
+    for s in getattr(ir, "services", []) or []:
+        id_to_display[s.id] = s.name_zh
+
     policy_groups: List[dict] = []
+    declared: set[str] = set()
+
     for g in getattr(ir, "base_groups", []) or []:
         policies = []
         for o in g.get("options") or []:
@@ -78,9 +100,9 @@ def render(ir: Any) -> dict:
             if iu:
                 select["icon"] = iu
         policy_groups.append(entry)
+        declared.add(select["name"])
 
     for s in getattr(ir, "services", []) or []:
-        id_to_display[s.id] = s.name_zh
         policies = [_resolve(str(o), id_to_display) for o in s.proxy_options]
         dname = _resolve(s.proxy_default, id_to_display)
         if dname in policies:
@@ -91,9 +113,21 @@ def render(ir: Any) -> dict:
             if iu:
                 entry["select"]["icon"] = iu
         policy_groups.append(entry)
+        declared.add(s.name_zh)
 
     use_rs = supports_rule_set(PLATFORM)
     rules = emit_egern_style(ir, id_to_display, use_rs)
+
+    # Hard invariant: every Egern rule_set.policy must reference an existing
+    # policy group. If a future rule source introduces a new target without a
+    # service declaration, fail loudly rather than emitting an unusable config.
+    for rule in rules:
+        rule_set = rule.get("rule_set") if isinstance(rule, dict) else None
+        if not isinstance(rule_set, dict):
+            continue
+        policy = rule_set.get("policy")
+        if policy not in declared:
+            raise ValueError(f"Egern rule_set policy has no policy group: {policy}")
 
     resolvers = getattr(ir, "resolvers", {}) or {}
     dns_upstreams = {}
