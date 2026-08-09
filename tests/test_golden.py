@@ -80,8 +80,20 @@ def test_stash_invariants():
 def test_egern_invariants():
     import yaml
     cfg = yaml.safe_load((BUILD / "egern/config.yaml").read_text(encoding="utf-8"))
-    assert cfg.get("policy_groups")
-    assert any("rule_set" in r for r in cfg.get("rules") or [])
+    groups = cfg.get("policy_groups") or []
+    assert groups, "egern policy_groups missing"
+    group_names = {g.get("name") for g in groups if isinstance(g, dict) and g.get("name")}
+    rules = cfg.get("rules") or []
+    assert rules, "egern rules missing"
+    rule_sets = [r.get("rule_set") for r in rules if isinstance(r, dict) and "rule_set" in r]
+    assert rule_sets, "egern rule_set coverage missing"
+    for rule_set in rule_sets:
+        assert isinstance(rule_set, dict), "egern rule_set must be an object"
+        assert rule_set.get("match"), "egern rule_set.match is required"
+        assert "url" not in rule_set, "egern rule_set.url is invalid; use match"
+        policy = rule_set.get("policy")
+        assert policy, "egern rule_set.policy is required"
+        assert policy in group_names, f"egern rule_set policy is not declared: {policy}"
     print("✅ egern semantic invariants OK")
 
 
