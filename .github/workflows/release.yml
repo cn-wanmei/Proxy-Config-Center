@@ -7,11 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Existing release tag to publish'
-        required: true
-        type: string
-      target_sha:
-        description: 'Commit SHA the release must build'
+        description: 'Release version, for example 1.3.4 or v1.3.4'
         required: true
         type: string
 
@@ -27,7 +23,7 @@ env:
 
 jobs:
   release:
-    if: ${{ github.event_name == 'push' || (inputs.release_tag != '' && inputs.target_sha != '') }}
+    if: ${{ github.event_name == 'push' || inputs.release_tag != '' }}
     runs-on: ubuntu-latest
     steps:
       - name: Resolve release target
@@ -35,15 +31,23 @@ jobs:
         shell: bash
         env:
           INPUT_TAG: ${{ inputs.release_tag }}
-          INPUT_SHA: ${{ inputs.target_sha }}
           EVENT_TAG: ${{ github.ref_name }}
-          EVENT_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
           TAG="${INPUT_TAG:-$EVENT_TAG}"
-          SHA="${INPUT_SHA:-$EVENT_SHA}"
-          [[ "$TAG" == v* ]] || { echo "Invalid release tag: $TAG"; exit 1; }
-          [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid target SHA: $SHA"; exit 1; }
+          [[ "$TAG" == v* ]] || TAG="v$TAG"
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Invalid release tag: $TAG"; exit 1; }
+
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            SHA=$(git ls-remote origin "refs/tags/$TAG" | awk '{print $1}' | head -n1)
+            [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "Unable to resolve tag SHA: $TAG"; exit 1; }
+            echo "Using existing tag $TAG at $SHA"
+          else
+            echo "Tag $TAG does not exist; resolving release source from current workflow ref."
+            SHA="${GITHUB_SHA}"
+            [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid workflow SHA: $SHA"; exit 1; }
+          fi
+
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
 
