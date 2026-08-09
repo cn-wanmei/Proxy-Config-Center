@@ -12,7 +12,12 @@ from engines.capability import (
     supports_rule_provider,
     supports_rule_set,
 )
-from engines.utils import load_yaml
+from engines.utils import (
+    DEFAULT_PRIORITY,
+    FALLBACK_PRIORITY,
+    get_priority_map,
+    load_yaml,
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 CORE = ROOT / "core"
@@ -77,7 +82,7 @@ class ResolvedRuleSource:
     domain_suffix: List[str] = field(default_factory=list)
     domain_keyword: List[str] = field(default_factory=list)
     is_match: bool = False
-    priority: int = 500
+    priority: int = DEFAULT_PRIORITY
 
 
 @dataclass
@@ -198,8 +203,8 @@ def _load_rule_sources(ir: ResolvedIR) -> None:
         "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash"
     )
     sources = src_data.get("sources") or {}
-    pri_map = {p["id"]: p.get("value", 999) for p in ir.priority}
-    for sid in sorted(sources.keys(), key=lambda i: pri_map.get(i, 500)):
+    pri_map = get_priority_map(ir.priority)
+    for sid in sorted(sources.keys(), key=lambda i: pri_map.get(i, DEFAULT_PRIORITY)):
         meta = sources[sid] or {}
         bm_sets: List[BMSet] = []
         primary = _parse_bm(ir.blackmatrix7_base, sid, meta.get("blackmatrix7"))
@@ -214,14 +219,14 @@ def _load_rule_sources(ir: ResolvedIR) -> None:
             domain_suffix=list(meta.get("domain_suffix") or []),
             domain_keyword=list(meta.get("domain_keyword") or []),
             is_match=bool(meta.get("match")),
-            priority=pri_map.get(sid, 500),
+            priority=pri_map.get(sid, DEFAULT_PRIORITY),
         ))
 
 
 def _load_rules(ir: ResolvedIR) -> None:
-    pri_map = {p["id"]: p.get("value", 999) for p in ir.priority}
+    pri_map = get_priority_map(ir.priority)
     rules_dir = CORE / "rules" / "services"
-    all_rules = []
+    all_rules: List[dict] = []
     if rules_dir.exists():
         for f in sorted(rules_dir.glob("*.yaml")):
             data = load_yaml(f)
@@ -231,9 +236,9 @@ def _load_rules(ir: ResolvedIR) -> None:
                     continue
                 item = dict(r)
                 item["_group"] = gid
-                item["_priority"] = pri_map.get(gid, 500)
+                item["_priority"] = pri_map.get(gid, DEFAULT_PRIORITY)
                 all_rules.append(item)
-    ir.rules = sorted(all_rules, key=lambda x: x.get("_priority", 999))
+    ir.rules = sorted(all_rules, key=lambda x: x.get("_priority", FALLBACK_PRIORITY))
 
 
 def _load_platforms(ir: ResolvedIR) -> None:
