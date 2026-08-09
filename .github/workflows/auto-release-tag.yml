@@ -46,21 +46,22 @@ jobs:
       - name: Resolve immutable tag target
         id: tag
         env:
-          GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ steps.version.outputs.tag }}
           CURRENT_SHA: ${{ github.sha }}
         shell: bash
         run: |
           set -euo pipefail
-          if target=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${RELEASE_TAG#v}" --jq '.object.sha' 2>/dev/null); then
-            echo "Using existing $RELEASE_TAG -> $target"
-          else
-            gh api --method POST "repos/${GITHUB_REPOSITORY}/git/refs" \
-              -f "ref=refs/tags/$RELEASE_TAG" \
-              -f "sha=$CURRENT_SHA" >/dev/null
+          repo_url="https://github.com/${GITHUB_REPOSITORY}.git"
+          target=$(git ls-remote "$repo_url" "refs/tags/$RELEASE_TAG" | awk '{print $1}' | head -n1 || true)
+          if [[ -z "$target" ]]; then
+            echo "Creating $RELEASE_TAG at $CURRENT_SHA"
+            git tag "$RELEASE_TAG" "$CURRENT_SHA"
+            git push origin "$RELEASE_TAG"
             target="$CURRENT_SHA"
-            echo "Created $RELEASE_TAG -> $target"
+          else
+            echo "Using existing $RELEASE_TAG -> $target"
           fi
+          [[ "$target" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid tag target: $target"; exit 1; }
           echo "target_sha=$target" >> "$GITHUB_OUTPUT"
       - name: Dispatch release workflow
         uses: actions/github-script@v7
