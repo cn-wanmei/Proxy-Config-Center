@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Seven-platform semantic equivalence tests.
+"""Seven-platform deep semantic equivalence tests.
 
-The test intentionally compares routing semantics, not serialized syntax. Each adapter
-may express the same rule using a different native representation.
+The test compares routing semantics, not serialized syntax. Each adapter may express
+an equivalent service target using different native syntax.
 """
 
 import importlib.util
@@ -78,19 +78,31 @@ def normalize_targets(targets: list[str], ir) -> set[str]:
 
 def main() -> int:
     ir = build_ir()
-    expected = {source.target_service for source in ir.rule_sources if source.target_service}
-    expected.add("final")
+    expected_services = {service.id for service in ir.services}
+    expected_services.update(source.target_service for source in ir.rule_sources if source.target_service)
+    expected_services.add("final")
     results = {}
     for platform in PLATFORMS:
         renderer = load_renderer(platform)
         config = renderer(ir, platform=platform) if "platform" in inspect.signature(renderer).parameters else renderer(ir)
         actual = normalize_targets(_targets_from_config(config), ir)
-        missing = sorted(expected - actual)
+        missing = sorted(expected_services - actual)
         if missing:
             raise AssertionError(f"{platform}: missing semantic targets: {missing}")
-        results[platform] = len(actual)
-    assert len(results) == 7
-    print("Seven-platform semantic equivalence OK:", results)
+        results[platform] = {
+            "targets": len(actual),
+            "services": sorted(expected_services & actual),
+        }
+    assert len(results) == len(PLATFORMS) == 7
+    baseline = set(results[PLATFORMS[0]]["services"])
+    for platform in PLATFORMS[1:]:
+        current = set(results[platform]["services"])
+        if current != baseline:
+            raise AssertionError(
+                f"{platform}: semantic target set differs from {PLATFORMS[0]}: "
+                f"missing={sorted(baseline-current)} extra={sorted(current-baseline)}"
+            )
+    print("Seven-platform deep semantic equivalence OK:", results)
     return 0
 
 
