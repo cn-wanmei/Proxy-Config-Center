@@ -1,6 +1,9 @@
 {
-  "release": "v1.3.4",
-  "version": "1.3.4",
+  "release": "v1.6.1",
+  "version": "1.6.1",
+  "source_commit": "f212e3a08c4af333392573d4418f890329ba0a2b",
+  "generator_commit": "f212e3a08c4af333392573d4418f890329ba0a2b",
+  "schema_version": "1.0",
   "remote_policy": "latest-rules",
   "remote_base": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/",
   "client_base": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/clients/",
@@ -30,15 +33,15 @@
       "name": "egern.yaml",
       "asset": "egern.yaml",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/clients/egern.yaml",
-      "sha256": "308fb6a0e73b4585de84a0913fad893e42076a26959d6131e416fe88247ff3b3",
-      "size": 7937
+      "sha256": "568127a180ba300bd70363a51c3cfad132c9a61e0cf1af881b5e5462ed963808",
+      "size": 7969
     },
     {
       "name": "loon.conf",
       "asset": "loon.conf",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/clients/loon.conf",
-      "sha256": "5411b03c45691df50550b29a3cf6da43de31ceb81c7c49f94e704664864c55bd",
-      "size": 5675
+      "sha256": "21c9a9b31bc09c55900692e911cbf04d272616436be85c67a36f428ae24c4767",
+      "size": 5668
     },
     {
       "name": "shadowrocket.conf",
@@ -59,7 +62,6 @@
     {
       "name": "rule-ad-block",
       "asset": "rule-ad-block.list",
-      "source": "rule-ad-block.list",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-ad-block.list",
       "sha256": "4d9a9c809ee52f973228ab35be58f29c7a5e818b3a74cbed820035eb46a0b858",
       "size": 12941
@@ -67,7 +69,6 @@
     {
       "name": "rule-ad-block",
       "asset": "rule-ad-block.yaml",
-      "source": "rule-ad-block.yaml",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-ad-block.yaml",
       "sha256": "8d575f783bb22b8946b3ee68c5ed07aca0371812f41ef87848ab20565d9e4a58",
       "size": 12113
@@ -75,7 +76,6 @@
     {
       "name": "rule-ai",
       "asset": "rule-ai.list",
-      "source": "rule-ai.list",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-ai.list",
       "sha256": "6f4047cdbf6953cf5d9b38c4ccd6da7bc6f1acb91b7a87134f25d5b8f5d2408b",
       "size": 1353
@@ -83,7 +83,6 @@
     {
       "name": "rule-ai",
       "asset": "rule-ai.yaml",
-      "source": "rule-ai.yaml",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-ai.yaml",
       "sha256": "cf66c50e7cfbe0aa0e9e249bfa8897d152ae35b38ab6db2936ef62860b7b61b4",
       "size": 1469
@@ -91,7 +90,6 @@
     {
       "name": "rule-apple",
       "asset": "rule-apple.list",
-      "source": "rule-apple.list",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-apple.list",
       "sha256": "5f48e6782f2195ea8546a5304f13d80d5d4c4e1b3443abf22c22becd25d294e9",
       "size": 1805
@@ -99,7 +97,6 @@
     {
       "name": "rule-apple",
       "asset": "rule-apple.yaml",
-      "source": "rule-apple.yaml",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-apple.yaml",
       "sha256": "9f81f8e6ee8485d4553544d7dcefd6e4b2e9534f6306c7e4ee38427a20898de1",
       "size": 1239
@@ -107,7 +104,6 @@
     {
       "name": "rule-china-extra0",
       "asset": "rule-china-extra0.list",
-      "source": "rule-china-extra0.list",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-china-extra0.list",
       "sha256": "577d0ab6fb5a11c1f672152a8f974f27891d179461f5e63a4664699c4ee1ff27",
       "size": 816243
@@ -115,7 +111,6 @@
     {
       "name": "rule-china",
       "asset": "rule-china.list",
-      "source": "rule-china.list",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-china.list",
       "sha256": "15890ccb51dbc91f61aefb4fd4634c8cc030be7f2dc273dfd9e363e6d99e1451",
       "size": 2056
@@ -123,7 +118,6 @@
     {
       "name": "rule-china",
       "asset": "rule-china.yaml",
-      "source": "rule-china.yaml",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-china.yaml",
       "sha256": "51c5809d65d1eaa98e8d644523b30d566bffa262ff43888313f18edb87cc44b3",
       "size": 1062
@@ -131,7 +125,6 @@
     {
       "name": "rule-code-repo",
       "asset": "rule-code-repo.list",
-      "source": "rule-code-repo.list",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-code-repo.list",
       "sha256": "ced8ab0ecda5775d04ec8ee6a57b282181108565331a6a1d85e9a26fee25d79b",
       "size": 1117
@@ -139,7 +132,6 @@
     {
       "name": "rule-code-repo",
       "asset": "rule-code-repo.yaml",
-      "source": "rule-code-repo.yaml",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-code-repo.yaml",
       "sha256": "a2641ce2f10857831b600623f97d354e6f8db7b20dff175c5313c2c46e0b6867",
       "size": 1250
@@ -147,7 +139,6 @@
     {
       "name": "rule-direct",
       "asset": "rule-direct.list",
-      "source": "rule-direct.list",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-direct.list",
       "sha256": "7664343710f1de04c68842bafbc3e7ef43f5ab15ddfa4feab54b7e6f306c680d",
       "size": 114
@@ -155,7 +146,6 @@
     {
       "name": "rule-ehentai",
       "asset": "rule-ehentai.list",
-      "source": "rule-ehentai.list",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-ehentai.list",
       "sha256": "99ebae4753e505dc60f60f4b88165ed358b913bdd1b5d414990142924671bacd",
       "size": 171
@@ -163,7 +153,6 @@
     {
       "name": "rule-game",
       "asset": "rule-game.list",
-      "source": "rule-game.list",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-game.list",
       "sha256": "35826051b8797c7636210389fafadea23a16af51378feee20ededbb652b43332",
       "size": 2055
@@ -171,7 +160,6 @@
     {
       "name": "rule-game",
       "asset": "rule-game.yaml",
-      "source": "rule-game.yaml",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-game.yaml",
       "sha256": "585e423c866bb020421a79dd2842f279b56ef94bf487fbee13354796958dcad6",
       "size": 2280
@@ -179,7 +167,6 @@
     {
       "name": "rule-google",
       "asset": "rule-google.list",
-      "source": "rule-google.list",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-google.list",
       "sha256": "4b08fd3ef47e2668d2a4bb79777773e2408394fdda60ac36014e1a4d3456ba6f",
       "size": 19985
@@ -187,7 +174,6 @@
     {
       "name": "rule-google",
       "asset": "rule-google.yaml",
-      "source": "rule-google.yaml",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-google.yaml",
       "sha256": "dfb4bf0a0095e48f024fbb7c31564a928e6c7d450b662aca9803119489a9237c",
       "size": 22654
@@ -195,7 +181,6 @@
     {
       "name": "rule-microsoft",
       "asset": "rule-microsoft.list",
-      "source": "rule-microsoft.list",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-microsoft.list",
       "sha256": "a2854b28dc9f903a64933c74fff5b50166e9bbebc70fdfce18c592f75793ff14",
       "size": 20605
@@ -203,7 +188,6 @@
     {
       "name": "rule-microsoft",
       "asset": "rule-microsoft.yaml",
-      "source": "rule-microsoft.yaml",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-microsoft.yaml",
       "sha256": "a289a1d52394e92ceee26a5c83953cd292609717d39fb2970d189dc7877b2a4d",
       "size": 23208
@@ -211,7 +195,6 @@
     {
       "name": "rule-netflix",
       "asset": "rule-netflix.list",
-      "source": "rule-netflix.list",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-netflix.list",
       "sha256": "aa03f015949e8f6f981d90a7d8b1acf7e88472ee48601632bd964b0bb740f8aa",
       "size": 40424
@@ -219,7 +202,6 @@
     {
       "name": "rule-netflix",
       "asset": "rule-netflix.yaml",
-      "source": "rule-netflix.yaml",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-netflix.yaml",
       "sha256": "cfb49b76fabc96887c7da7336ecea9066727c1489d25d677baa4f4e7a79a05f3",
       "size": 1607
@@ -227,7 +209,6 @@
     {
       "name": "rule-proxy",
       "asset": "rule-proxy.list",
-      "source": "rule-proxy.list",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-proxy.list",
       "sha256": "90bd7b433ecba754dcd4d9f9d04833faebba23e1352fb073857f48c84ca966a9",
       "size": 114
@@ -235,7 +216,6 @@
     {
       "name": "rule-spotify",
       "asset": "rule-spotify.list",
-      "source": "rule-spotify.list",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-spotify.list",
       "sha256": "33bd52e8f23cda9374876259621c8fba21554035e20fa55daffbfcaee2109079",
       "size": 1246
@@ -243,7 +223,6 @@
     {
       "name": "rule-spotify",
       "asset": "rule-spotify.yaml",
-      "source": "rule-spotify.yaml",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-spotify.yaml",
       "sha256": "e74599390a87e5ed6da929f80be9c173cf3017e41b8f69362c2028d248875a79",
       "size": 1317
@@ -251,7 +230,6 @@
     {
       "name": "rule-telegram",
       "asset": "rule-telegram.list",
-      "source": "rule-telegram.list",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-telegram.list",
       "sha256": "3b375bee8b2ff16d6c955804a5a3638e6e8fdfcc58d209506a928bdd4cc9891a",
       "size": 1680
@@ -259,7 +237,6 @@
     {
       "name": "rule-telegram",
       "asset": "rule-telegram.yaml",
-      "source": "rule-telegram.yaml",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-telegram.yaml",
       "sha256": "e78efc3f18069f1f1e3f88c15cd55f85424367b58ce8474af08c2fdf054704e0",
       "size": 1590
@@ -267,7 +244,6 @@
     {
       "name": "rule-tiktok",
       "asset": "rule-tiktok.list",
-      "source": "rule-tiktok.list",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-tiktok.list",
       "sha256": "b44559153af1e15e49ea1f2e161230276aee0fd29d697f2a4d635f4a484e2220",
       "size": 1156
@@ -275,7 +251,6 @@
     {
       "name": "rule-tiktok",
       "asset": "rule-tiktok.yaml",
-      "source": "rule-tiktok.yaml",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-tiktok.yaml",
       "sha256": "c93113e0f7d84302868ae8a1a7bfd024dbc03e54c5953f5439d20ca9c04005b7",
       "size": 1258
@@ -283,7 +258,6 @@
     {
       "name": "rule-twitter",
       "asset": "rule-twitter.list",
-      "source": "rule-twitter.list",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-twitter.list",
       "sha256": "64c836f2431ca0d4728cc545bb74280ee50c886e346040012e6cdd2f3eee3f97",
       "size": 1116
@@ -291,7 +265,6 @@
     {
       "name": "rule-twitter",
       "asset": "rule-twitter.yaml",
-      "source": "rule-twitter.yaml",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-twitter.yaml",
       "sha256": "67c46c3988da5cdc387eacee945c2950464691af0e2746929455cd9295c3ff2b",
       "size": 1191
@@ -299,7 +272,6 @@
     {
       "name": "rule-youtube",
       "asset": "rule-youtube.list",
-      "source": "rule-youtube.list",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-youtube.list",
       "sha256": "42274e143447066e26e1ebbf21ae03ce6efb40827f41e2775a84fb16d390713d",
       "size": 5451
@@ -307,7 +279,6 @@
     {
       "name": "rule-youtube",
       "asset": "rule-youtube.yaml",
-      "source": "rule-youtube.yaml",
       "latest_url": "https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/rule-youtube.yaml",
       "sha256": "2f84cc9d35c8559ebea4c43aa9b30bb43b36313d70684f23a359f1acabb879bb",
       "size": 5935
