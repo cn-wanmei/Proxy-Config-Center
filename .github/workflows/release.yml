@@ -118,8 +118,8 @@ jobs:
           import hashlib, json
           from pathlib import Path
           root = Path('dist')
-          rules = sorted(list(root.glob('rule-*.yaml')) + list(root.glob('rule-*.list')))
           clients = ['clash.yaml', 'clash-meta.yaml', 'stash.yaml', 'egern.yaml', 'loon.conf', 'shadowrocket.conf', 'sing-box.json']
+          rules = sorted(list(root.glob('rule-*.yaml')) + list(root.glob('rule-*.list')))
           def sha256(path):
               h = hashlib.sha256()
               with path.open('rb') as f:
@@ -131,6 +131,8 @@ jobs:
           manifest = {'release': '${{ steps.release_meta.outputs.tag }}', 'version': '${{ steps.release_meta.outputs.tag }}'[1:], 'remote_policy': 'latest-rules', 'remote_base': rule_base, 'client_base': client_base, 'clients': [], 'rules': []}
           for name in clients:
               p = root / name
+              if not p.is_file():
+                  raise SystemExit(f'Missing client artifact: {p}')
               manifest['clients'].append({'name': name, 'asset': name, 'latest_url': client_base + name, 'sha256': sha256(p), 'size': p.stat().st_size})
           for p in rules:
               manifest['rules'].append({'name': p.stem, 'asset': p.name, 'source': p.name, 'latest_url': rule_base + p.name, 'sha256': sha256(p), 'size': p.stat().st_size})
@@ -225,9 +227,15 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git fetch origin latest-rules
           rm -rf /tmp/pcc-latest-rules
-          git worktree add /tmp/pcc-latest-rules origin/latest-rules
+          if git ls-remote --exit-code origin refs/heads/latest-rules >/dev/null 2>&1; then
+            git fetch origin latest-rules
+            git worktree add /tmp/pcc-latest-rules origin/latest-rules
+          else
+            git worktree add --detach /tmp/pcc-latest-rules HEAD
+            cd /tmp/pcc-latest-rules
+            git checkout --orphan latest-rules
+          fi
           cd /tmp/pcc-latest-rules
           git rm -rf . >/dev/null 2>&1 || true
           mkdir -p clients rules
@@ -238,8 +246,8 @@ jobs:
           cp "$GITHUB_WORKSPACE"/dist/release-manifest.json release-manifest.json
           cp "$GITHUB_WORKSPACE"/dist/SHA256SUMS SHA256SUMS
           git add -A
-          git commit -m "release: publish ${RELEASE_TAG} clients and rules" || true
-          git push origin HEAD:latest-rules
+          git commit -m "release: publish ${RELEASE_TAG} clients and rules"
+          git push --force origin HEAD:latest-rules
 
       - name: Verify Raw clients and rules
         shell: bash
@@ -249,6 +257,8 @@ jobs:
           import hashlib, json, subprocess, time
           from pathlib import Path
           manifest = json.loads(Path('dist/release-manifest.json').read_text(encoding='utf-8'))
+          if len(manifest['clients']) != 7:
+              raise SystemExit(f"Expected 7 clients, got {len(manifest['clients'])}")
           checks = manifest['clients'] + manifest['rules']
           for item in checks:
               url = item['latest_url']
