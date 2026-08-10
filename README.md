@@ -1,94 +1,79 @@
 # Proxy-Config-Center
 
-**通用代理配置中心 / Universal Proxy Configuration Center**  
+**通用代理配置编译器 / Universal Proxy Configuration Compiler**  
 **Version: 2.0.0**
 
-统一生成并发布 Clash Meta、Clash、Stash、Egern、Loon、Shadowrocket、sing-box 七端代理配置。
+从「配置文件仓库」升级为：
 
-Core、规则、策略组与发布体系在本仓库维护；各客户端只消费经过验证的最终配置。
+```text
+Policy → Canonical IR → Security Engine + Capability Engine → Compiler → Platforms
+```
 
-**2.0.0 基线：DNS 免泄露 + Core V2 语义。**
+输出 Clash Meta / Clash / Stash / Egern / Loon / Shadowrocket / sing-box。
 
 ---
 
-## 快速使用
+## 编译管线（Core V2）
 
-### 七端完整配置 Raw URL
-
-| 平台 | Raw URL |
-|------|---------|
-| Clash | https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/clients/clash.yaml |
-| Clash Meta | https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/clients/clash-meta.yaml |
-| Stash | https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/clients/stash.yaml |
-| Egern | https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/clients/egern.yaml |
-| Loon | https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/clients/loon.conf |
-| Shadowrocket | https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/clients/shadowrocket.conf |
-| sing-box | https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/clients/sing-box.json |
-
-### 分流规则基地址
-
+```text
+                 Policy (core/)
+                      │
+                      ▼
+                Canonical IR
+                      │
+           ┌──────────┴──────────┐
+           ▼                     ▼
+    Security Engine        Capability Engine
+           │                     │
+           └──────────┬──────────┘
+                      ▼
+                   Compiler
+                      │
+        ┌────────────┴────────────┐
+        ▼             ▼             ▼
+      Clash         Loon          Egern  …
 ```
-https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rules/
-```
 
-### Manifest
-
-- https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/release-manifest.json
-- https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/SHA256SUMS
+- **Security Engine**：禁止 System DNS、禁止明文 UDP/53 nameserver、强制 fake-ip / DoH
+- **Capability Engine**：平台能力不足时禁止静默降级
+- **Compiler**：生成后二次解析校验（`verify_emit`）
+- **DNS Leak CI**：`tests/test_dns_leak.py` + `make security`
 
 ---
 
-## 架构（Core V2）
+## DNS 安全策略（强制）
 
-```
-Core
- → Schema / Semantic Validation
- → Reference Graph
- → Resolved IR
- → Capability Engine
- → Platform Adapter
- → Artifact / Release
-```
-
-- `core/` — 唯一业务语义（规则、DNS、策略组）
-- `scripts/ir.py` — 平台无关 IR
-- `scripts/engines/` — capability / DNS / rule 约束
-- `platforms/` — 各端 renderer
-- `build/` — 生成物（非源码接口）
-
-节点由 Sub-Store 独立管理。
+| 规则 | 要求 |
+|------|------|
+| System DNS | **禁止** |
+| 明文 DNS / UDP 53 作为 nameserver | **禁止**（bootstrap IP 仅用于解析 DoH 主机名） |
+| enhanced-mode | **fake-ip** |
+| proxy-server-nameserver | **必须**（DoH） |
+| fallback + fallback-filter | **必须** |
+| nameserver-policy | **必须** |
+| IPv4 / IPv6 | bootstrap 与 `dns.ipv6` 显式处理 |
 
 ---
 
-## DNS 免泄露（2.0）
-
-Clash / Clash-Meta / Stash：
-
-- `enhanced-mode: fake-ip`
-- bootstrap-only `default-nameserver`
-- DoH `nameserver` + `proxy-server-nameserver`
-- `fallback` + `fallback-filter`
-- `nameserver-policy`
-- 国外路径不提供 system DNS
-
----
-
-## 本地构建
+## 本地 CI
 
 ```bash
 make install
+make security
+make validate
+make test
 make ci
 ```
+
+`make ci` = security → validate → audit → test → golden → check → verify_emit
 
 ---
 
 ## 架构原则
 
-1. Core First  
-2. Capability Driven  
-3. Fail Fast  
-4. Tag-only Release  
-5. Semantic Raw Distribution  
-6. DNS Leak Resistant（2.0）  
-
-详见 [CHANGELOG.md](CHANGELOG.md) · [docs/架构说明.md](docs/架构说明.md)
+1. Policy First
+2. Security Before Compile
+3. No Silent Degradation
+4. Capability Driven
+5. Tag-only Release
+6. DNS Leak Resistant
