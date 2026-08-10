@@ -1,31 +1,34 @@
 # Changelog
 
-## [1.7.0] - 2026-08-09
+## [2.0.0] - 2026-08-10
 
-### DNS 免泄露 / Leak-resistant DNS
+### Core V2 / DNS leak-resistant baseline
 
-- DNS Engine V2：统一生成 Clash 系防泄露 DNS 块。
-- 渲染层真正输出 `nameserver-policy`（domain → policy 映射）。
-- `default-nameserver` 仅保留必要 bootstrap IP（223.5.5.5 / 1.1.1.1）。
-- 新增 `proxy-server-nameserver`（节点域名解析走 DoH）。
-- 新增 `fallback` + `fallback-filter`（geoip CN + 污染段）。
-- 国外/安全类 Policy 移除 `system` 选项，降低误选系统 DNS 泄露风险。
-- Clash / Clash-Meta / Stash 共用同一套防泄露 DNS 构建逻辑。
-- Apple / 中国路径仍允许 system（兼容性需要）。
+Breaking version cut from the 1.7.0 stack. Pre-2.0 release notes are retired.
 
-## [1.6.2] - 2026-08-09
+**DNS**
+- DNS Engine V2 is the only Clash-family DNS builder
+- `nameserver-policy` emitted from domain → policy map
+- `default-nameserver` bootstrap-only (`223.5.5.5`, `1.1.1.1`)
+- `proxy-server-nameserver` forces DoH for node hostnames
+- `fallback` + `fallback-filter` (geoip CN)
+- Foreign / secure / google / cloudflare / selectable policies: no `system` option
+- Removed deprecated `core/config/dns.yaml`
 
-### Fix incomplete push & stabilize engineering polish
+**Engineering (carried from 1.6–1.7)**
+- Cached YAML load (`engines.utils`)
+- `DEFAULT_PRIORITY` / `FALLBACK_PRIORITY` / `get_priority_map`
+- `engines.proxies_optional` facade
+- rule_audit dual-source notes + structured errors
+- Neutral technical documentation
 
-- Re-pushed optimized `scripts/ir.py`, `scripts/rule_audit.py`, `scripts/validate.py`.
-- Confirmed remote uses `DEFAULT_PRIORITY` / cached `load_yaml` / `proxies_optional`.
+**Platforms**
+- Clash / Clash-Meta / Stash share leak-resistant DNS block
+- Egern skips system upstreams
+- Loon / Shadowrocket / sing-box keep capability-native emission
 
-## [1.6.1] - 2026-08-09
+### Migration
 
-### Engineering polish (post-audit)
-
-- Cached YAML loading, priority constants, proxies_optional facade, dual_source notes, structured errors, neutral docs.
-
-## [1.6.0] - 2026-08-09
-
-v1.3–v1.6 engineering consolidation (release determinism, rule intelligence, AI provider, supply chain).
+1. Pull `main` @ 2.0.0
+2. Re-run `make ci` or full validate/build
+3. Re-subscribe Raw client URLs under `latest-rules` after the next formal tag release
