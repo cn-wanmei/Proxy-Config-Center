@@ -1,19 +1,19 @@
 # Proxy-Config-Center
 
 **通用代理配置中心 / Universal Proxy Configuration Center**  
-**Version: 1.7.0**
+**Version: 2.0.0**
 
 统一生成并发布 Clash Meta、Clash、Stash、Egern、Loon、Shadowrocket、sing-box 七端代理配置。
 
 Core、规则、策略组与发布体系在本仓库维护；各客户端只消费经过验证的最终配置。
 
-**v1.7.0 重点：DNS 免泄露**（DoH 优先、proxy-server-nameserver、nameserver-policy、fallback）。
+**2.0.0 基线：DNS 免泄露 + Core V2 语义。**
 
 ---
 
 ## 快速使用
 
-### 七端完整配置 Raw URL（推荐）
+### 七端完整配置 Raw URL
 
 | 平台 | Raw URL |
 |------|---------|
@@ -38,24 +38,57 @@ https://raw.githubusercontent.com/cn-wanmei/Proxy-Config-Center/latest-rules/rul
 
 ---
 
-## DNS 免泄露（v1.7）
+## 架构（Core V2）
 
-Clash / Clash-Meta / Stash 生成配置包含：
+```
+Core
+ → Schema / Semantic Validation
+ → Reference Graph
+ → Resolved IR
+ → Capability Engine
+ → Platform Adapter
+ → Artifact / Release
+```
+
+- `core/` — 唯一业务语义（规则、DNS、策略组）
+- `scripts/ir.py` — 平台无关 IR
+- `scripts/engines/` — capability / DNS / rule 约束
+- `platforms/` — 各端 renderer
+- `build/` — 生成物（非源码接口）
+
+节点由 Sub-Store 独立管理。
+
+---
+
+## DNS 免泄露（2.0）
+
+Clash / Clash-Meta / Stash：
 
 - `enhanced-mode: fake-ip`
-- `default-nameserver`：仅 bootstrap IP
-- `nameserver`：DoH 为主
-- `proxy-server-nameserver`：节点域名 DoH 解析
+- bootstrap-only `default-nameserver`
+- DoH `nameserver` + `proxy-server-nameserver`
 - `fallback` + `fallback-filter`
-- `nameserver-policy`：domain → policy
-- 国外/安全 Policy 不再提供 system 选项
+- `nameserver-policy`
+- 国外路径不提供 system DNS
 
 ---
 
 ## 本地构建
 
 ```bash
+make install
 make ci
 ```
 
-详见 [CHANGELOG.md](CHANGELOG.md) 与 `docs/架构说明.md`。
+---
+
+## 架构原则
+
+1. Core First  
+2. Capability Driven  
+3. Fail Fast  
+4. Tag-only Release  
+5. Semantic Raw Distribution  
+6. DNS Leak Resistant（2.0）  
+
+详见 [CHANGELOG.md](CHANGELOG.md) · [docs/架构说明.md](docs/架构说明.md)
