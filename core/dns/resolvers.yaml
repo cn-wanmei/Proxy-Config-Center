@@ -1,16 +1,9 @@
-# ============================================================
-# DNS Layer 1: Resolvers (upstream servers)
-# ============================================================
-# Only define actual DNS endpoints here.
-# Groups and Policies reference these by id.
+# DNS Layer 1: Resolvers (Core V2 — secure endpoints only)
+# System DNS and plaintext UDP/53 are forbidden.
 
-version: 1
+version: 2
 
 resolvers:
-  system:
-    name: { zh: 系统DNS, en: System DNS }
-    type: system
-
   alidns:
     name: { zh: 阿里DNS, en: AliDNS }
     type: doh

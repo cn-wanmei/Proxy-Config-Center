@@ -2,13 +2,16 @@ PYTHONPATH := $(CURDIR)/scripts
 export PYTHONPATH
 PYTHON ?= python3
 
-.PHONY: install validate audit build check test golden ci
+.PHONY: install validate security audit build check verify_emit test golden ci
 
 install:
 	$(PYTHON) -m pip install -r requirements.txt
 
 validate:
 	$(PYTHON) scripts/validate.py
+
+security:
+	$(PYTHON) scripts/security_check.py
 
 audit:
 	$(PYTHON) scripts/rule_audit.py --write
@@ -20,7 +23,11 @@ check: build
 	$(PYTHON) scripts/check_config.py --root build
 	$(PYTHON) scripts/check_config.py --root final
 
+verify_emit: build
+	$(PYTHON) scripts/verify_emit.py
+
 test:
+	$(PYTHON) tests/test_dns_leak.py
 	$(PYTHON) tests/test_capabilities.py
 	$(PYTHON) tests/test_rule_audit.py
 	$(PYTHON) tests/test_rule_sources.py
@@ -30,4 +37,4 @@ test:
 golden: build
 	$(PYTHON) tests/test_golden.py
 
-ci: validate audit test golden check
+ci: security validate audit test golden check verify_emit

@@ -1,18 +1,13 @@
-version: 1
+# DNS Layer 3: Policies (Core V2 — no system policy)
+
+version: 2
 
 policies:
-  - id: dns-system
-    name: { zh: 系统DNS, en: System DNS }
-    group: system
-    selectable: false
-    options: [system]
-    default: system
-
   - id: dns-china
     name: { zh: 中国DNS, en: China DNS }
     group: china
     selectable: true
-    options: [alidns, tencent, system, google, cloudflare]
+    options: [alidns, tencent, google, cloudflare]
     default: alidns
 
   - id: dns-foreign

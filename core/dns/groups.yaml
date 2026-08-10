@@ -1,20 +1,11 @@
-# ============================================================
-# DNS Layer 2: Groups (composed from resolvers)
-# ============================================================
-# A group is an ordered list of resolver ids + optional default.
-# Policies reference groups; options in policies must be resolver ids.
+# DNS Layer 2: Groups (Core V2 — no system group)
 
-version: 1
+version: 2
 
 groups:
-  - id: system
-    name: { zh: 系统组, en: System Group }
-    resolvers: [system]
-    default: system
-
   - id: china
     name: { zh: 中国组, en: China Group }
-    resolvers: [alidns, tencent, system]
+    resolvers: [alidns, tencent]
     default: alidns
 
   - id: foreign
