@@ -1,27 +1,28 @@
-# Release Notes — v2.1.0
+# Release Notes — v2.2.0
 
-## Summary
+## Theme
 
-Formal 2.1.0 compiler release: Policy → Security → IR → Optimizer → Platform IR → Emit → Reverse Validate → Release Tag Gate.
+Architecturally cannot emit insecure DNS configuration.
 
-## Highlights
+## Kernel
 
-- Security Policy abstraction (`core/security/policy.yaml`)
-- Platform IR + unified `scripts/compiler.py` pipeline
-- Rule normalization + Optimizer (dedup / merge / shadow_prune / priority_sort)
-- Release tag immutability gate (no retag; VERSION must match)
-- DNS leak-resistant defaults retained from 2.0
-- Golden snapshots refreshed for 2.1 emit
+- `SecureDNSEndpoint` / `BootstrapIP` typed constructors
+- Dynamic policy profiles (`PROXY_POLICY_PROFILE`)
+- Resolver intelligent scheduling
+- Incremental compile fingerprints
+- PlatformAdapter hard-fail before write
+- `build.py` and `compiler.py` both use secure emit path
 
-## Verify before tag
+## Verify
 
 ```bash
 make security && make compile_gate && make compile && make test && make golden
-make release_tag_gate
 ```
+
+## Package
+
+Source archive: `Proxy-Config-Center-2.2.0-src.tar.gz`
 
 ## Publish
 
-GitHub Actions → **Release** workflow → `workflow_dispatch` with `release_tag=2.1.0` (or `v2.1.0`).
-
-Immutable: existing `v2.1.0` cannot be overwritten.
+GitHub Actions → Release → `release_tag=2.2.0`
