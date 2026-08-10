@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
 """
-DNS Engine V2 — leak-aware resolver/group/policy + Clash-family DNS builder.
+DNS Engine V2 (Core V2 compiler) — secure-only DNS emission.
 
-Goals:
-- Prefer DoH over plaintext UDP
-- Minimal bootstrap IPs only for resolving DoH hostnames
-- proxy-server-nameserver for node domain resolution
-- nameserver-policy from service/domain bindings
-- fallback + fallback-filter against pollution
-- Avoid system DNS on foreign paths
+Forbidden:
+- system DNS
+- plaintext UDP/TCP 53 nameservers in emitted client config (except minimal bootstrap IPs)
+
+Required:
+- DoH / DoT / H3 for resolution paths
+- proxy-server-nameserver
+- fallback + fallback-filter
+- nameserver-policy
+- explicit ipv4 / ipv6 handling
+
+P2: optional latency-based DoH ranking (use_scores / PROXY_DNS_USE_SCORES).
 """
 
 from __future__ import annotations
@@ -31,6 +36,7 @@ except Exception:  # pragma: no cover
 
 
 BOOTSTRAP_IPV4 = ["223.5.5.5", "1.1.1.1"]
+BOOTSTRAP_IPV6 = ["2400:3200::1", "2606:4700:4700::1111"]
 
 SECURE_DOH = [
     "https://cloudflare-dns.com/dns-query",
@@ -42,11 +48,33 @@ CHINA_DOH = [
     "https://doh.pub/dns-query",
 ]
 
+
+def rank_doh_urls(urls: List[str], *, use_scores: bool = False, timeout: float = 3.0) -> List[str]:
+    """Optionally reorder DoH URLs by live latency scores (P2)."""
+    if not use_scores or not urls:
+        return list(urls)
+    try:
+        from engines.resolver_score import load_ranked_from_report, rank_urls, score_urls, write_score_report
+        cached = load_ranked_from_report()
+        if cached:
+            known = set(urls)
+            ordered = [u for u in cached if u in known]
+            for u in urls:
+                if u not in ordered:
+                    ordered.append(u)
+            return ordered if ordered else list(urls)
+        scored = score_urls(urls, timeout=timeout, probes=1)
+        write_score_report(scored)
+        return rank_urls(urls, timeout=timeout, probes=1, exclude_failed=True)
+    except Exception:
+        return list(urls)
+
+
 DEFAULT_DOMAIN_POLICY_MAP = {
-    "+.apple.com": "dns-system",
-    "+.icloud.com": "dns-system",
-    "+.push.apple.com": "dns-system",
-    "+.mzstatic.com": "dns-system",
+    "+.apple.com": "dns-china",
+    "+.icloud.com": "dns-china",
+    "+.push.apple.com": "dns-china",
+    "+.mzstatic.com": "dns-china",
     "+.cn": "dns-china",
     "+.baidu.com": "dns-china",
     "+.qq.com": "dns-china",
@@ -82,47 +110,64 @@ class DNSEngine:
             p["id"]: p for p in (policies_data.get("policies") or [])
         }
 
-    def resolver_servers(self, resolver_id: str, *, allow_system: bool = False) -> List[str]:
+    def resolver_servers(self, resolver_id: str) -> List[str]:
         r = self.resolvers.get(resolver_id) or {}
-        if r.get("type") == "system":
-            return ["system"] if allow_system else []
-        return list(r.get("servers") or [])
+        if str(r.get("type") or "").lower() == "system":
+            return []
+        out: List[str] = []
+        for s in r.get("servers") or []:
+            s = str(s)
+            if s.lower() == "system":
+                continue
+            out.append(s)
+        return out
 
-    def policy_default_servers(self, policy_id: str, *, allow_system: bool = False) -> List[str]:
+    def policy_default_servers(self, policy_id: str) -> List[str]:
         policy = self.policies.get(policy_id) or {}
         default = policy.get("default")
         if not default:
             return list(SECURE_DOH)
-        servers = self.resolver_servers(default, allow_system=allow_system)
+        servers = self.resolver_servers(str(default))
         return servers if servers else list(SECURE_DOH)
 
     def validate(self) -> List[str]:
         errors: List[str] = []
+        for rid, r in self.resolvers.items():
+            if str(r.get("type") or "").lower() == "system":
+                errors.append(f"resolver '{rid}' type=system forbidden")
+            for s in r.get("servers") or []:
+                if str(s).lower() == "system":
+                    errors.append(f"resolver '{rid}' contains system")
         for gid, g in self.groups.items():
             for rid in g.get("resolvers") or []:
                 if rid not in self.resolvers:
                     errors.append(f"group '{gid}' unknown resolver '{rid}'")
+                if rid == "system":
+                    errors.append(f"group '{gid}' references system")
         for pid, p in self.policies.items():
             if p.get("group") not in self.groups:
                 errors.append(f"policy '{pid}' unknown group '{p.get('group')}'")
             for opt in p.get("options") or []:
-                if opt not in self.resolvers:
+                if str(opt) == "system":
+                    errors.append(f"policy '{pid}' option system forbidden")
+                elif opt not in self.resolvers:
                     errors.append(f"policy '{pid}' option '{opt}' not a resolver")
             if p.get("default") not in (p.get("options") or []):
                 errors.append(f"policy '{pid}' default not in options")
+            if str(p.get("default") or "") == "system":
+                errors.append(f"policy '{pid}' default system forbidden")
         return errors
 
     def build_nameserver_policy(
         self,
         domain_map: Optional[Dict[str, str]] = None,
-        *,
-        allow_system: bool = False,
     ) -> dict:
         domain_map = domain_map or DEFAULT_DOMAIN_POLICY_MAP
         result: Dict[str, Any] = {}
         for domain, policy_id in domain_map.items():
-            use_system = allow_system or policy_id == "dns-system"
-            servers = self.policy_default_servers(policy_id, allow_system=use_system)
+            if policy_id == "dns-system":
+                policy_id = "dns-china"
+            servers = self.policy_default_servers(policy_id)
             if not servers:
                 servers = list(SECURE_DOH)
             result[domain] = servers if len(servers) > 1 else servers[0]
@@ -133,13 +178,18 @@ class DNSEngine:
         *,
         ipv6: bool = True,
         include_nameserver_policy: bool = True,
+        use_scores: bool = False,
     ) -> dict:
         nameserver: List[str] = []
         for srv in SECURE_DOH + CHINA_DOH:
             if srv not in nameserver:
                 nameserver.append(srv)
+        nameserver = rank_doh_urls(nameserver, use_scores=use_scores)
+        secure_ranked = rank_doh_urls(list(SECURE_DOH), use_scores=use_scores)
 
-        proxy_ns = list(SECURE_DOH)
+        bootstrap = list(BOOTSTRAP_IPV4)
+        if ipv6:
+            bootstrap = list(BOOTSTRAP_IPV4) + list(BOOTSTRAP_IPV6)
 
         dns: Dict[str, Any] = {
             "enable": True,
@@ -148,10 +198,10 @@ class DNSEngine:
             "fake-ip-range": "198.18.0.1/16",
             "use-hosts": True,
             "respect-rules": True,
-            "default-nameserver": list(BOOTSTRAP_IPV4),
+            "default-nameserver": bootstrap,
             "nameserver": nameserver,
-            "proxy-server-nameserver": proxy_ns,
-            "fallback": list(SECURE_DOH),
+            "proxy-server-nameserver": list(secure_ranked),
+            "fallback": list(secure_ranked),
             "fallback-filter": {
                 "geoip": True,
                 "geoip-code": "CN",
@@ -159,14 +209,14 @@ class DNSEngine:
             },
         }
         if include_nameserver_policy:
-            nsp = self.build_nameserver_policy(allow_system=True)
+            nsp = self.build_nameserver_policy()
             if nsp:
                 dns["nameserver-policy"] = nsp
         return dns
 
 
-def build_clash_dns_config(*, ipv6: bool = True) -> dict:
-    return DNSEngine().build_clash_dns(ipv6=ipv6)
+def build_clash_dns_config(*, ipv6: bool = True, use_scores: bool = False) -> dict:
+    return DNSEngine().build_clash_dns(ipv6=ipv6, use_scores=use_scores)
 
 
 if __name__ == "__main__":
@@ -175,11 +225,8 @@ if __name__ == "__main__":
     print(f"DNS Engine V2: {len(eng.resolvers)} resolvers, {len(eng.policies)} policies")
     if errs:
         for e in errs:
-            print("  ❌", e)
-    else:
-        print("  ✅ valid")
+            print("  \u274c", e)
+        raise SystemExit(1)
+    print("  \u2705 valid")
     dns = eng.build_clash_dns()
-    print("clash dns keys:", sorted(dns.keys()))
-    print("default-nameserver:", dns.get("default-nameserver"))
-    print("proxy-server-nameserver:", dns.get("proxy-server-nameserver"))
-    print("nameserver-policy entries:", len(dns.get("nameserver-policy") or {}))
+    print("keys", sorted(dns.keys()))
