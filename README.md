@@ -1,31 +1,28 @@
 # Proxy-Config-Center
 
 **Universal Proxy Configuration Compiler**  
-**Version: 2.1.0**
+**Version: 2.2.0**
+
+> Architecture: **cannot emit insecure configuration**.
 
 ```text
-CORE → Schema → Canonical IR → Security + Rule Engine → Optimizer
-  → Capability → Platform IR → Emit → Reverse Validate → Golden
-  → Release Tag Gate (immutable) → Release Artifact
+CORE → Schema → IR → Security + Rule → Optimizer
+  → Capability → Platform IR → Secure Adapter Emit → Artifact
 ```
 
-## 2.1 Modules
+## 2.2 Kernel
 
-| Module | Path |
-|--------|------|
-| Security Policy | `core/security/policy.yaml` |
-| Platform IR | `scripts/platform_ir.py` |
-| Compiler | `scripts/compiler.py` |
-| Rule Normalize | `engines/rule_normalize.py` |
-| Optimizer | `engines/optimizer.py` |
-| Release Tag Gate | `scripts/release_tag_gate.py` |
-| Artifact Pins | `scripts/artifact_immutability.py` |
-| Integration | `tests/test_integration_2_1.py` |
+| Capability | Module |
+|------------|--------|
+| Secure-by-construction DNS | `engines/secure_types.py` |
+| Dynamic policy | `engines/dynamic_policy.py` |
+| Resolver scheduler | `engines/resolver_scheduler.py` |
+| Incremental compile | `engines/incremental.py` |
+| Platform abstraction | `engines/platform_adapter.py` |
 
 ```bash
 make compile
-make release_tag_gate
+PROXY_POLICY_PROFILE=strict make compile
+PROXY_FORCE_BUILD=1 make compile
 make ci
 ```
-
-Release: tag must match VERSION; existing tags are immutable.
