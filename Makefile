@@ -2,7 +2,7 @@ PYTHONPATH := $(CURDIR)/scripts
 export PYTHONPATH
 PYTHON ?= python3
 
-.PHONY: install validate security compile_gate audit build check verify_emit test doh_health doh_latency golden ci
+.PHONY: install validate security compile_gate compile audit build check verify_emit artifact_pins test doh_health doh_latency golden ci
 
 install:
 	$(PYTHON) -m pip install -r requirements.txt
@@ -15,6 +15,12 @@ security:
 
 compile_gate:
 	$(PYTHON) scripts/compile_gate.py
+
+compile:
+	$(PYTHON) scripts/compiler.py
+
+artifact_pins:
+	$(PYTHON) scripts/artifact_immutability.py
 
 doh_health:
 	$(PYTHON) scripts/doh_health.py
@@ -39,6 +45,7 @@ test:
 	$(PYTHON) tests/test_dns_leak.py
 	$(PYTHON) tests/test_capability_matrix.py
 	$(PYTHON) tests/test_resolver_score.py
+	$(PYTHON) tests/test_integration_2_1.py
 	$(PYTHON) tests/test_capabilities.py
 	$(PYTHON) tests/test_rule_audit.py
 	$(PYTHON) tests/test_rule_sources.py
@@ -48,4 +55,4 @@ test:
 golden: build
 	$(PYTHON) tests/test_golden.py
 
-ci: security compile_gate validate audit test golden check verify_emit
+ci: security compile_gate compile validate audit test golden check verify_emit artifact_pins
