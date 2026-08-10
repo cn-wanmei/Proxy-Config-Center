@@ -1,0 +1,25 @@
+# Security Policy abstraction (Core V2.1)
+version: 2
+id: core-security-policy
+
+dns:
+  forbid_system: true
+  forbid_plaintext_nameserver: true
+  require_fake_ip: true
+  require_proxy_server_nameserver: true
+  require_fallback: true
+  require_nameserver_policy: true
+  allow_bootstrap_ip: true
+  bootstrap_ipv4: ["223.5.5.5", "1.1.1.1"]
+  bootstrap_ipv6: ["2400:3200::1", "2606:4700:4700::1111"]
+  allowed_schemes: ["https://", "h3://", "tls://"]
+
+compile:
+  no_silent_degradation: true
+  require_routing_capability: true
+  reverse_validate_emit: true
+
+release:
+  immutable_artifacts: true
+  pin_source_date_epoch: true
+  require_sha256: true
