@@ -99,33 +99,15 @@ def render(ir: Any, platform: Optional[str] = None) -> dict:
     use_rs = supports_remote_rules(plat)
     rule_providers, rules = emit_clash_style(ir, id_to_display, use_rs)
 
-    # DNS leak mitigations (v1.7): DoH-first, minimal bootstrap,
-    # proxy-server-nameserver, fallback, nameserver-policy.
-    try:
-        from engines.dns_engine import build_clash_dns_config
-        dns_block = build_clash_dns_config(ipv6=True)
-    except Exception:
-        dns_block = {
-            "enable": True,
-            "ipv6": True,
-            "enhanced-mode": "fake-ip",
-            "fake-ip-range": "198.18.0.1/16",
-            "default-nameserver": ["223.5.5.5", "1.1.1.1"],
-            "nameserver": [
-                "https://cloudflare-dns.com/dns-query",
-                "https://dns.google/dns-query",
-                "https://dns.alidns.com/dns-query",
-            ],
-            "proxy-server-nameserver": [
-                "https://cloudflare-dns.com/dns-query",
-                "https://dns.google/dns-query",
-            ],
-            "fallback": [
-                "https://cloudflare-dns.com/dns-query",
-                "https://dns.google/dns-query",
-            ],
-            "fallback-filter": {"geoip": True, "geoip-code": "CN", "ipcidr": ["240.0.0.0/4"]},
-        }
+    # DNS leak mitigations (v2.0) + optional P2 score ranking
+    from engines.dns_engine import build_clash_dns_config
+    from engines.security import check_dns_block, SecurityViolation
+    import os
+    use_scores = os.environ.get("PROXY_DNS_USE_SCORES", "").lower() in ("1", "true", "yes")
+    dns_block = build_clash_dns_config(ipv6=True, use_scores=use_scores)
+    dns_errs = check_dns_block(dns_block, platform=str(plat))
+    if dns_errs:
+        raise SecurityViolation("DNS_EMIT", "; ".join(dns_errs), path=str(plat))
 
     config = {
         "mixed-port": 7890,
