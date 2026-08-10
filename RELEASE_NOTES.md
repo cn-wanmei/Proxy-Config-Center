@@ -1,19 +1,27 @@
-# Release Notes — v2.0.0
+# Release Notes — v2.1.0
+
+## Summary
+
+Formal 2.1.0 compiler release: Policy → Security → IR → Optimizer → Platform IR → Emit → Reverse Validate → Release Tag Gate.
 
 ## Highlights
 
-- **Core V2 semantic baseline** based on the 1.7 DNS leak-resistant stack
-- **DNS Engine V2** as the single Clash-family DNS builder (fake-ip, DoH-first, proxy-server-nameserver, fallback, nameserver-policy)
-- Foreign/secure DNS policies no longer expose `system` resolver
-- Engineering polish from 1.6.x retained (cached YAML, priority constants, proxies_optional, neutral docs)
-- Deprecated `core/config/dns.yaml` removed; DNS lives only under `core/dns/`
+- Security Policy abstraction (`core/security/policy.yaml`)
+- Platform IR + unified `scripts/compiler.py` pipeline
+- Rule normalization + Optimizer (dedup / merge / shadow_prune / priority_sort)
+- Release tag immutability gate (no retag; VERSION must match)
+- DNS leak-resistant defaults retained from 2.0
+- Golden snapshots refreshed for 2.1 emit
 
-## Platforms
+## Verify before tag
 
-Clash Meta · Clash · Stash · Egern · Loon · Shadowrocket · sing-box
+```bash
+make security && make compile_gate && make compile && make test && make golden
+make release_tag_gate
+```
 
-## Breaking / intentional
+## Publish
 
-- Pre-2.0 changelog narrative retired; start from 2.0.0
-- System DNS only on explicit china/system/Apple paths
-- Clients should re-fetch Raw configs after upgrading to 2.0
+GitHub Actions → **Release** workflow → `workflow_dispatch` with `release_tag=2.1.0` (or `v2.1.0`).
+
+Immutable: existing `v2.1.0` cannot be overwritten.

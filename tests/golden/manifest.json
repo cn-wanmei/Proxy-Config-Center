@@ -1,13 +1,12 @@
 {
-  "version": "1.1.0",
+  "version": "2.1.0",
   "files": {
-    ".gitkeep": "5af6b6c75164f3faa97343960c5bb9ca5452246e",
-    "README.md": "94f7cae0f5077df8021714e4ec161a75c1868ddb",
-    "clash/config.yaml": "442deca2f4ae20f65343fdbba59d7b2566b87336",
-    "clash-meta/config.yaml": "312e64409aaad0295b9ef0764907da9f83a0b10e",
+    "clash/config.yaml": "449eea543709d1fed1d2962e93c9bbfef3e7e603",
+    "clash-meta/config.yaml": "513539787f92fcb7d0004e5568157ce9afad6c39",
     "egern/config.yaml": "4d7aece22c3a835af09e8b072ffc91d123fb8f04",
     "loon/config.conf": "3cbd62edb44f7df52ef10c2555c6e3ba400e333b",
     "shadowrocket/config.conf": "42327ad633c1068d30b3bc94fa3dbf4f33cdf278",
-    "stash/config.yaml": "b14beaa0b6c7d449674a7590c5ef224a72fd641b"
+    "sing-box/config.json": "7dffafe46e40fb4cb2baa07a5eaa8f94c4e6adff",
+    "stash/config.yaml": "d0f19be8f90b85d6e454f4210838b18bd5278c4e"
   }
 }
