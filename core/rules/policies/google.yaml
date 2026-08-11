@@ -1,11 +1,15 @@
-# Google 总策略
-# 子策略独立发布；Google.list 为聚合入口。
-version: 1
+# Google umbrella policy / 谷歌总策略
+version: 2
 id: google
 name: Google
 children:
   - google
-  - youtube
+  - android
+  - drive
+  - fcm
+  - gmail
+  - google-maps
   - google-play
-  - google-fcm
+  - google-photos
+  - youtube
   - youtube-music
