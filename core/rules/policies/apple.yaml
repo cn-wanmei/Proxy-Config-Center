@@ -1,0 +1,16 @@
+# Apple umbrella policy / Apple 总策略
+version: 1
+id: apple
+name: Apple
+children:
+  - apple
+  - apple-account
+  - app-store
+  - apple-music
+  - apple-tv
+  - apple-maps
+  - apple-push
+  - apple-updates
+  - icloud
+  - apple-intelligence
+  - apple-developer
