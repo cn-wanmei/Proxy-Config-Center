@@ -2,7 +2,7 @@ name: Validate Rules
 
 on:
   push:
-    branches: [main, 4.0-client-hierarchy]
+    branches: [main, 4.0-hierarchical-raw]
     paths-ignore:
       - 'rules/**'
   pull_request:
@@ -28,6 +28,6 @@ jobs:
       - run: rm -rf .audit/generated
       - run: python scripts/rule_compile.py --out .audit/generated
       - run: test -d .audit/generated/rules
-      - run: test -d rules || true
-      - if: hashFiles('rules/**') != ''
+      - name: Verify checked-in RAW when present
+        if: hashFiles('rules/**') != ''
         run: diff -ru rules .audit/generated/rules
