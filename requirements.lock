@@ -1,2 +1,3 @@
+# Dependency lock for Proxy-Config-Center 2.3
 PyYAML==6.0.2
-jsonschema==4.25.1
+jsonschema==4.23.0

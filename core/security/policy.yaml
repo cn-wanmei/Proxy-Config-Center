@@ -1,5 +1,5 @@
-# Security Policy abstraction (Core V2.1)
-version: 2
+# Security Policy — data-driven (Core V2.3)
+version: 3
 id: core-security-policy
 
 dns:
@@ -13,13 +13,25 @@ dns:
   bootstrap_ipv4: ["223.5.5.5", "1.1.1.1"]
   bootstrap_ipv6: ["2400:3200::1", "2606:4700:4700::1111"]
   allowed_schemes: ["https://", "h3://", "tls://"]
+  default_resolver_preference:
+    - cloudflare
+    - google
+    - alidns
+    - tencent
+  probe:
+    enabled: true
+    timeout_sec: 3.0
+    query_name: example.com
 
 compile:
   no_silent_degradation: true
   require_routing_capability: true
   reverse_validate_emit: true
+  require_secure_adapter: true
+  canonical_platform_ir_separated: true
 
 release:
   immutable_artifacts: true
   pin_source_date_epoch: true
   require_sha256: true
+  require_dependency_lock: true
