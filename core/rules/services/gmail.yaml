@@ -1,0 +1,9 @@
+version: 1
+id: service-gmail
+group: gmail
+priority: 60
+rules:
+  - type: domain-suffix
+    values: [gmail.com, googlemail.com, gmailusercontent.com]
+    action: group
+    target: google
