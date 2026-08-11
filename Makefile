@@ -2,7 +2,7 @@ PYTHONPATH := $(CURDIR)/scripts
 export PYTHONPATH
 PYTHON ?= python3
 
-.PHONY: install audit compile publish verify test ci clean
+.PHONY: install audit audit_gate compile publish verify generate test ci clean
 
 install:
 	$(PYTHON) -m pip install -r requirements.txt
@@ -19,10 +19,12 @@ publish:
 	$(PYTHON) scripts/rule_audit_gate.py
 	$(PYTHON) scripts/rule_compile.py --out .
 
+generate: publish
+
 verify:
 	$(PYTHON) scripts/rule_audit_gate.py
 	$(PYTHON) scripts/rule_compile.py --out .audit/generated
-	git diff --exit-code -- rules
+	diff -ru .audit/generated/rules rules
 
 test:
 	$(PYTHON) tests/test_semantic_4_0.py
