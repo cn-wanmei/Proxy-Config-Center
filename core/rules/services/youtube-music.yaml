@@ -1,0 +1,15 @@
+# YouTube Music — independent policy
+version: 1
+id: service-youtube-music
+group: youtube-music
+priority: 55
+
+rules:
+  - type: domain
+    values: [music.youtube.com]
+    action: group
+    target: youtube-music
+  - type: domain-suffix
+    values: [music.youtube.com]
+    action: group
+    target: youtube-music

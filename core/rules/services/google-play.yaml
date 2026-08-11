@@ -1,0 +1,22 @@
+# Google Play — independent (v2fly google-play)
+version: 1
+id: service-google-play
+group: google-play
+priority: 57
+
+rules:
+  - type: domain-suffix
+    values:
+      - play.google.com
+      - play.googleapis.com
+      - play-fe.googleapis.com
+      - play-games.googleusercontent.com
+      - play-lh.googleusercontent.com
+      - googleplay.com
+      - xn--ngstr-lra8j.com
+    action: group
+    target: google-play
+  - type: domain
+    values: [redirector.c.play.google.com]
+    action: group
+    target: google-play
