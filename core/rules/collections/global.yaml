@@ -1,0 +1,20 @@
+# 全部总规则集
+version: 1
+id: global
+name: Global
+policies:
+  - google
+  - apple
+  - microsoft
+  - github
+  - telegram
+  - twitter
+  - tiktok
+  - netflix
+  - spotify
+  - game
+  - ai
+  - ad-block
+  - china
+  - ehentai
+  - onedrive

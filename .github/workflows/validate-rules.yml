@@ -1,0 +1,33 @@
+name: Validate Rules
+
+on:
+  push:
+    branches: [main, 4.0-hierarchical-raw]
+    paths-ignore:
+      - 'rules/**'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: python scripts/engines/core_boundary.py
+      - run: python scripts/rule_audit_gate.py
+      - run: python tests/test_semantic_4_0.py
+      - run: python tests/test_rule_compile_4_0.py
+      - run: rm -rf .audit/generated
+      - run: python scripts/rule_compile.py --out .audit/generated
+      - run: test -d .audit/generated/rules
+      - name: Verify checked-in RAW when present
+        if: hashFiles('rules/**') != ''
+        run: diff -ru rules .audit/generated/rules

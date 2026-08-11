@@ -1,0 +1,45 @@
+name: Publish RAW Rules
+
+on:
+  push:
+    branches: [main, 4.0-hierarchical-raw]
+    paths:
+      - 'core/rules/**'
+      - 'clients/**'
+      - 'scripts/**'
+      - 'VERSION'
+      - 'requirements*.txt'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-raw-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: python scripts/engines/core_boundary.py
+      - run: python scripts/rule_audit_gate.py
+      - run: rm -rf rules
+      - run: python scripts/rule_compile.py --out .
+      - run: git diff --check
+      - name: Commit RAW rules
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add rules/
+          if git diff --cached --quiet; then
+            echo 'No RAW rule changes.'
+            exit 0
+          fi
+          git commit -m 'build: publish 4.0 hierarchical RAW rules [skip ci]'
+          git push
