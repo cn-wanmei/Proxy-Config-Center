@@ -1,60 +1,58 @@
-# Microsoft residual (Office/Azure/Windows) — independent
-# github / onedrive match first. Xbox stays under game.
-version: 1
+# Microsoft umbrella service / Microsoft 总服务
+version: 2
 id: service-microsoft
 group: microsoft
 priority: 50
-
 rules:
   - type: domain-suffix
     values:
-      - microsoft.com
-      - microsoftonline.com
-      - microsoft.net
-      - live.com
-      - live.net
-      - msn.com
-      - bing.com
-      - bing.net
       - aka.ms
-      - windows.com
-      - windows.net
-      - windowsupdate.com
-      - office.com
-      - office365.com
-      - office.net
-      - outlook.com
-      - hotmail.com
+      - asp.net
       - azure.com
       - azure.net
       - azureedge.net
       - azurewebsites.net
-      - visualstudio.com
-      - vscode.dev
-      - vsassets.io
-      - asp.net
-      - nuget.org
-      - skype.com
-      - skypeassets.com
+      - bing.com
+      - bing.net
+      - cloud.microsoft
+      - dynamics.com
+      - live.com
+      - live.net
+      - licdn.com
+      - linkedin.com
+      - minecraft.net
+      - microsoft.com
+      - microsoft.net
+      - microsoftonline.com
+      - microsoftusercontent.com
+      - microsoftteams.com
+      - msn.com
       - msedge.net
       - msecnd.net
       - msftauth.net
       - msauth.net
-      - linkedin.com
-      - licdn.com
-      - minecraft.net
-      - mojang.com
+      - nuget.org
+      - office.com
+      - office.net
+      - office365.com
+      - onedrive.com
       - onenote.com
-      - powerbi.com
+      - outlook.com
+      - outlook.cloud.microsoft
       - powerapps.com
-      - dynamics.com
-      - graph.microsoft.com
-      - copilot.microsoft.com
-      - microsoftteams.com
+      - powerbi.com
+      - sharepoint.com
+      - sharepointonline.com
+      - skype.com
+      - skypeassets.com
+      - static.microsoft
       - teams.microsoft.com
-    action: group
-    target: microsoft
-  - type: domain-keyword
-    values: [microsoft, windows, azure, office365]
+      - visualstudio.com
+      - vscode.dev
+      - vsassets.io
+      - windows.com
+      - windows.net
+      - windowsupdate.com
+      - usercontent.microsoft
     action: group
     target: microsoft
