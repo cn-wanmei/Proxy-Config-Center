@@ -1,4 +1,0 @@
-# DEPRECATED
-# This file has been moved to core/dns/
-# See: resolvers.yaml / groups.yaml / policies.yaml
-# 此文件已废弃，DNS 统一由 core/dns/ 管理
