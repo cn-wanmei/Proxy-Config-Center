@@ -1,5 +1,5 @@
 # Microsoft umbrella service / Microsoft 总服务
-version: 2
+version: 3
 id: service-microsoft
 group: microsoft
 priority: 50
@@ -24,7 +24,6 @@ rules:
       - microsoft.com
       - microsoft.net
       - microsoftonline.com
-      - microsoftusercontent.com
       - microsoftteams.com
       - msn.com
       - msedge.net
@@ -47,12 +46,20 @@ rules:
       - skypeassets.com
       - static.microsoft
       - teams.microsoft.com
+      - usercontent.microsoft
       - visualstudio.com
       - vscode.dev
       - vsassets.io
       - windows.com
       - windows.net
       - windowsupdate.com
-      - usercontent.microsoft
+    action: group
+    target: microsoft
+  - type: ip-cidr
+    values: []
+    action: group
+    target: microsoft
+  - type: ip-cidr6
+    values: []
     action: group
     target: microsoft
