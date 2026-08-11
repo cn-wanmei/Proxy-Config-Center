@@ -1,0 +1,9 @@
+version: 1
+id: service-teams
+group: teams
+priority: 50
+rules:
+  - type: domain-suffix
+    values: [teams.microsoft.com, microsoftteams.com, teams.cloud.microsoft, teams.live.com]
+    action: group
+    target: microsoft
