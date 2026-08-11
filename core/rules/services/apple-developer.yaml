@@ -1,0 +1,9 @@
+version: 1
+id: service-apple-developer
+group: apple-developer
+priority: 15
+rules:
+  - type: domain-suffix
+    values: [developer.apple.com, apple.com, cdn-apple.com]
+    action: group
+    target: apple
