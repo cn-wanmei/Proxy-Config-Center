@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-"""Rule intelligence (3.1): IDs, provenance, hash, conflicts, pollution, anomalies."""
+"""Rule intelligence compatibility layer for 3.2.
 
+Semantic identity is now owned by ``engines.semantic``. This module keeps the
+existing collection/provenance API stable for callers while delegating rule
+identity to the canonical engine.
+"""
 from __future__ import annotations
 
-import hashlib
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
@@ -12,10 +15,28 @@ ROOT = Path(__file__).resolve().parents[2]
 CORE = ROOT / "core"
 
 try:
+    from engines.semantic import content_sha256, global_rule_id, norm_type, norm_value, scoped_rule_id
     from engines.utils import load_yaml, DEFAULT_PRIORITY
 except Exception:
+    import hashlib
     import yaml
     DEFAULT_PRIORITY = 500
+
+    def norm_type(value: Any) -> str:
+        return str(value or "").strip().lower().replace("-", "_")
+
+    def norm_value(value: Any) -> str:
+        return str(value or "").strip().lower().rstrip(".")
+
+    def content_sha256(rtype: str, value: str) -> str:
+        return hashlib.sha256(f"{norm_type(rtype)}|{norm_value(value)}".encode("utf-8")).hexdigest()
+
+    def global_rule_id(rtype: str, value: str) -> str:
+        return f"{norm_type(rtype)}:{content_sha256(rtype, value)[:16]}"
+
+    def scoped_rule_id(policy: str, rtype: str, value: str) -> str:
+        return f"{norm_value(policy)}:{global_rule_id(rtype, value)}"
+
     def load_yaml(path: Path, *, required: bool = False) -> Any:
         if not path.exists():
             return {}
@@ -38,20 +59,14 @@ class RuleAtom:
         return asdict(self)
 
 
-def _norm_type(t: str) -> str:
-    return str(t or "").strip().lower().replace("-", "_")
-
-
-def _norm_val(v: str) -> str:
-    return str(v or "").strip().lower().rstrip(".")
-
-
 def rule_content_hash(rtype: str, value: str) -> str:
-    return hashlib.sha256(f"{_norm_type(rtype)}|{_norm_val(value)}".encode()).hexdigest()[:16]
+    """Return the complete SHA-256 content identity."""
+    return content_sha256(rtype, value)
 
 
 def make_rule_id(policy_id: str, rtype: str, value: str) -> str:
-    return f"{policy_id}:{_norm_type(rtype)}:{rule_content_hash(rtype, value)}"
+    """Return policy-scoped identity; use global_rule_id for cross-policy identity."""
+    return scoped_rule_id(policy_id, rtype, value)
 
 
 def _priority_map() -> Dict[str, int]:
@@ -72,7 +87,7 @@ def collect_atoms() -> List[RuleAtom]:
         for rule in data.get("rules") or []:
             if not isinstance(rule, dict):
                 continue
-            rtype = _norm_type(rule.get("type"))
+            rtype = norm_type(rule.get("type"))
             if rtype in ("geosite", "geoip", "match", "final"):
                 continue
             vals = rule.get("values") or rule.get("value")
@@ -81,7 +96,7 @@ def collect_atoms() -> List[RuleAtom]:
             if not isinstance(vals, list):
                 vals = [vals]
             for v in vals:
-                v = _norm_val(str(v))
+                v = norm_value(str(v))
                 if not v:
                     continue
                 atoms.append(RuleAtom(make_rule_id(pid, rtype, v), pid, rtype, v, path.name, "service", pri, rule_content_hash(rtype, v)))
@@ -89,31 +104,21 @@ def collect_atoms() -> List[RuleAtom]:
         if pid == "github":
             meta = src_map.get("code-repo") or meta
         for v in meta.get("domain_suffix") or []:
-            v = _norm_val(str(v))
-            atoms.append(RuleAtom(make_rule_id(pid, "domain_suffix", v), pid, "domain_suffix", v, "sources.yaml", "sources", pri, rule_content_hash("domain_suffix", v)))
+            v = norm_value(str(v))
+            if v:
+                atoms.append(RuleAtom(make_rule_id(pid, "domain_suffix", v), pid, "domain_suffix", v, "sources.yaml", "sources", pri, rule_content_hash("domain_suffix", v)))
         for v in meta.get("domain_keyword") or []:
-            v = _norm_val(str(v))
-            atoms.append(RuleAtom(make_rule_id(pid, "domain_keyword", v), pid, "domain_keyword", v, "sources.yaml", "sources", pri, rule_content_hash("domain_keyword", v)))
+            v = norm_value(str(v))
+            if v:
+                atoms.append(RuleAtom(make_rule_id(pid, "domain_keyword", v), pid, "domain_keyword", v, "sources.yaml", "sources", pri, rule_content_hash("domain_keyword", v)))
     return atoms
 
 
 def detect_semantic_conflicts(atoms: List[RuleAtom]) -> List[dict]:
-    by_key: Dict[Tuple[str, str], List[RuleAtom]] = {}
-    for a in atoms:
-        by_key.setdefault((a.type, a.value), []).append(a)
-    conflicts = []
-    for (rtype, val), group in by_key.items():
-        policies = {x.policy_id for x in group}
-        if len(policies) > 1:
-            conflicts.append({"kind": "cross_policy_duplicate", "type": rtype, "value": val, "policies": sorted(policies), "rule_ids": [x.rule_id for x in group]})
-    suffixes = [a for a in atoms if a.type == "domain_suffix"]
-    for a in suffixes:
-        for b in suffixes:
-            if a.policy_id == b.policy_id or a.value == b.value:
-                continue
-            if a.value.endswith("." + b.value) and b.priority < a.priority:
-                conflicts.append({"kind": "suffix_shadow", "child": a.to_dict(), "parent": b.to_dict()})
-    return conflicts
+    """Compatibility API; canonical analysis lives in engines.semantic."""
+    from engines.semantic import analyze
+    result = analyze([a.to_dict() for a in atoms])
+    return result["findings"]
 
 
 def detect_pollution(atoms: List[RuleAtom]) -> List[dict]:
@@ -149,18 +154,26 @@ def detect_source_count_anomaly(atoms: List[RuleAtom], *, min_per_policy: int = 
 
 def run_intelligence(*, hard_conflicts: bool = True) -> Dict[str, Any]:
     atoms = collect_atoms()
-    conflicts = detect_semantic_conflicts(atoms)
+    result = detect_semantic_conflicts(atoms)
     pollution = detect_pollution(atoms)
     anomalies = detect_source_count_anomaly(atoms)
     errors: List[str] = []
     if hard_conflicts:
-        for c in conflicts:
-            if c["kind"] == "suffix_shadow":
-                errors.append(f"suffix_shadow: {c['parent']['policy_id']}:{c['parent']['value']} shadows {c['child']['policy_id']}:{c['child']['value']}")
+        for finding in result:
+            if finding["kind"] in {"conflict", "shadow"}:
+                errors.append(f"{finding['kind']}: {finding}")
     for p in pollution:
         if p["kind"] in ("test_domain_pollution", "empty_value", "tld_pollution"):
             errors.append(f"{p['kind']}: {p['rule'].get('rule_id')}")
     for a in anomalies:
         if a["kind"] in ("source_too_few", "source_too_many"):
             errors.append(f"{a['kind']}: {a['policy']} count={a['count']}")
-    return {"atom_count": len(atoms), "atoms": [a.to_dict() for a in atoms], "conflicts": conflicts, "pollution": pollution, "source_anomalies": anomalies, "errors": errors, "ok": len(errors) == 0}
+    return {
+        "atom_count": len(atoms),
+        "atoms": [a.to_dict() for a in atoms],
+        "conflicts": result,
+        "pollution": pollution,
+        "source_anomalies": anomalies,
+        "errors": errors,
+        "ok": len(errors) == 0,
+    }
