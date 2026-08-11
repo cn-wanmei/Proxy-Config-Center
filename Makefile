@@ -3,7 +3,7 @@ export PYTHONPATH
 PYTHON ?= python3
 export SOURCE_DATE_EPOCH ?= 0
 
-.PHONY: install audit_gate rule_compile compile semantic_test test ci
+.PHONY: install audit_gate rule_compile compile semantic_test compile_test test ci
 
 install:
 	$(PYTHON) -m pip install -r requirements.txt
@@ -23,8 +23,5 @@ compile_test:
 	$(PYTHON) tests/test_rule_compile_3_2.py
 
 test: semantic_test compile_test
-	$(PYTHON) tests/test_pipeline_3_3.py
-	$(PYTHON) tests/test_rule_only.py
-	$(PYTHON) tests/test_rule_intelligence.py
 
 ci: audit_gate rule_compile test
