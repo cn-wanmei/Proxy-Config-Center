@@ -1,0 +1,9 @@
+version: 1
+id: service-outlook
+group: outlook
+priority: 50
+rules:
+  - type: domain-suffix
+    values: [outlook.com, outlook.office.com, outlook.office365.com, outlook.cloud.microsoft, hotmail.com, live.com]
+    action: group
+    target: microsoft
