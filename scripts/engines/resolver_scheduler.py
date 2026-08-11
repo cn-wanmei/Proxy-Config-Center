@@ -1,33 +1,22 @@
 #!/usr/bin/env python3
-"""Resolver intelligent scheduling (Core V2.2)."""
+"""Resolver scheduling (2.3) — catalog + optional real probe scores."""
 
 from __future__ import annotations
 
-from typing import Dict, List, Sequence
+from typing import List, Sequence
 
-from engines.secure_types import SecureDNSEndpoint, as_secure_url_list, secure_endpoints
-
-RESOLVER_CATALOG: Dict[str, List[str]] = {
-    "cloudflare": ["https://cloudflare-dns.com/dns-query", "https://1.1.1.1/dns-query"],
-    "google": ["https://dns.google/dns-query"],
-    "alidns": ["https://dns.alidns.com/dns-query"],
-    "tencent": ["https://doh.pub/dns-query"],
-}
-
-
-def urls_for_resolver_ids(ids: Sequence[str]) -> List[str]:
-    out: List[str] = []
-    for rid in ids:
-        for u in RESOLVER_CATALOG.get(rid, []):
-            if u not in out:
-                out.append(u)
-    return as_secure_url_list(secure_endpoints(out))
+from engines.resolver_catalog import urls_for_ids, all_secure_urls, validate_catalog
+from engines.secure_types import SecureDNSEndpoint, secure_endpoints
 
 
 def schedule(preference: Sequence[str], *, use_scores: bool = False, timeout: float = 3.0) -> List[SecureDNSEndpoint]:
-    base_urls = urls_for_resolver_ids(preference)
+    errs = validate_catalog()
+    if errs:
+        base_urls = urls_for_ids(["cloudflare", "google"]) or all_secure_urls()
+    else:
+        base_urls = urls_for_ids(preference) or urls_for_ids(["cloudflare", "google"]) or all_secure_urls()
     if not base_urls:
-        base_urls = urls_for_resolver_ids(["cloudflare", "google"])
+        raise RuntimeError("no secure resolvers available in catalog")
     if use_scores:
         try:
             from engines.resolver_score import load_ranked_from_report, rank_urls, score_urls, write_score_report
@@ -42,7 +31,8 @@ def schedule(preference: Sequence[str], *, use_scores: bool = False, timeout: fl
             scored = score_urls(base_urls, timeout=timeout, probes=1)
             write_score_report(scored)
             ranked = rank_urls(base_urls, timeout=timeout, probes=1, exclude_failed=True)
-            return list(secure_endpoints(ranked))
+            if ranked:
+                return list(secure_endpoints(ranked))
         except Exception:
             pass
     return list(secure_endpoints(base_urls))
