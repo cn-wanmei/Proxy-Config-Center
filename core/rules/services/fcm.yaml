@@ -1,0 +1,9 @@
+version: 1
+id: service-fcm
+group: fcm
+priority: 60
+rules:
+  - type: domain-suffix
+    values: [fcm.googleapis.com, fcmregistrations.googleapis.com, firebaseinstallations.googleapis.com, firebaseio.com, firebaseapp.com]
+    action: group
+    target: google
