@@ -1,27 +1,23 @@
-name: Validate & Build
+name: Validate Rules
 
 on:
   push:
     branches: [main]
     paths:
-      - 'core/**'
-      - 'platforms/**'
-      - 'scripts/**'
+      - 'core/rules/**'
+      - 'scripts/engines/**'
+      - 'scripts/rule_*.py'
       - 'tests/**'
-      - 'common/schemas/**'
-      - 'common/platforms.yaml'
       - 'requirements.txt'
       - 'VERSION'
       - '.github/workflows/**'
   pull_request:
     branches: [main]
     paths:
-      - 'core/**'
-      - 'platforms/**'
-      - 'scripts/**'
+      - 'core/rules/**'
+      - 'scripts/engines/**'
+      - 'scripts/rule_*.py'
       - 'tests/**'
-      - 'common/schemas/**'
-      - 'common/platforms.yaml'
       - 'requirements.txt'
       - 'VERSION'
       - '.github/workflows/**'
@@ -30,11 +26,8 @@ on:
 permissions:
   contents: read
 
-env:
-  PYTHONPATH: ${{ github.workspace }}/scripts
-
 jobs:
-  validate:
+  rules:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -43,87 +36,26 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - uses: actions/cache@v4
-        with:
-          path: .cache/rule-sources
-          key: rule-sources-${{ hashFiles('core/rules/sources.yaml') }}
       - name: Install dependencies
         run: pip install -r requirements.txt
-      - name: Validate Core + Capabilities + References
-        run: python scripts/validate.py
-      - name: Rule coverage audit
-        run: python scripts/rule_audit.py --write
-      - name: Rule intelligence graph
-        run: python scripts/rule_graph.py --write
-      - name: Rule intelligence regression
-        run: python tests/test_rule_intelligence.py
-      - name: Capability matrix
-        run: python scripts/engines/capability.py
-      - name: Capability tests
-        run: python tests/test_capabilities.py
-      - name: Rule audit regression
-        run: python tests/test_rule_audit.py
-      - name: Rule Source regression
-        run: python tests/test_rule_sources.py
+      - name: Core boundary
+        run: python scripts/engines/core_boundary.py
+      - name: Audit gate
+        run: python scripts/rule_audit_gate.py --write --out dist
+      - name: Deterministic rule compile
+        run: python scripts/rule_compile.py --out dist
       - name: Semantic tests
-        run: python tests/test_semantic.py
-      - name: Seven-platform semantic equivalence
-        run: python tests/test_platform_semantics.py
-      - name: Build golden validation tree
-        run: python scripts/build.py --include-final
-      - name: Remote client semantic validation
-        run: python scripts/validate_remote_configs.py --root build --write
-      - name: Seven-platform domain semantic matrix
-        run: python scripts/semantic_matrix.py --root build --write
-      - name: Remote client regression
-        run: python tests/test_remote_configs.py
-      - name: Golden snapshot tests
-        run: python tests/test_golden.py
-      - name: Rule source health and integrity report
-        run: python scripts/check_rule_sources.py --write
-      - name: Build report and supply-chain provenance
-        run: python scripts/build_report.py --root build && python scripts/supply_chain.py --root build --write
-      - name: Upload intelligence and provenance artifacts
+        run: python tests/test_semantic_3_2.py
+      - name: Compiler tests
+        run: python tests/test_rule_compile_3_2.py
+      - name: Existing rule-only regressions
+        run: |
+          python tests/test_rule_only.py
+          python tests/test_rule_intelligence.py
+      - name: Upload rule artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: intelligence-${{ github.sha }}
-          path: build/audit/
-          if-no-files-found: error
-          retention-days: 14
-
-  build:
-    needs: validate
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-      - name: Build all platforms (including legacy final/ compatibility tree)
-        run: python scripts/build.py --include-final
-      - name: Structural check - build
-        run: python scripts/check_config.py --root build
-      - name: Structural check - final compatibility
-        run: python scripts/check_config.py --root final
-      - name: Large source diff safety + report
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
-        run: python scripts/config_diff.py --write
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: proxy-configs-${{ github.sha }}
-          path: build/
-          if-no-files-found: error
-          retention-days: 14
-      - name: Upload final compatibility artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: proxy-configs-final-${{ github.sha }}
-          path: final/
+          name: rules-${{ github.sha }}
+          path: dist/
           if-no-files-found: error
           retention-days: 14
