@@ -13,16 +13,19 @@ audit:
 audit_gate: audit
 
 compile:
-	$(PYTHON) scripts/rule_compile.py --out dist
+	rm -rf rules
+	$(PYTHON) scripts/rule_compile.py --out .
 
 publish:
 	$(PYTHON) scripts/rule_audit_gate.py
+	rm -rf rules
 	$(PYTHON) scripts/rule_compile.py --out .
 
 generate: publish
 
 verify:
 	$(PYTHON) scripts/rule_audit_gate.py
+	rm -rf .audit/generated
 	$(PYTHON) scripts/rule_compile.py --out .audit/generated
 	diff -ru .audit/generated/rules rules
 
@@ -33,4 +36,4 @@ test:
 ci: audit test verify
 
 clean:
-	rm -rf .audit dist
+	rm -rf .audit dist rules
