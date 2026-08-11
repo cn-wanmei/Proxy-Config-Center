@@ -1,0 +1,9 @@
+version: 1
+id: service-apple-tv
+group: apple-tv
+priority: 15
+rules:
+  - type: domain-suffix
+    values: [tv.apple.com, tv.apple.com.cn, mzstatic.com]
+    action: group
+    target: apple
