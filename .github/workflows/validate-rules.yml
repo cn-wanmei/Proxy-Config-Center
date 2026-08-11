@@ -1,0 +1,28 @@
+name: Validate Rules
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: pip install -r requirements.txt
+      - run: python scripts/engines/core_boundary.py
+      - run: python scripts/rule_audit_gate.py --write --out dist
+      - run: python scripts/rule_compile.py --out dist
+      - run: python tests/test_semantic_3_2.py
+      - run: python tests/test_rule_compile_3_2.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rules-${{ github.sha }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
