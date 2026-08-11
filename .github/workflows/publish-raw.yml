@@ -2,7 +2,7 @@ name: Publish RAW Rules
 
 on:
   push:
-    branches: [main, 4.0-client-hierarchy]
+    branches: [main, 4.0-hierarchical-raw]
     paths:
       - 'core/rules/**'
       - 'core/clients/**'
@@ -41,5 +41,5 @@ jobs:
             echo 'No RAW rule changes.'
             exit 0
           fi
-          git commit -m 'build: publish 4.0 client RAW rules [skip ci]'
+          git commit -m 'build: publish 4.0 hierarchical RAW rules [skip ci]'
           git push
