@@ -111,6 +111,7 @@ def compile_client(client_id: str, output_root: Path) -> dict:
     format_id = str(client.get("format") or client_id).lower()
     collection_id = safe_id(str(client.get("collection") or "global"))
     type_map = {str(k): str(v) for k, v in (client.get("rule_types") or {}).items()}
+    names = {str(k): str(v) for k, v in (client.get("names") or {}).items()}
 
     if format_id != "loon":
         raise ValueError(f"unsupported 4.0 client format: {format_id}")
@@ -128,28 +129,30 @@ def compile_client(client_id: str, output_root: Path) -> dict:
 
     emitted: list[dict] = []
     for policy_id in collection_policies:
-        policy_dir = root / collection_id.capitalize() / policy_id.capitalize()
+        policy_name = names.get(policy_id, policy_id.capitalize())
+        policy_dir = root / collection_id.capitalize() / policy_name
         policy_dir.mkdir(parents=True, exist_ok=True)
 
-        total_path = policy_dir / f"{policy_id.capitalize()}{extension}"
-        total_path.write_text(render_loon(policy_id, policy_rules[policy_id], type_map), encoding="utf-8")
+        total_path = policy_dir / f"{policy_name}{extension}"
+        total_path.write_text(render_loon(policy_name, policy_rules[policy_id], type_map), encoding="utf-8")
         emitted.append({"kind": "policy", "policy": policy_id, "path": str(total_path.relative_to(output_root)), "count": len(policy_rules[policy_id])})
 
         for child in policy_graph.get(policy_id, [policy_id]):
             child_rules = dedupe_rules(service_rules(child))
-            child_name = child.replace("-", "").title()
+            child_name = names.get(child, child.capitalize())
             child_path = policy_dir / f"{child_name}{extension}"
-            child_path.write_text(render_loon(child, child_rules, type_map), encoding="utf-8")
+            child_path.write_text(render_loon(child_name, child_rules, type_map), encoding="utf-8")
             emitted.append({"kind": "child", "policy": policy_id, "service": child, "path": str(child_path.relative_to(output_root)), "count": len(child_rules)})
 
     collection_dir = root / collection_id.capitalize()
     collection_dir.mkdir(parents=True, exist_ok=True)
-    collection_path = collection_dir / f"{collection_id.capitalize()}{extension}"
+    collection_name = collection_id.capitalize()
+    collection_path = collection_dir / f"{collection_name}{extension}"
     collection_rules: list[tuple[str, str]] = []
     for policy_id in collection_policies:
         collection_rules.extend(policy_rules[policy_id])
     collection_rules = dedupe_rules(collection_rules)
-    collection_path.write_text(render_loon(collection_id, collection_rules, type_map), encoding="utf-8")
+    collection_path.write_text(render_loon(collection_name, collection_rules, type_map), encoding="utf-8")
     emitted.append({"kind": "collection", "collection": collection_id, "path": str(collection_path.relative_to(output_root)), "count": len(collection_rules)})
 
     return {"client": client_id, "collection": collection_id, "format": format_id, "files": emitted}
