@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Canonical rule semantic engine for 3.2.
 
-The core project owns rule meaning, not client configuration.  This module
+The core project owns rule meaning, not client configuration. This module
 contains pure semantic analysis used by audit and compile gates.
 """
 from __future__ import annotations
@@ -10,7 +10,7 @@ import hashlib
 import ipaddress
 import re
 from collections import defaultdict
-from typing import Any, Dict, Iterable, List, Mapping, Sequence, Tuple
+from typing import Any, Dict, List, Mapping, Sequence, Tuple
 
 
 def norm_type(value: Any) -> str:
@@ -66,24 +66,20 @@ def classify_pair(a: Mapping[str, Any], b: Mapping[str, Any]) -> str | None:
     at, av = norm_type(a.get("type")), norm_value(a.get("value"))
     bt, bv = norm_type(b.get("type")), norm_value(b.get("value"))
     if at == bt and av == bv:
-        if a.get("policy_id") == b.get("policy_id"):
-            return "duplicate"
-        return "conflict"
-
+        return "duplicate" if a.get("policy_id") == b.get("policy_id") else "conflict"
     if at == "domain_suffix" and bt == "domain_suffix":
         if _suffix_parent(av, bv):
             return "shadow" if int(a.get("priority", 500)) <= int(b.get("priority", 500)) else "overlap"
         if _suffix_parent(bv, av):
             return "shadow" if int(b.get("priority", 500)) <= int(a.get("priority", 500)) else "overlap"
-
     return None
 
 
 def analyze(rules: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
     """Analyze exact identity and supported semantic relationships.
 
-    The implementation deliberately avoids broad keyword overlap inference;
-    false positives in a routing core are worse than a conservative warning.
+    The engine intentionally avoids broad keyword-overlap inference. False
+    positives in a routing core are worse than a conservative warning.
     """
     normalized: List[dict] = []
     for raw in rules:
@@ -98,11 +94,11 @@ def analyze(rules: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
         normalized.append(item)
 
     exact: Dict[Tuple[str, str], List[int]] = defaultdict(list)
-    suffix: List[int] = []
+    suffix_by_value: Dict[str, List[int]] = defaultdict(list)
     for idx, rule in enumerate(normalized):
         exact[(rule["type"], rule["value"])].append(idx)
         if rule["type"] == "domain_suffix":
-            suffix.append(idx)
+            suffix_by_value[rule["value"]].append(idx)
 
     findings: List[dict] = []
     for (rtype, value), indexes in sorted(exact.items()):
@@ -117,34 +113,32 @@ def analyze(rules: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
             "rule_ids": [normalized[i]["rule_id"] for i in indexes],
         })
 
-    # Domain suffix relations are indexed by label depth to avoid an all-rule
-    # cross-product.  Only relations with an actual parent suffix are emitted.
-    by_policy: Dict[str, List[int]] = defaultdict(list)
-    for idx in suffix:
-        by_policy[normalized[idx]["policy_id"]].append(idx)
-
-    for idx in suffix:
-        child = normalized[idx]
+    # Walk only actual parent suffixes. This is O(rules * domain-depth), not
+    # O(rules²), which matters for large remote rule sets.
+    for idx, child in enumerate(normalized):
+        if child["type"] != "domain_suffix":
+            continue
         labels = child["value"].split(".")
         for cut in range(1, len(labels)):
             parent_value = ".".join(labels[cut:])
-            for parent_idx in suffix:
-                parent = normalized[parent_idx]
-                if parent["value"] != parent_value or parent_idx == idx:
+            for parent_idx in suffix_by_value.get(parent_value, []):
+                if parent_idx == idx:
                     continue
+                parent = normalized[parent_idx]
                 relation = classify_pair(parent, child)
-                if relation in ("shadow", "overlap"):
-                    findings.append({
-                        "kind": relation,
-                        "parent": parent["rule_id"],
-                        "child": child["rule_id"],
-                        "parent_policy": parent["policy_id"],
-                        "child_policy": child["policy_id"],
-                        "parent_value": parent["value"],
-                        "child_value": child["value"],
-                        "parent_priority": parent["priority"],
-                        "child_priority": child["priority"],
-                    })
+                if relation not in ("shadow", "overlap"):
+                    continue
+                findings.append({
+                    "kind": relation,
+                    "parent": parent["rule_id"],
+                    "child": child["rule_id"],
+                    "parent_policy": parent["policy_id"],
+                    "child_policy": child["policy_id"],
+                    "parent_value": parent["value"],
+                    "child_value": child["value"],
+                    "parent_priority": parent["priority"],
+                    "child_priority": child["priority"],
+                })
 
     validation: List[dict] = []
     for rule in normalized:
