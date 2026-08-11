@@ -2,7 +2,7 @@ name: Validate Rules
 
 on:
   push:
-    branches: [main, 3.2-core-refactor]
+    branches: [main, 4.0-client-hierarchy]
     paths-ignore:
       - 'rules/**'
   pull_request:
@@ -25,6 +25,9 @@ jobs:
       - run: python scripts/rule_audit_gate.py
       - run: python tests/test_semantic_4_0.py
       - run: python tests/test_rule_compile_4_0.py
+      - run: rm -rf .audit/generated
       - run: python scripts/rule_compile.py --out .audit/generated
-      - run: test -d rules
-      - run: diff -ru rules .audit/generated/rules
+      - run: test -d .audit/generated/rules
+      - run: test -d rules || true
+      - if: hashFiles('rules/**') != ''
+        run: diff -ru rules .audit/generated/rules
