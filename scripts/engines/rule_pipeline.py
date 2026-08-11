@@ -25,7 +25,7 @@ class PipelineResult:
 
 
 def _finding_label(finding: dict) -> str:
-    if finding['kind'] in {'duplicate', 'conflict', 'overlap'} and 'value' in finding:
+    if finding['kind'] in {'duplicate', 'conflict', 'overlap', 'shared'} and 'value' in finding:
         return f"{finding['type']}={finding['value']}"
     if 'parent_value' in finding and 'child_value' in finding:
         return f"{finding['parent_value']} ↔ {finding['child_value']}"
@@ -53,6 +53,8 @@ def run_pipeline() -> PipelineResult:
             warnings.append(f"W003 overlap: {label}")
         elif kind == 'duplicate':
             warnings.append(f"W001 duplicate: {label}")
+        elif kind == 'shared':
+            warnings.append(f"W002 shared rule across policies: {label}")
 
     errors += [f"E001 {item['kind']}: {item['rule_id']}" for item in semantic['validation']]
     errors += [
