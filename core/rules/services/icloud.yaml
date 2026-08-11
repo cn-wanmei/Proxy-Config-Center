@@ -1,0 +1,13 @@
+version: 1
+id: service-icloud
+group: icloud
+priority: 15
+rules:
+  - type: domain-suffix
+    values: [icloud.com, icloud-content.com]
+    action: group
+    target: apple
+  - type: domain
+    values: [setup.icloud.com, ws-ee-maidsvc.icloud.com, statici.icloud.com, gateway.icloud.com, probe.icloud.com, pong.icloud.com, metrics.icloud.com]
+    action: group
+    target: apple
