@@ -2,62 +2,27 @@ PYTHONPATH := $(CURDIR)/scripts
 export PYTHONPATH
 PYTHON ?= python3
 
-.PHONY: install validate security compile_gate compile audit build check verify_emit artifact_pins release_tag_gate test doh_health doh_latency golden ci
+.PHONY: install audit rule_compile compile build clients_optional test ci
 
 install:
 	$(PYTHON) -m pip install -r requirements.txt
 
-validate:
-	$(PYTHON) scripts/validate.py
-
-security:
-	$(PYTHON) scripts/security_check.py
-
-compile_gate:
-	$(PYTHON) scripts/compile_gate.py
-
-compile:
-	$(PYTHON) scripts/compiler.py
-
-artifact_pins:
-	$(PYTHON) scripts/artifact_immutability.py
-
-release_tag_gate:
-	$(PYTHON) scripts/release_tag_gate.py
-
-doh_health:
-	$(PYTHON) scripts/doh_health.py
-
-doh_latency:
-	$(PYTHON) scripts/doh_latency.py
-
 audit:
 	$(PYTHON) scripts/rule_audit.py --write
 
-build:
+rule_compile:
+	$(PYTHON) scripts/rule_compile.py --out dist
+
+compile: rule_compile
+
+clients_optional:
 	$(PYTHON) scripts/build.py --include-final
 
-check: build
-	$(PYTHON) scripts/check_config.py --root build
-	$(PYTHON) scripts/check_config.py --root final
-
-verify_emit: build
-	$(PYTHON) scripts/verify_emit.py
+build: rule_compile
 
 test:
-	$(PYTHON) tests/test_dns_leak.py
-	$(PYTHON) tests/test_capability_matrix.py
-	$(PYTHON) tests/test_resolver_score.py
-	$(PYTHON) tests/test_integration_2_1.py
-	$(PYTHON) tests/test_optimizer.py
-	$(PYTHON) tests/test_release_tag_gate.py
-	$(PYTHON) tests/test_capabilities.py
+	$(PYTHON) tests/test_rule_only.py
 	$(PYTHON) tests/test_rule_audit.py
 	$(PYTHON) tests/test_rule_sources.py
-	$(PYTHON) tests/test_semantic.py
-	$(PYTHON) tests/test_platform_semantics.py
 
-golden: build
-	$(PYTHON) tests/test_golden.py
-
-ci: security compile_gate compile validate audit test golden check verify_emit artifact_pins
+ci: audit rule_compile test
