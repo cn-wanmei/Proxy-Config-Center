@@ -1,52 +1,85 @@
-version: 2
-engine: blackmatrix7
-blackmatrix7_base: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash"
+version: 3
+engine: verified-online
+
+# Sources are evidence only. The updater never trusts a single source for destructive changes.
+# Official sources are preferred; BlackMatrix7 is a secondary corroboration source.
 sources:
-  ad-block:
-    blackmatrix7: {path: AdvertisingLite/AdvertisingLite.yaml, behavior: classical}
-    domain_suffix: [doubleclick.net, googlesyndication.com, googletagmanager.com, googleadservices.com, adservice.google.com, pagead.googlesyndication.com]
-  china:
-    blackmatrix7: {path: China/China.yaml, behavior: classical}
-    blackmatrix7_extra:
-      - {path: ChinaIPs/ChinaIPs.list, behavior: ipcidr}
-    domain_suffix: [cn, baidu.com, qq.com, aliyun.com, taobao.com, bilibili.com, weixin.qq.com, wechat.com, jd.com, 163.com, 126.com, weibo.com, zhihu.com, douyin.com, iqiyi.com, youku.com, meituan.com, dianping.com, ctrip.com, pinduoduo.com]
   apple:
-    blackmatrix7: {path: Apple/Apple.yaml, behavior: classical}
-    domain_suffix: [apple.com, icloud.com, icloud-content.com, mzstatic.com, cdn-apple.com, aaplimg.com, apple-dns.net, apple.news, apple.co]
-  code-repo:
-    blackmatrix7: {path: GitHub/GitHub.yaml, behavior: classical}
-    domain_suffix: [github.com, githubusercontent.com, githubassets.com, gitlab.com, github.io, github.dev, githubcopilot.com, githubapp.com, githubstatus.com, ghcr.io, git.io, npmjs.com, npmjs.org, nuget.org, atom.io]
-  microsoft:
-    blackmatrix7: {path: Microsoft/Microsoft.yaml, behavior: classical}
-    domain_suffix: [microsoft.com, live.com, office.com, office365.com, onedrive.com, outlook.com, hotmail.com, bing.com, azure.com, azure.net, azurewebsites.net, skype.com, skypeassets.com, xbox.com, xboxlive.com, aka.ms, msedge.net, msecnd.net, sharepoint.com, visualstudio.com, vscode.dev, minecraft.net, mojang.com, microsoftonline.com, windows.net, windowsupdate.com, msftauth.net, msauth.net, msn.com]
+    official:
+      - https://support.apple.com/en-us/101555
+    secondary:
+      - https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Loon/Apple/Apple.list
+    update: domain
   google:
-    blackmatrix7: {path: Google/Google.yaml, behavior: classical}
-    domain_suffix: [google.com, googleapis.com, gstatic.com, googleusercontent.com, gmail.com, googlevideo.com, ggpht.com, gvt1.com, gvt2.com, recaptcha.net, g.co, appspot.com, firebaseio.com, firebaseapp.com, withgoogle.com, googledrive.com, googlemail.com]
+    official:
+      - https://developers.google.com/
+    secondary:
+      - https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Loon/Google/Google.list
+    update: domain
   youtube:
-    blackmatrix7: {path: YouTube/YouTube.yaml, behavior: classical}
-    domain_suffix: [youtube.com, youtu.be, googlevideo.com, ytimg.com, youtube-nocookie.com, yt.be, youtubekids.com, youtubegaming.com, ggpht.com]
-  spotify:
-    blackmatrix7: {path: Spotify/Spotify.yaml, behavior: classical}
-    domain_suffix: [spotify.com, scdn.co, spotifycdn.com, spoti.fi, spotifycdn.net, byspotify.com, pscdn.co, spotifycharts.com, spotifyjobs.com]
+    official:
+      - https://support.google.com/youtube/
+    secondary:
+      - https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Loon/YouTube/YouTube.list
+    update: domain
+  microsoft:
+    official:
+      - https://endpoints.office.com/endpoints/worldwide
+    secondary:
+      - https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Loon/Microsoft/Microsoft.list
+    update: domain_ip
+  github:
+    official:
+      - https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/about-githubs-ip-addresses
+    secondary:
+      - https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Loon/GitHub/GitHub.list
+    update: domain_ip
   telegram:
-    blackmatrix7: {path: Telegram/Telegram.yaml, behavior: classical}
-    domain_suffix: [telegram.org, t.me, tdesktop.com, telegra.ph, telegram.me, cdn-telegram.org, graph.org, tg.dev, tx.me, telesco.pe, telegram.space, telegram-cdn.org]
-  twitter:
-    blackmatrix7: {path: Twitter/Twitter.yaml, behavior: classical}
-    domain_suffix: [twitter.com, x.com, twimg.com, t.co, twimg.co, tweetdeck.com, grok.com, vine.co, periscope.tv, pscp.tv]
+    official:
+      - https://core.telegram.org/
+    secondary:
+      - https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Loon/Telegram/Telegram.list
+    update: domain
   netflix:
-    blackmatrix7: {path: Netflix/Netflix.yaml, behavior: classical}
-    domain_suffix: [netflix.com, nflxvideo.net, nflxso.net, nflximg.net, fast.com, nflxext.com, nflximg.com, netflix.net, netflixtechblog.com]
+    official:
+      - https://help.netflix.com/
+    secondary:
+      - https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Loon/Netflix/Netflix.list
+    update: domain
+  spotify:
+    official:
+      - https://developer.spotify.com/
+    secondary:
+      - https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Loon/Spotify/Spotify.list
+    update: domain
   tiktok:
-    blackmatrix7: {path: TikTok/TikTok.yaml, behavior: classical}
-    domain_suffix: [tiktok.com, tiktokv.com, musical.ly, byteoversea.com, tiktokcdn.com, muscdn.com, capcut.com, snssdk.com, tiktokmusic.app, trae.ai, marscode.com, byteintlapi.com]
-  game:
-    blackmatrix7: {path: Steam/Steam.yaml, behavior: classical}
-    domain_suffix: [steampowered.com, steamcommunity.com, steamgames.com, steamstatic.com, steam.tv, steamdeck.com, valvesoftware.com, s.team, steamstat.us, humblebundle.com, fanatical.com]
+    official:
+      - https://www.tiktok.com/
+    secondary:
+      - https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Loon/TikTok/TikTok.list
+    update: domain
   ai:
-    blackmatrix7: {path: OpenAI/OpenAI.yaml, behavior: classical}
-    domain_suffix: [openai.com, chatgpt.com, anthropic.com, claude.ai, oaistatic.com, oaiusercontent.com, ai.com, sentry.io, auth0.com, intercom.io, intercomcdn.com, stripe.com, launchdarkly.com]
-  ehentai:
-    domain_suffix: [e-hentai.org, exhentai.org, ehgt.org, hath.network]
-  final:
-    match: true
+    official:
+      - https://platform.openai.com/docs
+      - https://docs.anthropic.com/
+    secondary:
+      - https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Loon/OpenAI/OpenAI.list
+    update: domain
+
+feeds:
+  - {source: apple, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Loon/Apple/Apple.list}
+  - {source: google, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Loon/Google/Google.list}
+  - {source: youtube, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Loon/YouTube/YouTube.list}
+  - {source: microsoft, url: https://endpoints.office.com/endpoints/worldwide}
+  - {source: github, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Loon/GitHub/GitHub.list}
+  - {source: telegram, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Loon/Telegram/Telegram.list}
+  - {source: netflix, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Loon/Netflix/Netflix.list}
+  - {source: spotify, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Loon/Spotify/Spotify.list}
+  - {source: tiktok, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Loon/TikTok/TikTok.list}
+  - {source: ai, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Loon/OpenAI/OpenAI.list}
+
+policy:
+  additions_require: 1
+  removals_require_consecutive_misses: 3
+  max_daily_change_ratio: 0.35
+  ignore_dynamic_dns_ips: true
