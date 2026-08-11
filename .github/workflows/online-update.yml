@@ -1,0 +1,48 @@
+name: Online Rule Intelligence
+
+on:
+  schedule:
+    # GitHub Actions cron is UTC: 08:00/20:00 Asia/Tokyo = 23:00/11:00 UTC.
+    - cron: '0 23 * * *'
+    - cron: '0 11 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: online-rule-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - name: Fetch, verify and update rule intelligence
+        run: python scripts/online_rule_update.py
+      - name: Audit updated rules
+        run: |
+          python scripts/engines/core_boundary.py
+          python scripts/rule_audit_gate.py
+      - name: Compile all client RAW outputs
+        run: |
+          rm -rf rules
+          python scripts/rule_compile.py --out .
+      - name: Validate generated files
+        run: git diff --check
+      - name: Publish changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add core/rules/services .update rules
+          if git diff --cached --quiet; then
+            echo 'No verified rule changes.'
+            exit 0
+          fi
+          git commit -m 'data: refresh online rule intelligence [skip ci]'
+          git push
