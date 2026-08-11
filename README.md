@@ -1,14 +1,12 @@
 # Proxy-Config-Center
 
 **分流规则编译与审计中心**  
-**Version: 3.1.0**
+**Version: 3.3.0**
 
-> 不是代理配置中心。只编译、审计、发布远程独立分流规则。
-
-```bash
-make audit_gate
-make rule_compile
-make ci
+```text
+规则输入 → 规范化 → 语义分析 → 冲突消解 → 审计 → 确定性编译 → 可追溯发布
 ```
 
-P0 fail-closed audit · P1 rule id/hash/provenance · P2 diff/history · Anywhere .arrs
+```bash
+make audit_gate && make rule_compile && make ci
+```
