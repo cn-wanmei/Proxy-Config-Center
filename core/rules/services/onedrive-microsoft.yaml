@@ -1,9 +1,0 @@
-version: 1
-id: service-onedrive-microsoft
-group: onedrive
-priority: 50
-rules:
-  - type: domain-suffix
-    values: [onedrive.com, onedrive.live.com, onedrive.net, sharepoint.com, sharepointonline.com]
-    action: group
-    target: microsoft
