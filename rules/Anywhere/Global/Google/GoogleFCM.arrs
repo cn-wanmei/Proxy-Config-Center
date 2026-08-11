@@ -1,0 +1,18 @@
+name = GoogleFCM
+routing = 0
+
+2, alt1-mtalk.google.com
+2, alt2-mtalk.google.com
+2, alt3-mtalk.google.com
+2, alt4-mtalk.google.com
+2, alt5-mtalk.google.com
+2, alt6-mtalk.google.com
+2, alt7-mtalk.google.com
+2, alt8-mtalk.google.com
+2, android.apis.google.com
+2, device-provisioning.googleapis.com
+2, firebaseinstallations.googleapis.com
+2, mtalk-dev.google.com
+2, mtalk-staging.google.com
+2, mtalk.google.com
+2, mtalk4.google.com

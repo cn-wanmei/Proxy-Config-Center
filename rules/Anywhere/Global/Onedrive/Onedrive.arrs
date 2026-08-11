@@ -1,0 +1,20 @@
+name = Onedrive
+routing = 0
+
+3, 1drv
+2, 1drv.com
+2, 1drv.ms
+2, livefilestore.com
+2, microsoftpersonalcontent.com
+2, oneclient.sfx.ms
+3, onedrive
+2, onedrive.com
+2, onedrive.live.com
+2, photos.live.com
+2, sharepoint.com
+2, sharepointonline.com
+3, skydrive
+2, skydrive.wns.windows.com
+2, spoprod-a.akamaihd.net
+2, storage.live.com
+2, storage.msn.com

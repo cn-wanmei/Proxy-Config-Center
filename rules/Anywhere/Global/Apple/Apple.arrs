@@ -1,0 +1,15 @@
+name = Apple
+routing = 0
+
+3, apple
+2, apple-cloudkit.com
+2, apple-dns.net
+2, apple-mobile.de
+2, apple.com
+2, cdn-apple.com
+3, icloud
+2, icloud-content.com
+2, icloud.com
+2, itunes.apple.com
+2, mzstatic.com
+2, push.apple.com
