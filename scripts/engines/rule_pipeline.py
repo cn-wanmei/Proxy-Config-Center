@@ -48,7 +48,7 @@ def run_pipeline() -> PipelineResult:
             policies = ','.join(finding.get('policies', []))
             errors.append(f"E003 conflict: {label} policies={policies}")
         elif kind == 'shadow':
-            errors.append(f"E005 shadow: {label}")
+            warnings.append(f"W004 shadow/redundant rule: {label}")
         elif kind == 'overlap':
             warnings.append(f"W003 overlap: {label}")
         elif kind == 'duplicate':
