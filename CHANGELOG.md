@@ -1,13 +1,12 @@
 # Changelog
 
-## [3.3.0] - 2026-08-11
+## 4.0.0
 
-Pipeline + Priority/Precedence decoupling + full SHA256 provenance + conflict resolve + rule graph + AST boundary.
-
-## [3.1.0] - 2026-08-11
-
-Fail-closed audit center.
-
-## [3.0.0] - 2026-08-11
-
-Rule-only pivot.
+- 收缩项目为纯分流规则 Core。
+- 规则按策略生成稳定在线 RAW 文件：`rules/<policy>.yaml`。
+- 移除旧手工规则输出和客户端/网络配置职责。
+- 编译器升级为确定性 RAW 编译器。
+- 审计输出改为本地临时产物，不作为在线规则发布包。
+- 增加 RAW 发布工作流，仅在审计通过后更新 `rules/`。
+- 增加 4.0 语义与确定性编译回归测试。
+- 禁止规则 ZIP/TAR/Release Package 作为项目分发方式。
