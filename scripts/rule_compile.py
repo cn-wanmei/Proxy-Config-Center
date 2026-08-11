@@ -83,15 +83,31 @@ def load_policy_graph() -> dict[str, list[str]]:
 
 def load_collection(collection_id: str) -> list[str]:
     path = COLLECTIONS_ROOT / f"{collection_id}.yaml"
+    if not path.exists():
+        raise ValueError(f"missing collection: {collection_id}")
     data = load_yaml(path)
-    return [safe_id(str(x)) for x in (data.get("policies") or [])]
+    policies = [safe_id(str(x)) for x in (data.get("policies") or [])]
+    if not policies:
+        raise ValueError(f"collection has no policies: {collection_id}")
+    return policies
 
 
-def compile_client(client_id: str) -> dict:
+def render_loon(name: str, rules: list[tuple[str, str]], type_map: dict[str, str]) -> str:
+    lines = [f"# NAME: {name}", f"# TOTAL: {len(rules)}"]
+    for rtype, value in rules:
+        mapped = type_map.get(rtype)
+        if not mapped:
+            raise ValueError(f"Loon rule type is not mapped: {rtype}")
+        lines.append(f"{mapped},{value}")
+    return "\n".join(lines) + "\n"
+
+
+def compile_client(client_id: str, output_root: Path) -> dict:
     client_path = CLIENTS_ROOT / f"{client_id}.yaml"
     client = load_yaml(client_path)
     extension = str(client.get("extension") or ".list")
-    root = ROOT / str(client.get("root") or f"rules/{client_id}")
+    relative_root = Path(str(client.get("root") or f"rules/{client_id}"))
+    root = output_root / relative_root.relative_to("rules") if relative_root.parts[:1] == ("rules",) else output_root / relative_root
     format_id = str(client.get("format") or client_id).lower()
     collection_id = safe_id(str(client.get("collection") or "global"))
     type_map = {str(k): str(v) for k, v in (client.get("rule_types") or {}).items()}
@@ -116,17 +132,15 @@ def compile_client(client_id: str) -> dict:
         policy_dir.mkdir(parents=True, exist_ok=True)
 
         total_path = policy_dir / f"{policy_id.capitalize()}{extension}"
-        total_lines = [f"# {policy_id}", *[f"{type_map[t]},{v}" for t, v in policy_rules[policy_id]]]
-        total_path.write_text("\n".join(total_lines).rstrip() + "\n", encoding="utf-8")
-        emitted.append({"kind": "policy", "policy": policy_id, "path": str(total_path.relative_to(ROOT)), "count": len(policy_rules[policy_id])})
+        total_path.write_text(render_loon(policy_id, policy_rules[policy_id], type_map), encoding="utf-8")
+        emitted.append({"kind": "policy", "policy": policy_id, "path": str(total_path.relative_to(output_root)), "count": len(policy_rules[policy_id])})
 
         for child in policy_graph.get(policy_id, [policy_id]):
             child_rules = dedupe_rules(service_rules(child))
             child_name = child.replace("-", "").title()
             child_path = policy_dir / f"{child_name}{extension}"
-            child_lines = [f"# {child}", *[f"{type_map[t]},{v}" for t, v in child_rules]]
-            child_path.write_text("\n".join(child_lines).rstrip() + "\n", encoding="utf-8")
-            emitted.append({"kind": "child", "policy": policy_id, "service": child, "path": str(child_path.relative_to(ROOT)), "count": len(child_rules)})
+            child_path.write_text(render_loon(child, child_rules, type_map), encoding="utf-8")
+            emitted.append({"kind": "child", "policy": policy_id, "service": child, "path": str(child_path.relative_to(output_root)), "count": len(child_rules)})
 
     collection_dir = root / collection_id.capitalize()
     collection_dir.mkdir(parents=True, exist_ok=True)
@@ -135,18 +149,18 @@ def compile_client(client_id: str) -> dict:
     for policy_id in collection_policies:
         collection_rules.extend(policy_rules[policy_id])
     collection_rules = dedupe_rules(collection_rules)
-    collection_lines = [f"# {collection_id}", *[f"{type_map[t]},{v}" for t, v in collection_rules]]
-    collection_path.write_text("\n".join(collection_lines).rstrip() + "\n", encoding="utf-8")
-    emitted.append({"kind": "collection", "collection": collection_id, "path": str(collection_path.relative_to(ROOT)), "count": len(collection_rules)})
+    collection_path.write_text(render_loon(collection_id, collection_rules, type_map), encoding="utf-8")
+    emitted.append({"kind": "collection", "collection": collection_id, "path": str(collection_path.relative_to(output_root)), "count": len(collection_rules)})
 
     return {"client": client_id, "collection": collection_id, "format": format_id, "files": emitted}
 
 
-def compile_rules() -> dict:
+def compile_rules(out: Path | None = None) -> dict:
+    output_root = Path(out) if out is not None else ROOT
     clients = sorted(p.stem for p in CLIENTS_ROOT.glob("*.yaml"))
     if not clients:
         raise ValueError("no client output definitions found")
-    results = [compile_client(client_id) for client_id in clients]
+    results = [compile_client(client_id, output_root) for client_id in clients]
     version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
     return {
         "schema_version": 4,
@@ -160,9 +174,10 @@ def compile_rules() -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Compile 4.0 hierarchical client-specific online RAW rules")
-    parser.parse_args()
+    parser.add_argument("--out", default=str(ROOT), help="output root; generated RAW files go under rules/<client>/...")
+    args = parser.parse_args()
     try:
-        manifest = compile_rules()
+        manifest = compile_rules(Path(args.out).resolve())
     except Exception as exc:
         print(f"❌ rule compile FAILED: {exc}")
         return 1
