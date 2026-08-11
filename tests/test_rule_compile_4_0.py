@@ -24,12 +24,25 @@ def test_compile_is_deterministic():
         m2 = compile_rules(Path(second))
         r1 = Path(first) / 'rules'
         r2 = Path(second) / 'rules'
-        assert m1['deterministic'] is True
         assert m1['online_raw'] is True
         assert m1['package_release'] is False
-        assert m1['rule_count'] > 0
+        assert m1['clients'][0]['client'] == 'loon'
         assert tree_hash(r1) == tree_hash(r2)
-        assert sorted(p.name for p in r1.glob('*.yaml')) == sorted(p.name for p in r2.glob('*.yaml'))
+
+        google = r1 / 'rules' if (r1 / 'rules').exists() else r1
+        google_files = list(google.rglob('Google.list'))
+        youtube_files = list(google.rglob('YouTube.list'))
+        play_files = list(google.rglob('GooglePlay.list'))
+        assert google_files
+        assert youtube_files
+        assert play_files
+        assert any('/Loon/Global/Google/Google.list' in str(p).replace('\\', '/') for p in google_files)
+        assert any('/Loon/Global/Google/YouTube.list' in str(p).replace('\\', '/') for p in youtube_files)
+        assert any('/Loon/Global/Google/GooglePlay.list' in str(p).replace('\\', '/') for p in play_files)
+
+        text = google_files[0].read_text(encoding='utf-8')
+        assert text.startswith('# NAME: Google\n')
+        assert 'DOMAIN-SUFFIX,google.com' in text
 
 
 if __name__ == '__main__':
