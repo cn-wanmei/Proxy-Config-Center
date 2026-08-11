@@ -13,21 +13,29 @@ def test_identity():
 
 
 def test_relations():
-    exact = analyze([
+    duplicate = analyze([
         {'policy_id': 'a', 'type': 'domain-suffix', 'value': 'example.com', 'priority': 100},
+        {'policy_id': 'a', 'type': 'domain-suffix', 'value': 'example.com', 'priority': 100},
+    ])
+    assert 'duplicate' in {finding['kind'] for finding in duplicate['findings']}
+
+    conflict = analyze([
         {'policy_id': 'a', 'type': 'domain-suffix', 'value': 'example.com', 'priority': 100},
         {'policy_id': 'a', 'type': 'domain-suffix', 'value': 'example.com', 'priority': 200},
+    ])
+    assert 'conflict' in {finding['kind'] for finding in conflict['findings']}
+
+    shared = analyze([
+        {'policy_id': 'a', 'type': 'domain-suffix', 'value': 'example.com', 'priority': 100},
         {'policy_id': 'b', 'type': 'domain-suffix', 'value': 'example.com', 'priority': 100},
     ])
-    exact_kinds = {finding['kind'] for finding in exact['findings']}
-    assert {'duplicate', 'conflict', 'shared'} <= exact_kinds
+    assert 'shared' in {finding['kind'] for finding in shared['findings']}
 
     shadow = analyze([
         {'policy_id': 'a', 'type': 'domain-suffix', 'value': 'example.com', 'priority': 100},
         {'policy_id': 'a', 'type': 'domain-suffix', 'value': 'mail.example.com', 'priority': 200},
     ])
-    shadow_kinds = {finding['kind'] for finding in shadow['findings']}
-    assert 'shadow' in shadow_kinds
+    assert 'shadow' in {finding['kind'] for finding in shadow['findings']}
 
 
 def test_validation():
