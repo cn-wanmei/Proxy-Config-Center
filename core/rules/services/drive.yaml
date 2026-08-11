@@ -1,0 +1,9 @@
+version: 1
+id: service-drive
+group: drive
+priority: 60
+rules:
+  - type: domain-suffix
+    values: [drive.google.com, googledrive.com, docs.google.com, sheets.google.com, slides.google.com, googleusercontent.com]
+    action: group
+    target: google
