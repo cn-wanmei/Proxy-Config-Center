@@ -4,7 +4,7 @@ id: loon
 name: Loon
 extension: .list
 root: rules/Loon
-collection: Global
+collection: global
 format: loon
 rule_types:
   domain: DOMAIN
@@ -13,3 +13,9 @@ rule_types:
   ip_cidr: IP-CIDR
   ip_cidr6: IP-CIDR6
   user_agent: USER-AGENT
+names:
+  google: Google
+  youtube: YouTube
+  google-play: GooglePlay
+  google-fcm: GoogleFCM
+  youtube-music: YouTubeMusic
