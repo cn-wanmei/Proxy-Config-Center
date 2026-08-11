@@ -18,6 +18,7 @@ POLICIES_ROOT = RULES_ROOT / "policies"
 COLLECTIONS_ROOT = RULES_ROOT / "collections"
 CLIENTS_ROOT = ROOT / "clients"
 IDENT_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
+NON_PORTABLE = {"geosite", "geoip"}
 
 
 def load_yaml(path: Path) -> dict:
@@ -54,10 +55,9 @@ def service_rules(service_id: str) -> list[tuple[str, str]]:
         if not isinstance(rule, dict):
             raise ValueError(f"invalid rule object in {path}")
         rtype = normalize_type(rule.get("type", ""))
-        # GEOSITE is a resolver/database reference, not a portable rule declaration.
-        # It stays in semantic source/audit data but is intentionally not emitted into
-        # client-independent RAW lists; concrete rules from the same service are emitted.
-        if rtype == "geosite":
+        if rtype in NON_PORTABLE:
+            # Database/geolocation references belong to the semantic source layer.
+            # They are not portable standalone rules for the classical RAW clients.
             continue
         if rtype not in allowed:
             raise ValueError(f"unsupported rule type {rtype!r} in {path}")
