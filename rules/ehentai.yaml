@@ -1,0 +1,43 @@
+schema_version: 4
+policy_id: ehentai
+rules:
+- rule_id: ehentai:domain_suffix:f26ae86be5b0ea8b
+  global_rule_id: domain_suffix:f26ae86be5b0ea8b
+  sha256: f26ae86be5b0ea8bca2f5df3de3c7e67b8a303f6591e3522fb46a82857aaf46a
+  type: domain_suffix
+  value: e-hentai.org
+  priority: 130
+  source_file: sources.yaml
+  provenance: sources
+- rule_id: ehentai:domain_suffix:5ae8de9bcb8bcb1a
+  global_rule_id: domain_suffix:5ae8de9bcb8bcb1a
+  sha256: 5ae8de9bcb8bcb1ab9c595b0c11caafa6bd3fc92cb809dc6433bdca37ccef8b6
+  type: domain_suffix
+  value: ehentai.org
+  priority: 130
+  source_file: ehentai.yaml
+  provenance: service
+- rule_id: ehentai:domain_suffix:100742a59037e20c
+  global_rule_id: domain_suffix:100742a59037e20c
+  sha256: 100742a59037e20cdc67ab5a254a017d09228b0b1167c2555484d73b7b78e86f
+  type: domain_suffix
+  value: ehgt.org
+  priority: 130
+  source_file: sources.yaml
+  provenance: sources
+- rule_id: ehentai:domain_suffix:26596769e061fd5a
+  global_rule_id: domain_suffix:26596769e061fd5a
+  sha256: 26596769e061fd5a845cf75e6c22e0464bc3d45003422a8d2cad2bf58ed35017
+  type: domain_suffix
+  value: exhentai.org
+  priority: 130
+  source_file: sources.yaml
+  provenance: sources
+- rule_id: ehentai:domain_suffix:22e87cc3182ae1b2
+  global_rule_id: domain_suffix:22e87cc3182ae1b2
+  sha256: 22e87cc3182ae1b21725d45c069868cda6b69103d0fd74964a7f06c0d31891d1
+  type: domain_suffix
+  value: hath.network
+  priority: 130
+  source_file: sources.yaml
+  provenance: sources

@@ -1,0 +1,19 @@
+schema_version: 4
+policy_id: youtube-music
+rules:
+- rule_id: youtube-music:domain:881261534f3d49fe
+  global_rule_id: domain:881261534f3d49fe
+  sha256: 881261534f3d49fe6bb1428542a7a4f61f87363a188e60fd3e9c63906bd98e11
+  type: domain
+  value: music.youtube.com
+  priority: 55
+  source_file: youtube-music.yaml
+  provenance: service
+- rule_id: youtube-music:domain_suffix:9d0eff0d91b5c51f
+  global_rule_id: domain_suffix:9d0eff0d91b5c51f
+  sha256: 9d0eff0d91b5c51f3247b918fe98b474649ac2691182434843c906a6e109e93c
+  type: domain_suffix
+  value: music.youtube.com
+  priority: 55
+  source_file: youtube-music.yaml
+  provenance: service
