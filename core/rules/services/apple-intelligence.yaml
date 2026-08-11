@@ -1,0 +1,13 @@
+version: 1
+id: service-apple-intelligence
+group: apple-intelligence
+priority: 15
+rules:
+  - type: domain
+    values: [guzzoni.apple.com, apple-relay.apple.com, cp4.cloudflare.com]
+    action: group
+    target: apple
+  - type: domain-suffix
+    values: [smoot.apple.com]
+    action: group
+    target: apple
