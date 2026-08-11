@@ -1,4 +1,5 @@
 # Loon 独立客户端输出定义
+# 4.0 hierarchical RAW adapter
 version: 1
 id: loon
 name: Loon
