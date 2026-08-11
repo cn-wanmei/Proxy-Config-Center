@@ -1,0 +1,9 @@
+version: 1
+id: service-apple-updates
+group: apple-updates
+priority: 15
+rules:
+  - type: domain
+    values: [appldnld.apple.com, configuration.apple.com, gdmf.apple.com, gg.apple.com, gs.apple.com, ig.apple.com, mesu.apple.com, static.ips.apple.com]
+    action: group
+    target: apple
