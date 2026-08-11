@@ -1,0 +1,9 @@
+version: 1
+id: service-office
+group: office
+priority: 50
+rules:
+  - type: domain-suffix
+    values: [office.com, office.net, office365.com, officeapps.live.com, online.office.com, office.live.com, officecdn.microsoft.com]
+    action: group
+    target: microsoft
