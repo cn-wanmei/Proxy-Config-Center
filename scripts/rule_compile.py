@@ -107,7 +107,7 @@ def compile_client(client_id: str, output_root: Path) -> dict:
     client = load_yaml(client_path)
     extension = str(client.get("extension") or ".list")
     relative_root = Path(str(client.get("root") or f"rules/{client_id}"))
-    root = output_root / relative_root.relative_to("rules") if relative_root.parts[:1] == ("rules",) else output_root / relative_root
+    root = output_root / relative_root
     format_id = str(client.get("format") or client_id).lower()
     collection_id = safe_id(str(client.get("collection") or "global"))
     type_map = {str(k): str(v) for k, v in (client.get("rule_types") or {}).items()}
