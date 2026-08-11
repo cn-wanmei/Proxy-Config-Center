@@ -16,7 +16,7 @@ RULES_ROOT = ROOT / "core" / "rules"
 SERVICES_ROOT = RULES_ROOT / "services"
 POLICIES_ROOT = RULES_ROOT / "policies"
 COLLECTIONS_ROOT = RULES_ROOT / "collections"
-CLIENTS_ROOT = ROOT / "core" / "clients"
+CLIENTS_ROOT = ROOT / "clients"
 IDENT_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 
 
@@ -110,10 +110,6 @@ def render_classical(name: str, rules: list[tuple[str, str]], type_map: dict[str
     return "\n".join(lines) + "\n"
 
 
-def render_loon(name: str, rules: list[tuple[str, str]], type_map: dict[str, str]) -> str:
-    return render_classical(name, rules, type_map)
-
-
 def file_sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -131,10 +127,7 @@ def compile_client(client_id: str, output_root: Path) -> dict:
     type_map = {str(k): str(v) for k, v in (client.get("rule_types") or {}).items()}
     names = {str(k): str(v) for k, v in (client.get("names") or {}).items()}
 
-    renderers = {
-        "loon": render_loon,
-        "classical": render_classical,
-    }
+    renderers = {"classical": render_classical}
     renderer = renderers.get(format_id)
     if renderer is None:
         raise ValueError(f"unsupported 4.0 client format: {format_id}")
