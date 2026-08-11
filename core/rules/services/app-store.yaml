@@ -1,0 +1,13 @@
+version: 1
+id: service-app-store
+group: app-store
+priority: 15
+rules:
+  - type: domain-suffix
+    values: [itunes.apple.com, apps.apple.com, mzstatic.com, cdn-apple.com]
+    action: group
+    target: apple
+  - type: domain
+    values: [ppq.apple.com, vpp.itunes.apple.com]
+    action: group
+    target: apple
