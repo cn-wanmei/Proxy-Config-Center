@@ -1,0 +1,12 @@
+version: 1
+id: microsoft
+name: Microsoft
+children:
+  - microsoft
+  - office
+  - outlook
+  - onedrive
+  - teams
+  - azure
+  - windows-update
+  - xbox
