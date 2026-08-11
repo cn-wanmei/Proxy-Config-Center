@@ -1,0 +1,11 @@
+# Google 总策略
+# 子策略独立发布；Google.list 为聚合入口。
+version: 1
+id: google
+name: Google
+children:
+  - google
+  - youtube
+  - google-play
+  - google-fcm
+  - youtube-music
