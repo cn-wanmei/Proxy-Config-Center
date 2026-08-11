@@ -1,9 +1,10 @@
 # Local rule-source cache
 .cache/
 
-# Local generated delivery output
+# Local audit / generated working output
+.audit/
+dist/
+
+# Client/build output is forbidden in this repository
 final/
-build/*.yaml
-build/*.conf
-build/*/*.yaml
-build/*/*.conf
+build/
