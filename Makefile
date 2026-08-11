@@ -2,7 +2,7 @@ PYTHONPATH := $(CURDIR)/scripts
 export PYTHONPATH
 PYTHON ?= python3
 
-.PHONY: install audit audit_gate compile publish verify generate test ci clean
+.PHONY: install audit audit_gate online_update compile publish verify generate test ci clean
 
 install:
 	$(PYTHON) -m pip install -r requirements.txt
@@ -11,6 +11,9 @@ audit:
 	$(PYTHON) scripts/rule_audit_gate.py --write --out .audit
 
 audit_gate: audit
+
+online_update:
+	$(PYTHON) scripts/online_rule_update.py
 
 compile:
 	rm -rf rules
@@ -32,6 +35,7 @@ verify:
 test:
 	$(PYTHON) tests/test_semantic_4_0.py
 	$(PYTHON) tests/test_rule_compile_4_0.py
+	$(PYTHON) tests/test_online_rule_update_4_1.py
 
 ci: audit test verify
 
