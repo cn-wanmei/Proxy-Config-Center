@@ -1,0 +1,9 @@
+version: 1
+id: service-azure
+group: azure
+priority: 50
+rules:
+  - type: domain-suffix
+    values: [azure.com, azure.net, azureedge.net, azurewebsites.net, cloudapp.azure.com, azurefd.net, microsoftonline.com]
+    action: group
+    target: microsoft
