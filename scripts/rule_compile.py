@@ -54,6 +54,11 @@ def service_rules(service_id: str) -> list[tuple[str, str]]:
         if not isinstance(rule, dict):
             raise ValueError(f"invalid rule object in {path}")
         rtype = normalize_type(rule.get("type", ""))
+        # GEOSITE is a resolver/database reference, not a portable rule declaration.
+        # It stays in semantic source/audit data but is intentionally not emitted into
+        # client-independent RAW lists; concrete rules from the same service are emitted.
+        if rtype == "geosite":
+            continue
         if rtype not in allowed:
             raise ValueError(f"unsupported rule type {rtype!r} in {path}")
         values = rule.get("values") if rule.get("values") is not None else rule.get("value")
