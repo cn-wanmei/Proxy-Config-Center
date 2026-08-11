@@ -1,27 +1,34 @@
 PYTHONPATH := $(CURDIR)/scripts
 export PYTHONPATH
 PYTHON ?= python3
-export SOURCE_DATE_EPOCH ?= 0
 
-.PHONY: install audit_gate rule_compile compile semantic_test compile_test test ci
+.PHONY: install audit compile publish verify test ci clean
 
 install:
 	$(PYTHON) -m pip install -r requirements.txt
 
-audit_gate:
-	$(PYTHON) scripts/rule_audit_gate.py --write --out dist
+audit:
+	$(PYTHON) scripts/rule_audit_gate.py --write --out .audit
 
-rule_compile:
+audit_gate: audit
+
+compile:
 	$(PYTHON) scripts/rule_compile.py --out dist
 
-compile: audit_gate rule_compile
+publish:
+	$(PYTHON) scripts/rule_audit_gate.py
+	$(PYTHON) scripts/rule_compile.py --out .
 
-semantic_test:
-	$(PYTHON) tests/test_semantic_3_2.py
+verify:
+	$(PYTHON) scripts/rule_audit_gate.py
+	$(PYTHON) scripts/rule_compile.py --out .audit/generated
+	git diff --exit-code -- rules
 
-compile_test:
-	$(PYTHON) tests/test_rule_compile_3_2.py
+test:
+	$(PYTHON) tests/test_semantic_4_0.py
+	$(PYTHON) tests/test_rule_compile_4_0.py
 
-test: semantic_test compile_test
+ci: audit test verify
 
-ci: audit_gate rule_compile test
+clean:
+	rm -rf .audit dist
