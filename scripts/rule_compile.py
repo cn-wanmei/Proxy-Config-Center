@@ -134,7 +134,6 @@ def compile_client(client_id: str, output_root: Path) -> dict:
     collection_policies = load_collection(collection_id)
     policy_rules: dict[str, list[tuple[str, str]]] = {}
 
-    # The client-specific RAW tree is authoritative; remove stale generated files first.
     if root.exists():
         shutil.rmtree(root)
     root.mkdir(parents=True, exist_ok=True)
@@ -149,14 +148,12 @@ def compile_client(client_id: str, output_root: Path) -> dict:
     collection_dir = root / display_name(collection_id)
     collection_dir.mkdir(parents=True, exist_ok=True)
 
-    # 1) Client -> Collection total.
     collection_rules = dedupe_rules(rule for policy_id in collection_policies for rule in policy_rules[policy_id])
     collection_name = names.get(collection_id, display_name(collection_id))
     collection_path = collection_dir / f"{collection_name}{extension}"
     collection_path.write_text(render_loon(collection_name, collection_rules, type_map), encoding="utf-8")
     emitted.append({"kind": "collection", "id": collection_id, "path": str(collection_path.relative_to(output_root)), "count": len(collection_rules), "sha256": file_sha256(collection_path)})
 
-    # 2) Collection -> Policy total -> optional child rule sets.
     for policy_id in collection_policies:
         policy_name = names.get(policy_id, display_name(policy_id))
         policy_dir = collection_dir / policy_name
@@ -166,7 +163,11 @@ def compile_client(client_id: str, output_root: Path) -> dict:
         total_path.write_text(render_loon(policy_name, policy_rules[policy_id], type_map), encoding="utf-8")
         emitted.append({"kind": "policy", "id": policy_id, "path": str(total_path.relative_to(output_root)), "count": len(policy_rules[policy_id]), "sha256": file_sha256(total_path)})
 
+        # If a policy contains a service with the same id, it is the policy's base rules,
+        # not a second child file. This prevents Google/Google.list from overwriting the aggregate.
         for child in policy_children(policy_id, graph):
+            if child == policy_id:
+                continue
             child_rules = dedupe_rules(service_rules(child))
             child_name = names.get(child, display_name(child))
             child_path = policy_dir / f"{child_name}{extension}"
