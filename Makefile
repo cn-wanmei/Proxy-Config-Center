@@ -19,7 +19,10 @@ compile: audit_gate rule_compile
 semantic_test:
 	$(PYTHON) tests/test_semantic_3_2.py
 
-test: semantic_test
+compile_test:
+	$(PYTHON) tests/test_rule_compile_3_2.py
+
+test: semantic_test compile_test
 	$(PYTHON) tests/test_pipeline_3_3.py
 	$(PYTHON) tests/test_rule_only.py
 	$(PYTHON) tests/test_rule_intelligence.py
