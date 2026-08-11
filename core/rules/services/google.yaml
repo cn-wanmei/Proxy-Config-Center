@@ -1,18 +1,21 @@
-# Google service rules / 谷歌服务规则
-# Platform-agnostic semantic
-
-version: 1
+# Google umbrella service / 谷歌总服务
+version: 2
 id: service-google
 group: google
 priority: 60
-
 rules:
   - type: domain-suffix
     values:
+      - appspot.com
       - google.com
       - googleapis.com
-      - gstatic.com
       - googleusercontent.com
+      - gstatic.com
+      - g.co
       - ggpht.com
+      - gvt1.com
+      - gvt2.com
+      - recaptcha.net
+      - withgoogle.com
     action: group
     target: google
