@@ -100,14 +100,18 @@ def policy_children(policy_id: str, graph: dict[str, list[str]]) -> list[str]:
     return graph.get(policy_id, [policy_id])
 
 
-def render_loon(name: str, rules: list[tuple[str, str]], type_map: dict[str, str]) -> str:
+def render_classical(name: str, rules: list[tuple[str, str]], type_map: dict[str, str]) -> str:
     lines = [f"# NAME: {name}", f"# TOTAL: {len(rules)}", ""]
     for rtype, value in rules:
         mapped = type_map.get(rtype)
         if not mapped:
-            raise ValueError(f"Loon rule type is not mapped: {rtype}")
+            raise ValueError(f"client rule type is not mapped: {rtype}")
         lines.append(f"{mapped},{value}")
     return "\n".join(lines) + "\n"
+
+
+def render_loon(name: str, rules: list[tuple[str, str]], type_map: dict[str, str]) -> str:
+    return render_classical(name, rules, type_map)
 
 
 def file_sha256(path: Path) -> str:
@@ -127,7 +131,12 @@ def compile_client(client_id: str, output_root: Path) -> dict:
     type_map = {str(k): str(v) for k, v in (client.get("rule_types") or {}).items()}
     names = {str(k): str(v) for k, v in (client.get("names") or {}).items()}
 
-    if format_id != "loon":
+    renderers = {
+        "loon": render_loon,
+        "classical": render_classical,
+    }
+    renderer = renderers.get(format_id)
+    if renderer is None:
         raise ValueError(f"unsupported 4.0 client format: {format_id}")
 
     graph = load_policy_graph()
@@ -151,7 +160,7 @@ def compile_client(client_id: str, output_root: Path) -> dict:
     collection_rules = dedupe_rules(rule for policy_id in collection_policies for rule in policy_rules[policy_id])
     collection_name = names.get(collection_id, display_name(collection_id))
     collection_path = collection_dir / f"{collection_name}{extension}"
-    collection_path.write_text(render_loon(collection_name, collection_rules, type_map), encoding="utf-8")
+    collection_path.write_text(renderer(collection_name, collection_rules, type_map), encoding="utf-8")
     emitted.append({"kind": "collection", "id": collection_id, "path": str(collection_path.relative_to(output_root)), "count": len(collection_rules), "sha256": file_sha256(collection_path)})
 
     for policy_id in collection_policies:
@@ -160,18 +169,16 @@ def compile_client(client_id: str, output_root: Path) -> dict:
         policy_dir.mkdir(parents=True, exist_ok=True)
 
         total_path = policy_dir / f"{policy_name}{extension}"
-        total_path.write_text(render_loon(policy_name, policy_rules[policy_id], type_map), encoding="utf-8")
+        total_path.write_text(renderer(policy_name, policy_rules[policy_id], type_map), encoding="utf-8")
         emitted.append({"kind": "policy", "id": policy_id, "path": str(total_path.relative_to(output_root)), "count": len(policy_rules[policy_id]), "sha256": file_sha256(total_path)})
 
-        # If a policy contains a service with the same id, it is the policy's base rules,
-        # not a second child file. This prevents Google/Google.list from overwriting the aggregate.
         for child in policy_children(policy_id, graph):
             if child == policy_id:
                 continue
             child_rules = dedupe_rules(service_rules(child))
             child_name = names.get(child, display_name(child))
             child_path = policy_dir / f"{child_name}{extension}"
-            child_path.write_text(render_loon(child_name, child_rules, type_map), encoding="utf-8")
+            child_path.write_text(renderer(child_name, child_rules, type_map), encoding="utf-8")
             emitted.append({"kind": "child", "policy": policy_id, "id": child, "path": str(child_path.relative_to(output_root)), "count": len(child_rules), "sha256": file_sha256(child_path)})
 
     return {"client": client_id, "collection": collection_id, "format": format_id, "files": emitted}
