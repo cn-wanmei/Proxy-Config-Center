@@ -1,14 +1,60 @@
-# Microsoft service rules
+# Microsoft residual (Office/Azure/Windows) — independent
+# github / onedrive match first. Xbox stays under game.
 version: 1
 id: service-microsoft
 group: microsoft
+priority: 50
 
 rules:
-  - type: geosite
-    values: [microsoft, onedrive]
+  - type: domain-suffix
+    values:
+      - microsoft.com
+      - microsoftonline.com
+      - microsoft.net
+      - live.com
+      - live.net
+      - msn.com
+      - bing.com
+      - bing.net
+      - aka.ms
+      - windows.com
+      - windows.net
+      - windowsupdate.com
+      - office.com
+      - office365.com
+      - office.net
+      - outlook.com
+      - hotmail.com
+      - azure.com
+      - azure.net
+      - azureedge.net
+      - azurewebsites.net
+      - visualstudio.com
+      - vscode.dev
+      - vsassets.io
+      - asp.net
+      - nuget.org
+      - skype.com
+      - skypeassets.com
+      - msedge.net
+      - msecnd.net
+      - msftauth.net
+      - msauth.net
+      - linkedin.com
+      - licdn.com
+      - minecraft.net
+      - mojang.com
+      - onenote.com
+      - powerbi.com
+      - powerapps.com
+      - dynamics.com
+      - graph.microsoft.com
+      - copilot.microsoft.com
+      - microsoftteams.com
+      - teams.microsoft.com
     action: group
     target: microsoft
-  - type: domain-suffix
-    values: [microsoft.com, microsoftonline.com, live.com, office.com, office365.com, onedrive.com, 1drv.com, windowsupdate.com]
+  - type: domain-keyword
+    values: [microsoft, windows, azure, office365]
     action: group
     target: microsoft

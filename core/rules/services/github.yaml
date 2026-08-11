@@ -1,14 +1,40 @@
-# Code repository rules (GitHub etc.)
+# GitHub — independent (BM7 GitHub)
 version: 1
-id: service-code-repo
-group: code-repo
+id: service-github
+group: github
+priority: 40
 
 rules:
-  - type: geosite
+  - type: domain-suffix
+    values:
+      - github.com
+      - githubusercontent.com
+      - githubassets.com
+      - github.io
+      - github.dev
+      - githubapp.com
+      - githubstatus.com
+      - githubcopilot.com
+      - github.blog
+      - github.community
+      - githubnext.com
+      - githubpreview.dev
+      - ghcr.io
+      - git.io
+      - atom.io
+      - dependabot.com
+      - npmjs.com
+      - npmjs.org
+      - npm.community
+      - rawgit.com
+      - rawgithub.com
+      - myoctocat.com
+      - opensource.guide
+      - thegithubshop.com
+      - repo.new
+    action: group
+    target: github
+  - type: domain-keyword
     values: [github]
     action: group
-    target: code-repo
-  - type: domain-suffix
-    values: [github.com, githubusercontent.com, githubassets.com, gitlab.com]
-    action: group
-    target: code-repo
+    target: github

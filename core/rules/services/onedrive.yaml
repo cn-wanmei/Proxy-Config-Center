@@ -1,0 +1,29 @@
+# OneDrive — independent (BM7 OneDrive)
+version: 1
+id: service-onedrive
+group: onedrive
+priority: 42
+
+rules:
+  - type: domain-suffix
+    values:
+      - onedrive.com
+      - onedrive.live.com
+      - 1drv.com
+      - 1drv.ms
+      - livefilestore.com
+      - microsoftpersonalcontent.com
+      - oneclient.sfx.ms
+      - photos.live.com
+      - sharepoint.com
+      - sharepointonline.com
+      - skydrive.wns.windows.com
+      - storage.live.com
+      - storage.msn.com
+      - spoprod-a.akamaihd.net
+    action: group
+    target: onedrive
+  - type: domain-keyword
+    values: [onedrive, 1drv, skydrive]
+    action: group
+    target: onedrive
