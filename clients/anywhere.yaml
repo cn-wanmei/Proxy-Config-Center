@@ -1,0 +1,21 @@
+# Anywhere 独立客户端输出定义
+# Routing rule sets use the native .arrs import format.
+version: 1
+id: anywhere
+name: Anywhere
+extension: .arrs
+root: rules/Anywhere
+collection: global
+format: anywhere_arrs
+rule_types:
+  domain: 2
+  domain_suffix: 2
+  domain_keyword: 3
+  ip_cidr: 0
+  ip_cidr6: 1
+names:
+  google: Google
+  youtube: YouTube
+  google-play: GooglePlay
+  google-fcm: GoogleFCM
+  youtube-music: YouTubeMusic

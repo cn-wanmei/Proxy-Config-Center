@@ -56,8 +56,6 @@ def service_rules(service_id: str) -> list[tuple[str, str]]:
             raise ValueError(f"invalid rule object in {path}")
         rtype = normalize_type(rule.get("type", ""))
         if rtype in NON_PORTABLE:
-            # Database/geolocation references belong to the semantic source layer.
-            # They are not portable standalone rules for the classical RAW clients.
             continue
         if rtype not in allowed:
             raise ValueError(f"unsupported rule type {rtype!r} in {path}")
@@ -74,7 +72,10 @@ def service_rules(service_id: str) -> list[tuple[str, str]]:
 
 
 def dedupe_rules(rules: Iterable[tuple[str, str]]) -> list[tuple[str, str]]:
-    return sorted(set(rules), key=lambda item: (item[0], item[1]))
+    # Public RAW rule files are intentionally sorted by rule value first.
+    # This keeps every generated file alphabetically ordered independent of
+    # client syntax while retaining a stable type tie-breaker.
+    return sorted(set(rules), key=lambda item: (item[1].casefold(), item[1], item[0]))
 
 
 def load_policy_graph() -> dict[str, list[str]]:
@@ -115,6 +116,32 @@ def render_classical(name: str, rules: list[tuple[str, str]], type_map: dict[str
     return "\n".join(lines) + "\n"
 
 
+def render_anywhere(name: str, rules: list[tuple[str, str]], type_map: dict[str, str]) -> str:
+    lines = [f"name = {name}", "routing = 0", ""]
+    for rtype, value in rules:
+        mapped = type_map.get(rtype)
+        if not mapped:
+            raise ValueError(f"Anywhere client rule type is not mapped: {rtype}")
+        lines.append(f"{mapped}, {value}")
+    return "\n".join(lines) + "\n"
+
+
+def render_clashmeta(name: str, rules: list[tuple[str, str]], type_map: dict[str, str]) -> str:
+    payload: list[str] = []
+    for rtype, value in rules:
+        mapped = type_map.get(rtype)
+        if not mapped:
+            raise ValueError(f"ClashMeta client rule type is not mapped: {rtype}")
+        payload.append(f"{mapped},{value}")
+    return yaml.safe_dump(
+        {"payload": payload},
+        allow_unicode=True,
+        sort_keys=False,
+        default_flow_style=False,
+        width=120,
+    )
+
+
 def file_sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -132,7 +159,11 @@ def compile_client(client_id: str, output_root: Path) -> dict:
     type_map = {str(k): str(v) for k, v in (client.get("rule_types") or {}).items()}
     names = {str(k): str(v) for k, v in (client.get("names") or {}).items()}
 
-    renderers = {"classical": render_classical}
+    renderers = {
+        "classical": render_classical,
+        "anywhere_arrs": render_anywhere,
+        "clashmeta_classical": render_clashmeta,
+    }
     renderer = renderers.get(format_id)
     if renderer is None:
         raise ValueError(f"unsupported 4.0 client format: {format_id}")
