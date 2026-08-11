@@ -1,40 +1,31 @@
-# GitHub — independent (BM7 GitHub)
-version: 1
+# GitHub umbrella service / GitHub 总服务
+version: 2
 id: service-github
 group: github
-priority: 40
-
+priority: 45
 rules:
   - type: domain-suffix
     values:
       - github.com
-      - githubusercontent.com
-      - githubassets.com
-      - github.io
       - github.dev
+      - github.io
       - githubapp.com
-      - githubstatus.com
+      - githubassets.com
       - githubcopilot.com
-      - github.blog
-      - github.community
-      - githubnext.com
-      - githubpreview.dev
+      - githubusercontent.com
+      - githubstatus.com
       - ghcr.io
       - git.io
-      - atom.io
-      - dependabot.com
+      - gitlab.com
       - npmjs.com
       - npmjs.org
-      - npm.community
-      - rawgit.com
-      - rawgithub.com
-      - myoctocat.com
-      - opensource.guide
-      - thegithubshop.com
-      - repo.new
     action: group
     target: github
-  - type: domain-keyword
-    values: [github]
+  - type: ip-cidr
+    values: []
+    action: group
+    target: github
+  - type: ip-cidr6
+    values: []
     action: group
     target: github
