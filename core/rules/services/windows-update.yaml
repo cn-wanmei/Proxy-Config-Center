@@ -1,0 +1,9 @@
+version: 1
+id: service-windows-update
+group: windows-update
+priority: 50
+rules:
+  - type: domain-suffix
+    values: [windows.com, windows.net, windowsupdate.com, update.microsoft.com, delivery.mp.microsoft.com, dl.delivery.mp.microsoft.com]
+    action: group
+    target: microsoft
