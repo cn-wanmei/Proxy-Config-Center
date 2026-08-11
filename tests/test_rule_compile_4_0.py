@@ -88,4 +88,4 @@ def test_compile_is_deterministic_for_all_clients():
 
 if __name__ == "__main__":
     test_compile_is_deterministic_for_all_clients()
-    print("OK rule compile 4.0 all clients")
+    print("OK rule compile 4.0 all clients; alphabetical RAW ordering enforced")
