@@ -1,0 +1,22 @@
+# Clash Meta / Mihomo 独立客户端输出定义
+# Remote rule-provider compatible classical YAML.
+version: 1
+id: clashmeta
+name: ClashMeta
+extension: .yaml
+root: rules/ClashMeta
+collection: global
+format: clashmeta_classical
+rule_types:
+  domain: DOMAIN
+  domain_suffix: DOMAIN-SUFFIX
+  domain_keyword: DOMAIN-KEYWORD
+  ip_cidr: IP-CIDR
+  ip_cidr6: IP-CIDR6
+  user_agent: USER-AGENT
+names:
+  google: Google
+  youtube: YouTube
+  google-play: GooglePlay
+  google-fcm: GoogleFCM
+  youtube-music: YouTubeMusic
