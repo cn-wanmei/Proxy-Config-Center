@@ -1,0 +1,13 @@
+version: 1
+id: service-apple-account
+group: apple-account
+priority: 15
+rules:
+  - type: domain
+    values: [account.apple.com, appleid.cdn-apple.com, idmsa.apple.com, gsa.apple.com, identity.apple.com]
+    action: group
+    target: apple
+  - type: domain-suffix
+    values: [appleid.com]
+    action: group
+    target: apple
