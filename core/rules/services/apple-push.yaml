@@ -1,0 +1,9 @@
+version: 1
+id: service-apple-push
+group: apple-push
+priority: 15
+rules:
+  - type: domain-suffix
+    values: [push.apple.com]
+    action: group
+    target: apple
