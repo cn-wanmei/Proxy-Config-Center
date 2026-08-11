@@ -1,0 +1,9 @@
+version: 1
+id: service-google-maps
+group: google-maps
+priority: 60
+rules:
+  - type: domain-suffix
+    values: [maps.google.com, maps.googleapis.com, maps.gstatic.com, googleusercontent.com]
+    action: group
+    target: google
