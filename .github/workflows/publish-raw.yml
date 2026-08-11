@@ -5,7 +5,7 @@ on:
     branches: [main, 4.0-hierarchical-raw]
     paths:
       - 'core/rules/**'
-      - 'core/clients/**'
+      - 'clients/**'
       - 'scripts/**'
       - 'VERSION'
       - 'requirements*.txt'
