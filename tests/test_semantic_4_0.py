@@ -16,11 +16,12 @@ def test_relations():
     result = analyze([
         {'policy_id': 'a', 'type': 'domain-suffix', 'value': 'example.com', 'priority': 100},
         {'policy_id': 'a', 'type': 'domain-suffix', 'value': 'example.com', 'priority': 100},
+        {'policy_id': 'a', 'type': 'domain-suffix', 'value': 'example.com', 'priority': 200},
         {'policy_id': 'b', 'type': 'domain-suffix', 'value': 'example.com', 'priority': 100},
         {'policy_id': 'c', 'type': 'domain-suffix', 'value': 'mail.example.com', 'priority': 200},
     ])
     kinds = {finding['kind'] for finding in result['findings']}
-    assert {'duplicate', 'conflict', 'shadow'} <= kinds
+    assert {'duplicate', 'conflict', 'shared', 'shadow'} <= kinds
 
 
 def test_validation():
