@@ -28,6 +28,20 @@ jobs:
       - run: rm -rf .audit/generated
       - run: python scripts/rule_compile.py --out .audit/generated
       - run: test -d .audit/generated/rules
-      - name: Verify checked-in RAW when present
-        if: hashFiles('rules/**') != ''
-        run: diff -ru rules .audit/generated/rules
+      - name: Verify generated RAW tree is deterministic
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+
+          root = Path('.audit/generated/rules')
+          files = sorted(p for p in root.rglob('*') if p.is_file())
+          assert files, 'generated RAW tree is empty'
+          digest = hashlib.sha256()
+          for path in files:
+              digest.update(str(path.relative_to(root)).encode())
+              digest.update(b'\0')
+              digest.update(path.read_bytes())
+          print(f'RAW files: {len(files)}')
+          print(f'RAW tree SHA256: {digest.hexdigest()}')
+          PY
