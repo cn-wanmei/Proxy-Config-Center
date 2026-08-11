@@ -1,0 +1,9 @@
+version: 1
+id: service-xbox
+group: xbox
+priority: 50
+rules:
+  - type: domain-suffix
+    values: [xbox.com, xboxlive.com, xboxlive.net, xboxservices.com, xsts.auth.xboxlive.com]
+    action: group
+    target: microsoft
