@@ -1,0 +1,9 @@
+version: 1
+id: service-google-photos
+group: google-photos
+priority: 60
+rules:
+  - type: domain-suffix
+    values: [photos.google.com, photos.googleusercontent.com, ggpht.com, googleusercontent.com]
+    action: group
+    target: google
