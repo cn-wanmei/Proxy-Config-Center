@@ -7,13 +7,6 @@ group: google
 priority: 60
 
 rules:
-  - type: geosite
-    values:
-      - google
-      - google-cn
-    action: group
-    target: google
-
   - type: domain-suffix
     values:
       - google.com
