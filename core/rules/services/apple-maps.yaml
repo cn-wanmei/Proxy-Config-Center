@@ -1,0 +1,9 @@
+version: 1
+id: service-apple-maps
+group: apple-maps
+priority: 15
+rules:
+  - type: domain-suffix
+    values: [maps.apple.com, apple-mapkit.com]
+    action: group
+    target: apple
