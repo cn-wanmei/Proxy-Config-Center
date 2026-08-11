@@ -1,0 +1,9 @@
+version: 1
+id: service-apple-music
+group: apple-music
+priority: 15
+rules:
+  - type: domain-suffix
+    values: [music.apple.com, music.apple.com.cn, mzstatic.com, itunes.apple.com]
+    action: group
+    target: apple
